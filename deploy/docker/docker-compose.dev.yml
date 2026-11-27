@@ -1,0 +1,80 @@
+name: skotos
+
+services:
+  postgres:
+    image: mirror.gcr.io/library/postgres:16
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-skotos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skotos}
+      POSTGRES_DB: ${POSTGRES_DB:-skotos}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    shm_size: 128m
+    mem_limit: 512m
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-h",
+          "127.0.0.1",
+          "-p",
+          "5432",
+          "-U",
+          "${POSTGRES_USER:-skotos}",
+          "-d",
+          "${POSTGRES_DB:-skotos}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  nats:
+    # Use nats:2-alpine (not scratch nats:2) so BusyBox wget is available for /healthz
+    image: mirror.gcr.io/library/nats:2-alpine
+    restart: unless-stopped
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_PORT:-8222}:8222"
+    volumes:
+      - nats_data:/data
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  minio:
+    # Upstream docker.io/minio/minio (404) and quay.io/minio/minio (401) are no longer publicly pullable.
+    # pgsty/minio is an AGPL-3.0 community MinIO image (amd64+arm64) bundling minio, mc, and curl.
+    # Pulled via mirror.gcr.io public Docker Hub mirror to avoid unauthenticated Docker Hub rate limits.
+    image: mirror.gcr.io/pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-skotos}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-skotos-dev-secret}
+    volumes:
+      - minio_data:/data
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  nats_data:
+  minio_data:

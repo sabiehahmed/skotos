@@ -1,0 +1,5 @@
+name: skotos
+
+include:
+  - path: deploy/docker/docker-compose.dev.yml
+    project_directory: .

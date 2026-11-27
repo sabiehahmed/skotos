@@ -1,0 +1,14 @@
+[package]
+name = "skotos-auth"
+description = "Pluggable dual-path identity providers, API tokens, and RBAC authorization"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[dependencies]
+skotos-domain.workspace = true
+
+[lints]
+workspace = true

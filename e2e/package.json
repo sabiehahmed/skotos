@@ -1,0 +1,28 @@
+{
+  "name": "skotos-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Independent opaque-box Phase 1 E2E test suite for Skotos",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "self-test": "node scripts/run-e2e.mjs --self-test",
+    "test": "node scripts/run-e2e.mjs --tier all",
+    "test:tier1": "node scripts/run-e2e.mjs --tier 1",
+    "test:tier2": "node scripts/run-e2e.mjs --tier 2",
+    "test:tier3": "node scripts/run-e2e.mjs --tier 3",
+    "test:tier4": "node scripts/run-e2e.mjs --tier 4",
+    "test:list": "node scripts/run-e2e.mjs --tier all --list"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "1.65.1",
+    "@types/node": "^22.20.7",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.1",
+    "typescript": "~5.9.3"
+  }
+}

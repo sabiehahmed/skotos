@@ -1,0 +1,30 @@
+.shell {
+  min-height: 100vh;
+  background-color: var(--sk-color-bg);
+  color: var(--sk-color-text);
+  font-family: var(--sk-font-sans);
+  padding: var(--sk-space-6);
+}
+
+.card {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: var(--sk-space-4);
+  background-color: var(--sk-color-surface);
+  border: 1px solid var(--sk-color-border);
+  border-top: 3px solid var(--sk-env-accent);
+  border-radius: var(--sk-radius-md);
+}
+
+.title {
+  margin: 0 0 var(--sk-space-2);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--sk-color-text-muted);
+  font-family: var(--sk-font-mono);
+  font-size: 0.875rem;
+}

@@ -1,0 +1,15 @@
+:root {
+  --sk-color-bg: #ffffff;
+  --sk-color-surface: #f8fafc;
+  --sk-color-border: #e2e8f0;
+  --sk-color-text: #0f172a;
+  --sk-color-text-muted: #475569;
+  --sk-color-accent: #2563eb;
+  --sk-env-accent: var(--sk-color-accent);
+  --sk-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sk-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sk-space-2: 0.5rem;
+  --sk-space-4: 1rem;
+  --sk-space-6: 1.5rem;
+  --sk-radius-md: 0.5rem;
+}

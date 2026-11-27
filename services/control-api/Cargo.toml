@@ -1,0 +1,30 @@
+[package]
+name = "control-api"
+description = "Skotos Control Plane REST API and OpenAPI 3.1 exporter"
+default-run = "control-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[lib]
+name = "control_api"
+path = "src/lib.rs"
+
+[[bin]]
+name = "control-api"
+path = "src/main.rs"
+
+[[bin]]
+name = "export-openapi"
+path = "src/bin/export_openapi.rs"
+
+[dependencies]
+skotos-domain.workspace = true
+skotos-eval.workspace = true
+skotos-storage.workspace = true
+skotos-auth.workspace = true
+
+[lints]
+workspace = true

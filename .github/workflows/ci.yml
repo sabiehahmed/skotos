@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  rust:
+    name: Rust fmt, clippy & test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: mirror.gcr.io/library/postgres:16
+        env:
+          POSTGRES_USER: skotos
+          POSTGRES_PASSWORD: skotos
+          POSTGRES_DB: skotos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U skotos -d skotos"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      CARGO_TERM_COLOR: always
+      DATABASE_URL: postgres://skotos:skotos@127.0.0.1:5432/skotos
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Restore Cargo cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy lints
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Run Rust workspace tests
+        run: cargo test --workspace
+
+  frontend:
+    name: TypeScript, ESLint boundaries, tests & build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint and UI boundary rules
+        run: pnpm lint
+
+      - name: Run zero-Tailwind and manifest boundary guard
+        run: pnpm lint:boundaries
+
+      - name: Run TypeScript typecheck
+        run: pnpm typecheck
+
+      - name: Run boundary and workspace unit tests
+        run: pnpm test
+
+      - name: Build workspace packages and web app
+        run: pnpm build
+
+      # Note: Milestone 1C (M4) will add OpenAPI zero-drift verification:
+      # make gen-openapi && git diff --exit-code spec/openapi/ packages/api-client/
+
+  docs:
+    name: Markdown lint & Prettier check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Markdown documentation
+        run: pnpm run lint:md
+
+      - name: Check documentation formatting
+        run: pnpm run format:check

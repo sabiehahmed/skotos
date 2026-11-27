@@ -1,0 +1,24 @@
+{
+  "name": "@skotos/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "@skotos/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "gen": "node -e \"import('node:fs').then((fs) => { const spec = '../../spec/openapi/control-api.json'; console.error(fs.existsSync(spec) ? '@skotos/api-client: OpenAPI TypeScript codegen is not yet wired (Milestone 1C / M4).' : '@skotos/api-client: spec/openapi/control-api.json not yet generated (Milestone 1C / M4).'); process.exit(2); })\"",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --maxWorkers=2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^8.4.0",
+    "vitest": "^5.1.2"
+  }
+}
