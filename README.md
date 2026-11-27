@@ -18,6 +18,7 @@ skotos/
 - **Product & Planning (`docs/`)**
   - [Docs Index](docs/README.md)
   - [Product Vision](docs/product-vision.md)
+  - [LaunchDarkly Feature Catalog & Cost Strategy](docs/launchdarkly-feature-catalog.md)
   - [Domain Glossary](docs/glossary.md)
   - [Requirements](docs/requirements.md)
   - [Roadmap](docs/roadmap.md)

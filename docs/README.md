@@ -4,13 +4,14 @@ This folder holds product-level specifications, requirements, shared domain voca
 
 ## Contents
 
-| Document                            | Purpose                                                  |
-| ----------------------------------- | -------------------------------------------------------- |
-| [Product Vision](product-vision.md) | Core mission, target personas, and capability pillars    |
-| [Domain Glossary](glossary.md)      | Ubiquitous terminology shared across APIs, SDKs, and UI  |
-| [Requirements](requirements.md)     | Functional scope (P0/P1/P2) and non-functional SLAs      |
-| [Roadmap](roadmap.md)               | Phased delivery milestones from MVP to enterprise scale  |
-| [RFCs](rfcs/README.md)              | Proposal workflow and template for major feature changes |
+| Document                                                        | Purpose                                                                        |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Product Vision](product-vision.md)                             | Core mission, target personas, and capability pillars                          |
+| [LaunchDarkly Feature Catalog](launchdarkly-feature-catalog.md) | Full LaunchDarkly feature parity matrix & cost-effective architecture strategy |
+| [Domain Glossary](glossary.md)                                  | Ubiquitous terminology shared across APIs, SDKs, and UI                        |
+| [Requirements](requirements.md)                                 | Functional scope (P0/P1/P2) and non-functional SLAs                            |
+| [Roadmap](roadmap.md)                                           | Phased delivery milestones from MVP to enterprise scale                        |
+| [RFCs](rfcs/README.md)                                          | Proposal workflow and template for major feature changes                       |
 
 ## Related Folders
 
