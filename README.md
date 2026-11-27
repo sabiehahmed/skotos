@@ -2,14 +2,15 @@
 
 **Skotos** is a LaunchDarkly-style feature flagging, targeting, and experimentation platform designed for low-latency flag evaluation, real-time streaming updates, and enterprise-grade governance.
 
-> **Status:** Phase 1 Complete (Core Control Plane, Evaluation Engine, `@skotos/ui`, and Management Dashboard MVP) — Ready for Phase 2
+> **Status:** Phase 2 Complete (Real-Time Delivery Edge, Event Ingest, Segments/Automation/Webhooks, and Multi-Language SDK Suite) — Ready for Phase 3
 
 ## Repository Structure
 
 ```text
 skotos/
-├── crates/         # Rust workspace libraries: skotos-domain, skotos-eval, skotos-storage, skotos-auth
-├── services/       # Rust backend services: control-api (Axum + utoipa OpenAPI 3.1)
+├── crates/         # Rust libraries: skotos-domain, skotos-eval, skotos-storage, skotos-auth, skotos-telemetry, skotos-fanout
+├── services/       # Rust services: control-api (Axum + utoipa), delivery-edge (DB-free SSE/evalx), event-ingest
+├── sdks/           # Official SDKs + OpenFeature providers: rust-server, go-server, node-server, browser, react
 ├── packages/       # TypeScript packages: @skotos/ui (Radix + CSS Modules, zero Tailwind), @skotos/api-client
 ├── apps/           # Frontend apps: @skotos/web (React + Vite Management Dashboard SPA)
 ├── spec/           # Canonical Golden Evaluation Test Suite (124 vectors) and OpenAPI 3.1 schema

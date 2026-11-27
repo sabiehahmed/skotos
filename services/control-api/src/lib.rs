@@ -3,6 +3,7 @@
 pub mod config;
 pub mod dto;
 pub mod extract;
+pub mod phase2_routes;
 pub mod problem;
 pub mod routes;
 
@@ -14,6 +15,7 @@ use skotos_auth::{
     SelfHostedAuthAdapter,
 };
 use skotos_storage::{run_migrations, Storage};
+use skotos_telemetry::{PostgresTelemetryStore, TelemetryStore};
 use sqlx::postgres::PgPoolOptions;
 
 pub use config::AppConfig;
@@ -87,6 +89,7 @@ pub async fn init_app(config: &AppConfig) -> Result<(AppState, Router), String> 
             .map_err(|e| format!("failed to run database migrations: {e}"))?;
     }
 
+    let telemetry: Arc<dyn TelemetryStore> = Arc::new(PostgresTelemetryStore::new(pool.clone()));
     let storage = Storage::new(pool);
 
     let identity_provider: Arc<dyn IdentityProvider> = match config.auth_mode {
@@ -112,6 +115,7 @@ pub async fn init_app(config: &AppConfig) -> Result<(AppState, Router), String> 
     let state = AppState {
         api_token_verifier: ApiTokenVerifier::new(storage.clone()),
         storage,
+        telemetry,
         identity_provider,
         authorizer: Authorizer,
         cookie_secure: config.cookie_secure,

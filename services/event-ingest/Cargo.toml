@@ -1,0 +1,32 @@
+[package]
+name = "event-ingest"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+skotos-domain.workspace = true
+skotos-fanout.workspace = true
+skotos-storage.workspace = true
+skotos-telemetry.workspace = true
+axum.workspace = true
+bytes.workspace = true
+chrono.workspace = true
+dashmap.workspace = true
+dotenvy.workspace = true
+flate2.workspace = true
+futures.workspace = true
+http.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+tokio.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true

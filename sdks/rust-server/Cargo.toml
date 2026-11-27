@@ -1,0 +1,23 @@
+[package]
+name = "skotos-server-sdk"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+skotos-domain.workspace = true
+skotos-eval.workspace = true
+skotos-telemetry.workspace = true
+chrono.workspace = true
+flate2.workspace = true
+futures.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true

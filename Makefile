@@ -7,7 +7,7 @@ export CARGO_BUILD_JOBS
 
 COMPOSE ?= docker compose
 
-.PHONY: help dev-infra dev-infra-down migrate test-rust test-ui test-web gen-openapi lint-all check
+.PHONY: help dev-infra dev-infra-down migrate test-rust test-go test-ui test-web gen-openapi lint-all check
 
 help: ## Show available Skotos development targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -23,6 +23,9 @@ migrate: ## Run embedded PostgreSQL migrations via control-api
 
 test-rust: ## Run all Rust workspace tests
 	cargo test --workspace
+
+test-go: ## Run Go Server SDK tests (124 golden vectors + OpenFeature) with race detector
+	go -C sdks/go-server test -race ./...
 
 test-ui: ## Run @skotos/ui test suite
 	pnpm --filter @skotos/ui test
@@ -43,7 +46,7 @@ lint-all: ## Run Rust fmt/clippy, ESLint boundaries, zero-Tailwind guard, and do
 	pnpm run lint:md
 	pnpm run format:check
 
-check: lint-all test-rust ## Run full offline lint, typecheck, test, and build verification
+check: lint-all test-rust test-go ## Run full lint, typecheck, test, and build verification
 	pnpm typecheck
 	pnpm test
 	pnpm build

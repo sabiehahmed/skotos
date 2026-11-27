@@ -30,7 +30,9 @@ serde_json.workspace = true
 skotos-auth.workspace = true
 skotos-domain = { workspace = true, features = ["openapi"] }
 skotos-eval.workspace = true
+skotos-fanout = { workspace = true, features = ["workers"] }
 skotos-storage.workspace = true
+skotos-telemetry.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 tower.workspace = true
@@ -39,6 +41,16 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 utoipa.workspace = true
 uuid.workspace = true
+
+[dev-dependencies]
+base64.workspace = true
+delivery-edge = { path = "../delivery-edge" }
+event-ingest = { path = "../event-ingest" }
+flate2.workspace = true
+futures.workspace = true
+reqwest.workspace = true
+skotos-server-sdk = { path = "../../sdks/rust-server" }
+zstd.workspace = true
 
 [lints]
 workspace = true

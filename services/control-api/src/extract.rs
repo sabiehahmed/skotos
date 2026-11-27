@@ -7,6 +7,7 @@ use skotos_auth::{
     ApiTokenVerifier, AuthenticatedPrincipal, Authorizer, IdentityProvider, SESSION_COOKIE_NAME,
 };
 use skotos_storage::Storage;
+use skotos_telemetry::TelemetryStore;
 
 use crate::problem::ApiError;
 
@@ -14,6 +15,7 @@ use crate::problem::ApiError;
 #[derive(Clone)]
 pub struct AppState {
     pub storage: Storage,
+    pub telemetry: Arc<dyn TelemetryStore>,
     pub identity_provider: Arc<dyn IdentityProvider>,
     pub api_token_verifier: ApiTokenVerifier,
     pub authorizer: Authorizer,

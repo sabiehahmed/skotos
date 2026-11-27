@@ -149,6 +149,62 @@ const server = setupServer(
   http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/revisions", () =>
     HttpResponse.json({ items: [] }),
   ),
+  http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/usage", () =>
+    HttpResponse.json({
+      flagKey: "express-checkout",
+      totalEvaluations: 1240,
+      variations: [
+        { variationIndex: 0, count: 940 },
+        { variationIndex: 1, count: 300 },
+      ],
+      contextKinds: ["user"],
+      lastEvaluatedAt: "2026-11-27T12:00:00Z",
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/schedules", () =>
+    HttpResponse.json({ items: [] }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/triggers", () =>
+    HttpResponse.json({ items: [] }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/environments/:envKey/segments", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "77777777-7777-7777-7777-777777777771",
+          envId: mockEnvs[0]!.id,
+          key: "beta-testers",
+          name: "Beta Testers",
+          kind: "standard",
+          version: 2,
+          salt: "seg-salt",
+          included: ["usr_beta_1", "usr_beta_2"],
+          excluded: [],
+          includedContexts: [],
+          excludedContexts: [],
+          rules: [],
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/webhooks", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "88888888-8888-8888-8888-888888888881",
+          orgId: mockOrg.id,
+          name: "Datadog Flag Events",
+          url: "https://hooks.example.com/skotos",
+          enabled: true,
+          events: ["flag.updated"],
+          envFilter: ["production"],
+          createdAt: "2026-11-27T00:00:00Z",
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
   http.post("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/simulate", () =>
     HttpResponse.json({
       flagKey: "express-checkout",
@@ -186,7 +242,7 @@ describe("@skotos/web management dashboard", () => {
     expect(await screen.findByText("Express Checkout")).toBeInTheDocument();
   });
 
-  it("renders flags list, environment banner, and navigates to flag detail simulator", async () => {
+  it("renders flags list, environment banner, simulator, and Phase 2 Usage & Automation tab", async () => {
     const user = userEvent.setup();
     render(<App initialEntries={["/projects/default/flags"]} />);
 
@@ -200,5 +256,22 @@ describe("@skotos/web management dashboard", () => {
     await waitFor(() => {
       expect(screen.getByText("FALLTHROUGH")).toBeInTheDocument();
     });
+
+    await user.click(screen.getByRole("tab", { name: "Usage & Automation" }));
+    expect(await screen.findByText("Evaluation Usage (Last 30 Days)")).toBeInTheDocument();
+    expect(await screen.findByText(/1,240 evaluations/i)).toBeInTheDocument();
+    expect(screen.getByText("Flag Triggers (APM Kill-Switch URLs)")).toBeInTheDocument();
+  });
+
+  it("navigates to Phase 2 Segments and Webhooks views", async () => {
+    const user = userEvent.setup();
+    render(<App initialEntries={["/projects/default/flags"]} />);
+    expect(await screen.findByText("Express Checkout")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Segments" }));
+    expect(await screen.findByText("Beta Testers")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Webhooks" }));
+    expect(await screen.findByText("Datadog Flag Events")).toBeInTheDocument();
   });
 });

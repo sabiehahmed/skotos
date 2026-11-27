@@ -180,6 +180,22 @@ export interface paths {
         patch: operations["update_environment"];
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/flags/bulk-patch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["bulk_patch_flags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/environments/{envKey}/keys": {
         parameters: {
             query?: never;
@@ -206,6 +222,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["rotate_environment_key"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_segments"];
+        put?: never;
+        post: operations["create_segment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_segment"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_segment"];
+        options?: never;
+        head?: never;
+        patch: operations["patch_segment"];
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_environment_usage"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -244,6 +308,22 @@ export interface paths {
         patch: operations["patch_flag"];
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["copy_flag_env"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/restore/{version}": {
         parameters: {
             query?: never;
@@ -276,6 +356,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_scheduled_changes"];
+        put?: never;
+        post: operations["create_scheduled_change"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules/{scheduleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["cancel_scheduled_change"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/simulate": {
         parameters: {
             query?: never;
@@ -286,6 +398,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["simulate_flag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_flag_triggers"];
+        put?: never;
+        post: operations["create_flag_trigger"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers/{triggerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_flag_trigger"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_flag_usage"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -319,6 +479,70 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["revoke_token"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/triggers/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["execute_flag_trigger"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_webhooks"];
+        put?: never;
+        post: operations["create_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/{webhookId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_webhook"];
+        options?: never;
+        head?: never;
+        patch: operations["update_webhook"];
+        trace?: never;
+    };
+    "/api/v1/webhooks/{webhookId}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_webhook_deliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -427,6 +651,14 @@ export interface components {
         };
         /** @enum {string} */
         BuiltInRole: "reader" | "writer" | "admin" | "owner";
+        BulkPatchFlagsRequest: {
+            comment?: string | null;
+            flagKeys: string[];
+            instructions: components["schemas"]["FlagPatchInstruction"][];
+        };
+        BulkPatchFlagsResponse: {
+            items: components["schemas"]["PatchFlagResponse"][];
+        };
         Clause: {
             attribute: string;
             contextKind?: string;
@@ -440,8 +672,8 @@ export interface components {
          */
         ClauseOp: "in" | "startsWith" | "endsWith" | "contains" | "matches" | "lessThan" | "lessThanOrEqual" | "greaterThan" | "greaterThanOrEqual" | "before" | "after" | "semverEqual" | "semverLessThan" | "semverGreaterThan" | "segmentMatch";
         ClientSideAvailability: {
-            usingEnvironmentId: boolean;
-            usingMobileKey: boolean;
+            usingEnvironmentId?: boolean;
+            usingMobileKey?: boolean;
         };
         /** @description Evaluation context: either a single context ({"kind":"user","key":"...",...}) or a multi-context ({"kind":"multi","user":{...},"organization":{...}}) */
         Context: {
@@ -452,6 +684,14 @@ export interface components {
             privateAttributes?: string[];
             redactedAttributes?: string[];
             secondary?: string | null;
+        };
+        CopyFlagEnvRequest: {
+            comment?: string | null;
+            copyOnState?: boolean;
+            /** Format: int64 */
+            expectedVersion?: number | null;
+            sourceEnvironmentKey: string;
+            targetEnvironmentKey: string;
         };
         CreateApiTokenRequest: {
             /** Format: date-time */
@@ -484,6 +724,15 @@ export interface components {
             temporary?: boolean;
             variations: components["schemas"]["CreateVariationInput"][];
         };
+        CreateFlagTriggerRequest: {
+            action: components["schemas"]["TriggerAction"];
+            description?: string;
+        };
+        CreateFlagTriggerResponse: {
+            plaintextToken: string;
+            trigger: components["schemas"]["FlagTrigger"];
+            triggerPath: string;
+        };
         CreateMemberRequest: {
             displayName: string;
             email: string;
@@ -500,12 +749,39 @@ export interface components {
             environments: components["schemas"]["Environment"][];
             project: components["schemas"]["Project"];
         };
+        CreateScheduledChangeRequest: {
+            comment?: string | null;
+            /** Format: date-time */
+            executeAt: string;
+            instructions: components["schemas"]["FlagPatchInstruction"][];
+        };
+        CreateSegmentRequest: {
+            excluded?: string[];
+            excludedContexts?: components["schemas"]["SegmentTarget"][];
+            included?: string[];
+            includedContexts?: components["schemas"]["SegmentTarget"][];
+            key: string;
+            kind?: components["schemas"]["SegmentKind"];
+            name: string;
+            rules?: components["schemas"]["SegmentRule"][];
+        };
         CreateVariationInput: {
             description?: string | null;
             /** Format: uuid */
             id?: string | null;
             name?: string | null;
             value: unknown;
+        };
+        CreateWebhookRequest: {
+            envFilter?: string[];
+            events?: string[];
+            name: string;
+            secret?: string | null;
+            url: string;
+        };
+        CreateWebhookResponse: {
+            secret: string;
+            webhook: components["schemas"]["Webhook"];
         };
         Environment: {
             clientSideId: string;
@@ -544,6 +820,9 @@ export interface components {
         EnvironmentListResponse: {
             items: components["schemas"]["Environment"][];
         };
+        EnvironmentUsageResponse: {
+            items: components["schemas"]["FlagEvalUsage"][];
+        };
         /** @description Detailed result returned by the evaluation engine. */
         EvaluationDetail: {
             reason: components["schemas"]["EvaluationReason"];
@@ -577,6 +856,14 @@ export interface components {
             errorKind: components["schemas"]["EvaluationErrorKind"];
             /** @enum {string} */
             kind: "ERROR";
+        };
+        ExecuteTriggerResponse: {
+            action: components["schemas"]["TriggerAction"];
+            environmentKey: string;
+            flagKey: string;
+            /** Format: int64 */
+            newVersion: number;
+            on: boolean;
         };
         FeatureFlag: {
             archived: boolean;
@@ -641,6 +928,15 @@ export interface components {
             on: boolean;
             /** Format: int64 */
             version: number;
+        };
+        FlagEvalUsage: {
+            contextKinds?: string[];
+            flagKey: string;
+            /** Format: date-time */
+            lastEvaluatedAt?: string | null;
+            /** Format: int64 */
+            totalEvaluations: number;
+            variations?: components["schemas"]["VariationUsageCount"][];
         };
         /** @enum {string} */
         FlagKind: "boolean" | "string" | "number" | "json";
@@ -772,6 +1068,29 @@ export interface components {
         FlagRevisionsResponse: {
             items: components["schemas"]["FlagEnvRevision"][];
         };
+        FlagTrigger: {
+            action: components["schemas"]["TriggerAction"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdBy?: string | null;
+            description?: string;
+            enabled: boolean;
+            /** Format: uuid */
+            envId: string;
+            /** Format: uuid */
+            flagId: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            lastTriggeredAt?: string | null;
+            tokenPrefix: string;
+            /** Format: int64 */
+            triggerCount: number;
+        };
+        FlagTriggerListResponse: {
+            items: components["schemas"]["FlagTrigger"][];
+        };
         HealthResponse: {
             service: string;
             status: string;
@@ -816,6 +1135,16 @@ export interface components {
         PatchFlagResponse: {
             envConfig: components["schemas"]["FlagEnvConfig"];
             flag: components["schemas"]["FeatureFlag"];
+            summaries: components["schemas"]["PatchSummaryItem"][];
+        };
+        PatchSegmentRequest: {
+            comment?: string | null;
+            /** Format: int64 */
+            expectedVersion?: number | null;
+            instructions: components["schemas"]["SegmentPatchInstruction"][];
+        };
+        PatchSegmentResponse: {
+            segment: components["schemas"]["Segment"];
             summaries: components["schemas"]["PatchSummaryItem"][];
         };
         /** @description Human-readable description of a single semantic patch instruction for UI diffs and audit logs. */
@@ -879,6 +1208,117 @@ export interface components {
             key: components["schemas"]["EnvironmentKey"];
             plaintextKey: string;
         };
+        ScheduledChange: {
+            comment?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdBy?: string | null;
+            /** Format: uuid */
+            envId: string;
+            errorMessage?: string | null;
+            /** Format: date-time */
+            executeAt: string;
+            /** Format: date-time */
+            executedAt?: string | null;
+            /** Format: uuid */
+            flagId: string;
+            /** Format: uuid */
+            id: string;
+            instructions: unknown;
+            /** Format: uuid */
+            orgId: string;
+            status: components["schemas"]["ScheduledChangeStatus"];
+        };
+        ScheduledChangeListResponse: {
+            items: components["schemas"]["ScheduledChange"][];
+        };
+        /** @enum {string} */
+        ScheduledChangeStatus: "pending" | "executed" | "failed" | "canceled";
+        Segment: {
+            /** Format: uuid */
+            envId: string;
+            excluded?: string[];
+            excludedContexts?: components["schemas"]["SegmentTarget"][];
+            /** Format: uuid */
+            id: string;
+            included?: string[];
+            includedContexts?: components["schemas"]["SegmentTarget"][];
+            key: string;
+            kind: components["schemas"]["SegmentKind"];
+            name: string;
+            rules?: components["schemas"]["SegmentRule"][];
+            salt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+        };
+        /** @enum {string} */
+        SegmentKind: "standard" | "big" | "synced";
+        SegmentListResponse: {
+            items: components["schemas"]["Segment"][];
+        };
+        /** @description Semantic instruction patches for segment mutations. */
+        SegmentPatchInstruction: {
+            /** @enum {string} */
+            kind: "updateName";
+            name: string;
+        } | {
+            contextKind?: string;
+            /** @enum {string} */
+            kind: "addIncluded";
+            values: string[];
+        } | {
+            contextKind?: string;
+            /** @enum {string} */
+            kind: "removeIncluded";
+            values: string[];
+        } | {
+            contextKind?: string;
+            /** @enum {string} */
+            kind: "addExcluded";
+            values: string[];
+        } | {
+            contextKind?: string;
+            /** @enum {string} */
+            kind: "removeExcluded";
+            values: string[];
+        } | {
+            bucketBy?: string | null;
+            clauses: components["schemas"]["Clause"][];
+            id?: string | null;
+            /** @enum {string} */
+            kind: "addRule";
+            rolloutContextKind?: string | null;
+            /** Format: int32 */
+            weight?: number | null;
+        } | {
+            bucketBy?: string | null;
+            clauses: components["schemas"]["Clause"][];
+            /** @enum {string} */
+            kind: "updateRule";
+            rolloutContextKind?: string | null;
+            ruleId: string;
+            /** Format: int32 */
+            weight?: number | null;
+        } | {
+            /** @enum {string} */
+            kind: "removeRule";
+            ruleId: string;
+        };
+        SegmentRule: {
+            bucketBy?: string | null;
+            clauses?: components["schemas"]["Clause"][];
+            id?: string;
+            rolloutContextKind?: string | null;
+            /** Format: int32 */
+            weight?: number | null;
+        };
+        SegmentTarget: {
+            contextKind?: string;
+            values?: string[];
+        };
         SimulateFlagRequest: {
             context: components["schemas"]["Context"];
             draftInstructions?: components["schemas"]["FlagPatchInstruction"][] | null;
@@ -906,6 +1346,8 @@ export interface components {
             id: string;
             trackEvents?: boolean;
         };
+        /** @enum {string} */
+        TriggerAction: "turnFlagOn" | "turnFlagOff";
         UpdateEnvironmentRequest: {
             color?: string | null;
             confirmChanges?: boolean | null;
@@ -919,6 +1361,13 @@ export interface components {
             defaultClientSideAvailability?: null | components["schemas"]["ClientSideAvailability"];
             name?: string | null;
         };
+        UpdateWebhookRequest: {
+            enabled?: boolean | null;
+            envFilter?: string[] | null;
+            events?: string[] | null;
+            name?: string | null;
+            url?: string | null;
+        };
         Variation: {
             description?: string | null;
             /** Format: uuid */
@@ -930,6 +1379,50 @@ export interface components {
             rollout?: null | components["schemas"]["Rollout"];
             /** Format: uuid */
             variationId?: string | null;
+        };
+        VariationUsageCount: {
+            /** Format: int64 */
+            count: number;
+            /** Format: int32 */
+            variationIndex: number;
+        };
+        Webhook: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdBy?: string | null;
+            enabled: boolean;
+            envFilter?: string[];
+            events?: string[];
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: date-time */
+            updatedAt: string;
+            url: string;
+        };
+        WebhookDelivery: {
+            /** Format: int32 */
+            attempt: number;
+            /** Format: date-time */
+            deliveredAt: string;
+            errorMessage?: string | null;
+            eventType: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            statusCode?: number | null;
+            success: boolean;
+            /** Format: uuid */
+            webhookId: string;
+        };
+        WebhookDeliveryListResponse: {
+            items: components["schemas"]["WebhookDelivery"][];
+        };
+        WebhookListResponse: {
+            items: components["schemas"]["Webhook"][];
         };
         WeightedVariation: {
             untracked?: boolean;
@@ -1632,6 +2125,34 @@ export interface operations {
             };
         };
     };
+    bulk_patch_flags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkPatchFlagsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkPatchFlagsResponse"];
+                };
+            };
+        };
+    };
     list_environment_keys: {
         parameters: {
             query?: never;
@@ -1700,6 +2221,196 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_segments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SegmentListResponse"];
+                };
+            };
+        };
+    };
+    create_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSegmentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Segment"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    get_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Segment"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    delete_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    patch_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatchSegmentRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatchSegmentResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    get_environment_usage: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvironmentUsageResponse"];
                 };
             };
         };
@@ -1910,6 +2621,42 @@ export interface operations {
             };
         };
     };
+    copy_flag_env: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CopyFlagEnvRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagEnvConfig"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     restore_flag_revision: {
         parameters: {
             query?: never;
@@ -1995,6 +2742,96 @@ export interface operations {
             };
         };
     };
+    list_scheduled_changes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledChangeListResponse"];
+                };
+            };
+        };
+    };
+    create_scheduled_change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateScheduledChangeRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledChange"];
+                };
+            };
+        };
+    };
+    cancel_scheduled_change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Scheduled change ID */
+                scheduleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     simulate_flag: {
         parameters: {
             query?: never;
@@ -2034,6 +2871,124 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_flag_triggers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagTriggerListResponse"];
+                };
+            };
+        };
+    };
+    create_flag_trigger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFlagTriggerRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateFlagTriggerResponse"];
+                };
+            };
+        };
+    };
+    delete_flag_trigger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Trigger ID */
+                triggerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    get_flag_usage: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagEvalUsage"];
                 };
             };
         };
@@ -2128,6 +3083,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    execute_flag_trigger: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Secret flag trigger token */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecuteTriggerResponse"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_webhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookListResponse"];
+                };
+            };
+        };
+    };
+    create_webhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWebhookRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateWebhookResponse"];
+                };
+            };
+        };
+    };
+    delete_webhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Webhook ID */
+                webhookId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    update_webhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Webhook ID */
+                webhookId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWebhookRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_webhook_deliveries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Webhook ID */
+                webhookId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDeliveryListResponse"];
                 };
             };
         };

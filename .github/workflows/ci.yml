@@ -35,9 +35,19 @@ jobs:
     env:
       CARGO_TERM_COLOR: always
       DATABASE_URL: postgres://skotos:skotos@127.0.0.1:5432/skotos
+      NATS_URL: nats://127.0.0.1:4222
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: skotos-snapshots
+      S3_ACCESS_KEY_ID: skotos
+      S3_SECRET_ACCESS_KEY: skotos-dev-secret
+      S3_FORCE_PATH_STYLE: "true"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Start NATS JetStream and MinIO for Phase 2 delivery E2E
+        run: docker compose -f deploy/docker/docker-compose.dev.yml up -d --wait --wait-timeout 90 nats minio
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -55,6 +65,21 @@ jobs:
 
       - name: Run Rust workspace tests
         run: cargo test --workspace
+
+  go-sdk:
+    name: Go Server SDK golden suite & race tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run Go Server SDK tests (124 golden vectors + OpenFeature)
+        run: go -C sdks/go-server test -v -race ./...
 
   frontend:
     name: TypeScript, ESLint boundaries, tests & build
@@ -84,14 +109,11 @@ jobs:
       - name: Run TypeScript typecheck
         run: pnpm typecheck
 
-      - name: Run boundary and workspace unit tests
+      - name: Run boundary, SDK golden, and workspace unit tests
         run: pnpm test
 
-      - name: Build workspace packages and web app
+      - name: Build workspace packages, SDKs, and web app
         run: pnpm build
-
-      # Note: Milestone 1C (M4) will add OpenAPI zero-drift verification:
-      # make gen-openapi && git diff --exit-code spec/openapi/ packages/api-client/
 
   docs:
     name: Markdown lint & Prettier check

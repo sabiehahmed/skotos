@@ -53,6 +53,9 @@ proptest! {
                     ],
                 }),
             },
+            client_side_availability: Default::default(),
+            track_events: false,
+            track_events_fallthrough: false,
         });
 
         let ctx = Context::single(SingleContext::new("user", user_key));
@@ -96,6 +99,9 @@ proptest! {
                     variation: Some(0),
                     rollout: None,
                 },
+                client_side_availability: Default::default(),
+                track_events: false,
+                track_events_fallthrough: false,
             });
         }
 
@@ -149,6 +155,9 @@ fn rollout_distribution_is_statistically_uniform_over_10k_users() {
                 ],
             }),
         },
+        client_side_availability: Default::default(),
+        track_events: false,
+        track_events_fallthrough: false,
     });
 
     let mut count_a = 0usize;

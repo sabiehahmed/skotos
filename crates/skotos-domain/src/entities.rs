@@ -107,8 +107,20 @@ pub struct Member {
 #[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct ClientSideAvailability {
+    #[serde(default)]
     pub using_environment_id: bool,
+    #[serde(default)]
     pub using_mobile_key: bool,
+}
+
+impl ClientSideAvailability {
+    pub fn is_default(&self) -> bool {
+        !self.using_environment_id && !self.using_mobile_key
+    }
+
+    pub fn any_enabled(&self) -> bool {
+        self.using_environment_id || self.using_mobile_key
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -574,4 +586,164 @@ pub struct OutboxEvent {
     pub created_at: DateTime<Utc>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub published_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "lowercase")]
+pub enum ScheduledChangeStatus {
+    Pending,
+    Executed,
+    Failed,
+    Canceled,
+}
+
+impl ScheduledChangeStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Pending => "pending",
+            Self::Executed => "executed",
+            Self::Failed => "failed",
+            Self::Canceled => "canceled",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ScheduledChange {
+    pub id: Uuid,
+    pub org_id: Uuid,
+    pub flag_id: Uuid,
+    pub env_id: Uuid,
+    pub execute_at: DateTime<Utc>,
+    pub instructions: Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created_by: Option<Uuid>,
+    pub status: ScheduledChangeStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_message: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub executed_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub enum TriggerAction {
+    TurnFlagOn,
+    TurnFlagOff,
+}
+
+impl TriggerAction {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::TurnFlagOn => "turnFlagOn",
+            Self::TurnFlagOff => "turnFlagOff",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct FlagTrigger {
+    pub id: Uuid,
+    pub flag_id: Uuid,
+    pub env_id: Uuid,
+    pub action: TriggerAction,
+    pub token_prefix: String,
+    #[serde(default)]
+    pub description: String,
+    pub enabled: bool,
+    pub trigger_count: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_triggered_at: Option<DateTime<Utc>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created_by: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct Webhook {
+    pub id: Uuid,
+    pub org_id: Uuid,
+    pub name: String,
+    pub url: String,
+    pub enabled: bool,
+    #[serde(default)]
+    pub events: Vec<String>,
+    #[serde(default)]
+    pub env_filter: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created_by: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct WebhookDelivery {
+    pub id: Uuid,
+    pub webhook_id: Uuid,
+    pub event_type: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status_code: Option<i32>,
+    pub attempt: i32,
+    pub success: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_message: Option<String>,
+    pub delivered_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct VariationUsageCount {
+    pub variation_index: i32,
+    pub count: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct FlagEvalUsage {
+    pub flag_key: String,
+    pub total_evaluations: i64,
+    #[serde(default)]
+    pub variations: Vec<VariationUsageCount>,
+    #[serde(default)]
+    pub context_kinds: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_evaluated_at: Option<DateTime<Utc>>,
+}
+
+/// Auth registry record exported to R2/S3 and NATS so `delivery-edge` and `event-ingest`
+/// authenticate SDK/Mobile keys and Client-Side IDs with zero PostgreSQL calls on the hot path.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvironmentAuthRecord {
+    pub org_id: Uuid,
+    pub project_id: Uuid,
+    pub env_id: Uuid,
+    pub env_key: String,
+    pub client_side_id: String,
+    pub keys: Vec<EnvironmentKeyHashRecord>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvironmentKeyHashRecord {
+    pub key_id: Uuid,
+    pub kind: EnvironmentKeyKind,
+    pub key_hash: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<DateTime<Utc>>,
 }

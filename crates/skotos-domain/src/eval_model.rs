@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::entities::{
-    default_context_kind, Clause, FeatureFlag, FlagEnvConfig, RolloutKind, Segment, SegmentRule,
-    SegmentTarget, VariationOrRollout,
+    default_context_kind, Clause, ClientSideAvailability, FeatureFlag, FlagEnvConfig, RolloutKind,
+    Segment, SegmentRule, SegmentTarget, VariationOrRollout,
 };
 use crate::error::DomainError;
 
@@ -28,6 +28,12 @@ pub struct EvalFlag {
     #[serde(default)]
     pub rules: Vec<EvalRule>,
     pub fallthrough: EvalVariationOrRollout,
+    #[serde(default, skip_serializing_if = "ClientSideAvailability::is_default")]
+    pub client_side_availability: ClientSideAvailability,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub track_events: bool,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub track_events_fallthrough: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -283,6 +289,9 @@ pub fn compile_eval_flag_with_flags(
         targets,
         rules,
         fallthrough,
+        client_side_availability: flag.client_side_availability,
+        track_events: env_config.config.track_events,
+        track_events_fallthrough: env_config.config.track_events_fallthrough,
     })
 }
 

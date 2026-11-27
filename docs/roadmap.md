@@ -17,15 +17,15 @@ All Phase 0 architectural decisions are finalized in [`architecture/adrs/`](../a
 - [x] **1D**: Standalone `@skotos/ui` library (Radix UI + `.module.css`, zero Tailwind, design tokens, Vitest + WCAG 2.1 AA axe coverage)
 - [x] **1E**: `apps/web` Management Dashboard consuming `@skotos/ui` + `@skotos/api-client` exclusively
 
-## Phase 2 — Real-Time Delivery Plane, Event Ingest & First SDK Suite (Next)
+## Phase 2 — Real-Time Delivery Plane, Event Ingest & First SDK Suite (Complete)
 
-- [ ] Outbox -> R2/S3 pre-compressed snapshots -> NATS JetStream publisher
-- [ ] `services/delivery-edge` (Server SSE `put`/`patch`/`delete`, ETag polling, Client Ping-to-Re-evaluate SSE + `evalx`)
-- [ ] `services/event-ingest` (5s SDK summary rollups -> PostgreSQL counters)
-- [ ] Segments, Prerequisites, Flag Scheduling, Flag Triggers, Signed Webhooks
-- [ ] Launch SDKs + OpenFeature providers: TS/Node Server, Browser/React Client, Go Server, Rust Server
+- [x] Outbox -> R2/S3 pre-compressed snapshots (`gzip`, `zstd`, pre-framed SSE `put`) -> NATS JetStream publisher (`crates/skotos-fanout`)
+- [x] `services/delivery-edge` (DB-free hot path: Server SSE `put`/`patch`/`delete`, ETag polling, Client Ping-to-Re-evaluate SSE + stateless `evalx`)
+- [x] `services/event-ingest` + `crates/skotos-telemetry` (`TelemetryStore` trait, 5s SDK summary rollups -> PostgreSQL counters + payload deduplication)
+- [x] Segments CRUD & semantic patching, Environment Copy, Bulk Patching, Flag Scheduling, Flag Triggers (APM rollback URLs), Signed Outbound Webhooks, Evaluation Usage/Stale API & Dashboard screens
+- [x] Launch SDKs + OpenFeature providers (124/124 golden vector parity across server SDKs): TS/Node Server, Browser Client, React SDK, Go Server, Rust Server
 
-## Phase 3 — Enterprise Governance, Relay Proxy, DevTools & Scale
+## Phase 3 — Enterprise Governance, Relay Proxy, DevTools & Scale (Next)
 
 - [ ] Custom RBAC policies, Teams, Mandatory Approval Workflows, SAML/SCIM & Self-Hosted OIDC
 - [ ] Flag Workflows, Release Pipelines & Release Plans
