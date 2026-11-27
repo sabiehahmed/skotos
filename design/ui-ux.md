@@ -1,28 +1,49 @@
-# UI & UX Specification
+# UI & UX Specification (Finalized Architecture)
 
-The Management Dashboard is where engineers and product managers inspect, configure, and safely roll out features across environments.
+## Strict Frontend Component Ownership ([ADR-0006](../architecture/adrs/0006-ui-component-library-css-modules.md))
 
-## Information Architecture
+The frontend is split into two strictly decoupled packages inside our `pnpm` workspace:
+
+1. **`packages/ui` (`@skotos/ui`) — Standalone UI Component Library**:
+   - Built with **React (latest)**, **TypeScript (latest)**, **Vite**, **Vitest**, **Radix UI accessible primitives**, and **CSS Modules (`.module.css`)** + CSS custom properties (**zero Tailwind**).
+   - Owns **100% of UI components**, design tokens (`tokens.css`), light/dark themes, layout shells, form controls, dialogs, tables, badges, rollout sliders, rule-builder widgets, diff viewers, charts, and component tests.
+   - Contains **zero** business-domain API calls or router coupling.
+2. **`apps/web` — Main Management Dashboard SPA**:
+   - Built with **React (latest)**, **TypeScript (latest)**, **Vite**, **Vitest**, TanStack Router/Query, and `@skotos/api-client`.
+   - **NEVER owns UI components**: imports all visual components exclusively from `@skotos/ui` and focuses purely on routing, auth session state, API queries/mutations, and domain page composition.
+   - Enforced by ESLint boundary rules (no `@radix-ui/*` imports, no Tailwind, no reusable UI primitives defined inside `apps/web`).
+
+## Phase 1 Core `@skotos/ui` Component Catalog
+
+| Category                       | Components Owned by `@skotos/ui`                                                                                                                                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Tokens & Layout**            | `ThemeProvider`, `AppShell`, `Sidebar`, `TopBar`, `PageHeader`, `EnvironmentBanner`, `Stack`, `Grid`, `SplitPane`, `Card`, `Separator`                             |
+| **Typography & Feedback**      | `Text`, `Heading`, `CodeBlock`, `Badge`, `StatusDot`, `Alert`, `ToastProvider`, `Skeleton`, `EmptyState`, `Spinner`                                                |
+| **Inputs & Controls**          | `Button`, `IconButton`, `Input`, `Textarea`, `Select`, `Combobox`, `Checkbox`, `Switch`, `ToggleGroup`, `Slider`, `TagInput`, `KeyValueEditor`                     |
+| **Overlays & Navigation**      | `Dialog`, `Drawer`, `Popover`, `DropdownMenu`, `Tooltip`, `Tabs`, `Breadcrumb`, `Pagination`, `CommandPalette`                                                     |
+| **Data & Flag Domain Widgets** | `DataTable`, `JsonEditor`, `DiffViewer`, `RuleBuilder` (clause rows, operator picker, value chips), `RolloutAllocator` (weighted percentage bars), `AuditTimeline` |
+
+## Information Architecture (`apps/web`)
 
 ```text
-Workspace / Project Switcher + Global Environment Selector
+Workspace / Project Switcher + Global Environment Selector (Color-Coded Banner)
 ├── Feature Flags
 │   ├── Flag List (search, tags, status filters, inline quick-toggle, last-evaluated badge)
 │   └── Flag Detail
-│       ├── Targeting (kill switch, prerequisites, individual targets, rule builder, fallthrough, off variation)
-│       ├── Variations (edit labels, values, descriptions)
-│       ├── Insights / Usage (evaluations over time, variation breakdown)
+│       ├── Targeting (kill switch, prerequisites, individual targets, RuleBuilder, fallthrough, off variation)
+│       ├── Test Context Simulator (live dry-run via /simulate showing variation + EvaluationReason)
+│       ├── Variations (manage typed values, names, descriptions)
+│       ├── Insights / Usage (variation split & evaluation volume)
 │       ├── Settings (client-side availability, tags, maintainer, archive/delete)
-│       └── History (flag-scoped audit diffs)
+│       └── History (version timeline with DiffViewer & one-click restore)
 ├── Segments
 │   ├── Segment List
 │   └── Segment Editor (included/excluded keys, dynamic rules, referencing flags)
-├── Contexts
-│   └── Discovered Contexts Directory (inspect which variation each flag serves to a specific user/org)
-├── Live Debugger
-│   └── Real-time evaluation event stream filterable by flag, context key, and variation
+├── Contexts & Live Debugger (Phase 3)
+├── Releases & Experiments (Phase 3–5)
+├── AI Configs & Observability (Phase 5–6)
 ├── Audit Log
-│   └── Filterable chronological timeline with human-readable before/after diffs
+│   └── Filterable chronological AuditTimeline with semantic patch diffs
 └── Settings
     ├── Projects & Environments (SDK keys, rotation, protection rules)
     ├── Team Members & Roles (RBAC)
@@ -30,16 +51,9 @@ Workspace / Project Switcher + Global Environment Selector
     └── Webhooks & Integrations
 ```
 
-## Critical UX Safeguards
+## Critical Operational Safeguards
 
-Feature flag mistakes in production can cause immediate outages. The UI must include deliberate safety friction where it matters:
-
-1. **Environment Color Coding**: Every environment has a high-contrast visual indicator (e.g., red/amber banner for `production`, green/blue for `dev`) visible across all flag pages.
-2. **Change Review Modal (Production Protection)**: For protected environments, saving targeting edits shows a clear human-readable diff summary (e.g., _"Rollout for Rule #2 changed from 10% -> 50%"_), requires an optional/mandatory change comment, and asks for explicit confirmation.
-3. **Interactive Rule Simulator ("Test Context")**: Embedded right inside the Flag Targeting page so users can test a sample JSON context against unsaved draft rules and see the exact matched variation and `EvaluationReason` before publishing.
-4. **Copy Settings Across Environments**: One-click workflow to compare and promote targeting rules from `staging` -> `production` with a visual diff preview.
-
-## Open Questions for Planning
-
-- Will the dashboard be a single-page app (e.g., React/Vite or Next.js) served alongside the API or deployed separately?
-- Do we want a CLI tool (`skotos-cli`) in Phase 1/2 alongside the Web UI for terminal-first workflows?
+1. **Environment Color Coding**: `EnvironmentBanner` renders a high-contrast accent bar driven by `--sk-env-accent` (e.g., crimson/amber for `production`, emerald/blue for `dev`) across all flag and segment screens.
+2. **Change Review Modal (Production Protection)**: Protected environments open a `Dialog` containing a human-readable `DiffViewer` of the semantic instructions, a change comment field (required when `requireComments = true`), and explicit confirmation before submitting `PATCH`.
+3. **Interactive Rule Simulator ("Test Context")**: Embedded in the Flag Targeting view; runs unsaved draft instructions against `POST .../simulate` (`crates/skotos-eval`) and displays the matched variation and exact `EvaluationReason` before publishing.
+4. **Copy / Promote Across Environments**: Compare and promote targeting configs from `staging` -> `production` with a visual diff preview.

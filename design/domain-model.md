@@ -1,4 +1,6 @@
-# Domain Model
+# Domain Model (Finalized Specification)
+
+Per [ADR-0002](../../architecture/adrs/0002-primary-datastore-and-schema.md), Skotos uses **PostgreSQL 16+** with a **hybrid relational + versioned `JSONB`** schema in `crates/skotos-storage` backed by strongly typed Rust domain structs in `crates/skotos-domain`.
 
 ## Core Entity Relationships
 
@@ -6,51 +8,51 @@
 erDiagram
     ORGANIZATION ||--o{ PROJECT : owns
     ORGANIZATION ||--o{ MEMBER : has
-    ORGANIZATION ||--o{ ACCESS_TOKEN : issues
+    ORGANIZATION ||--o{ TEAM : organizes
+    ORGANIZATION ||--o{ CUSTOM_ROLE : defines
+    ORGANIZATION ||--o{ API_TOKEN : issues
     PROJECT ||--o{ ENVIRONMENT : contains
     PROJECT ||--o{ FEATURE_FLAG : defines
+    ENVIRONMENT ||--o{ ENVIRONMENT_KEY : authenticates
     ENVIRONMENT ||--o{ FLAG_ENV_CONFIG : configures
     FEATURE_FLAG ||--o{ FLAG_ENV_CONFIG : "has per-env state"
+    FLAG_ENV_CONFIG ||--o{ FLAG_ENV_REVISION : "snapshots history"
     ENVIRONMENT ||--o{ SEGMENT : scopes
-    ENVIRONMENT ||--o{ AUDIT_LOG : records
-    FLAG_ENV_CONFIG ||--o{ TARGETING_RULE : evaluates
-    FLAG_ENV_CONFIG ||--o{ PREREQUISITE : requires
+    ENVIRONMENT ||--o{ APPROVAL_REQUEST : gates
+    ENVIRONMENT ||--o{ SCHEDULED_CHANGE : schedules
+    ORGANIZATION ||--o{ AUDIT_LOG : records
+    ORGANIZATION ||--o{ OUTBOX_EVENT : publishes
 ```
 
-## Key Entities
+## Storage Tables & Schema Split
 
-### 1. Organization, Project & Environment
+### 1. Relational Control Hierarchy
 
-- **Organization**: Top-level tenant (`id`, `slug`, `name`, `createdAt`).
-- **Project**: Scopes flag definitions (`id`, `orgId`, `key`, `name`, `defaultClientSideAvailability`).
-- **Environment**: Independent runtime stage (`id`, `projectId`, `key`, `name`, `color`, `sdkKeyHash`, `mobileKey`, `clientSideId`, `requireComments`, `confirmChanges`, `revision`).
-  - Each environment maintains a **monotonically increasing `revision`** (or per-flag/segment `version`) used to order streaming patches and prevent stale overwrites.
+- `organizations` (`id`, `slug`, `name`, `external_auth_org_id`, `plan_tier`, `created_at`)
+- `members` (`id`, `org_id`, `external_subject_id`, `email`, `display_name`, `role`, `created_at`)
+- `projects` (`id`, `org_id`, `key`, `name`, `default_client_side_availability`, `created_at`)
+- `environments` (`id`, `project_id`, `key`, `name`, `color`, `client_side_id`, `require_comments`, `confirm_changes`, `revision`, `created_at`)
+- `environment_keys` (`id`, `env_id`, `kind` [`sdk` | `mobile`], `key_prefix`, `key_hash`, `expires_at`, `created_at`)
+- `flags` (`id`, `project_id`, `key`, `name`, `description`, `kind` [`boolean` | `string` | `number` | `json`], `variations_jsonb`, `temporary`, `client_side_availability_jsonb`, `tags`, `maintainer_id`, `archived`, `created_at`)
 
-### 2. Feature Flag & Per-Environment Config
+### 2. Versioned Runtime Configs (`JSONB`)
 
-A flag's **definition** (key, variation type, variations) is shared at the Project level, while its **targeting state** is isolated per Environment:
+- `flag_env_configs`:
+  - Primary key: `(flag_id, env_id)`
+  - Columns: `version` (BIGINT, monotonic), `on` (BOOLEAN), `salt` (TEXT), `config_jsonb` (contains `offVariation`, `prerequisites`, `targets`, `rules`, `fallthrough`, `trackEvents`, `trackEventsFallthrough`, `debugEventsUntilDate`), `updated_at`.
+  - Variations keep stable UUIDs (`variation.id`) inside `flags.variations_jsonb` so renaming/reordering variations preserves historical analytics integrity.
+- `flag_env_revisions`:
+  - Append-only snapshot of every `(flag_id, env_id, version)` with `config_jsonb`, `instructions_jsonb`, `actor_id`, `comment`, `created_at` — enables instant one-click version restore and structured history diffs.
+- `segments`:
+  - `(id, env_id, key, name, kind [standard | big | synced], version, salt, segment_jsonb, updated_at)`.
 
-- **Flag Definition (Project-scoped)**:
-  - `key`: Unique immutable slug within the project (e.g., `new-checkout-flow`)
-  - `kind`: `boolean` | `string` | `number` | `json`
-  - `variations`: Ordered array of `{ id, value, name, description }`
-  - `temporary`: Boolean indicating short-lived release flag vs permanent ops toggle
-  - `clientSideAvailability`: `{ usingEnvironmentId, usingMobileKey }`
-  - `tags`, `maintainerId`, `archived`, `deprecated`
-- **Flag Environment Config (Environment-scoped)**:
-  - `on`: Boolean kill switch
-  - `version`: Monotonically increasing integer incremented on every mutation
-  - `salt`: Random string used in consistent percentage rollout hashing
-  - `offVariation`: Index into `variations` returned when `on == false` or prerequisite fails
-  - `prerequisites`: Ordered list of `{ flagKey, variationIndex }`
-  - `targets`: Per-variation explicit context key allowlists (`{ contextKind, values[], variationIndex }`)
-  - `rules`: Ordered list of `{ id, clauses[], variationOrRollout, trackEvents }`
-  - `fallthrough`: `{ variationIndex | rollout }`
-  - `trackEvents`, `trackEventsFallthrough`, `debugEventsUntilDate`
+### 3. Transactional Outbox, Audit & Scheduling
 
-### 3. Multi-Context Model
+- `audit_logs`: Partitioned by `created_at` (monthly); stores `org_id`, `project_id`, `env_id`, `resource_type`, `resource_key`, `actor_id`, `comment`, `instructions_jsonb`, `before_jsonb`, `after_jsonb`.
+- `outbox_events`: `(id, org_id, env_id, event_type, payload_jsonb, created_at, published_at)` — consumed atomically via `FOR UPDATE SKIP LOCKED` by the snapshot compiler & NATS publisher worker.
+- `scheduled_changes` & `approval_requests`: Store validated semantic instruction arrays (`instructions_jsonb`) so scheduled and approved edits execute through the exact same transactional patch engine.
 
-Following modern LaunchDarkly semantics, evaluation inputs are typed **Contexts** rather than flat user objects:
+## Canonical Multi-Context Model
 
 ```json
 {
@@ -71,14 +73,4 @@ Following modern LaunchDarkly semantics, evaluation inputs are typed **Contexts*
 }
 ```
 
-Single contexts omit `"kind": "multi"` and specify `"kind": "user"` (or any custom kind) directly at the top level.
-
-### 4. Segment
-
-- **Standard Segment**: Embedded in the environment ruleset (`included[]`, `excluded[]`, `rules[]`, `version`, `salt`).
-- **Big Segment (P1)**: For targeting lists with 100k+ keys; stores metadata in the main payload and checks membership out-of-band via Redis/persistent store so streaming payloads stay small.
-
-## Open Questions for Planning
-
-- Should `variations` be mutable in place (with stable `variationId` UUIDs) or append-only with soft-delete to preserve historical analytics integrity?
-- Should flag rules live as normalized relational tables, versioned JSONB documents in Postgres, or a hybrid? (Track in ADR-0002.)
+Single contexts specify `"kind": "user"` (or any custom kind) directly at the top level.

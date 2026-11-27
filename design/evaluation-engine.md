@@ -66,7 +66,7 @@ To ensure consistent assignment across restarts, processes, and SDK languages:
 
 Before implementing any second SDK or language port, maintain a language-agnostic `spec/evaluation-tests/` fixture suite (JSON files containing flags, segments, contexts, and expected `{ value, variationIndex, reason }`) executed in CI by every engine implementation.
 
-## Open Questions for Planning
+## Finalized Decisions ([ADR-0004](../architecture/adrs/0004-sdk-evaluation-engine.md))
 
-- Should we write one canonical evaluation core in Rust/WASM or Go and bind/port to other languages, or maintain small idiomatic pure-language engines validated by the golden test suite? (Track in ADR-0004.)
-- Should regex operator `matches` strictly enforce linear-time RE2 semantics to prevent ReDoS?
+- **Engine Strategy**: `crates/skotos-eval` is the canonical Rust reference implementation powering Control Plane simulation, Delivery Edge (`evalx`), Relay Proxy, and the Rust SDK. All other SDKs (Node/TS, Browser/React, Go, Python, etc.) ship as **pure idiomatic language engines** verified in CI against `spec/evaluation-tests/` so customers have zero native/WASM packaging friction.
+- **Regex Safety**: The `matches` operator strictly enforces linear-time RE2 semantics (via the Rust `regex` crate / Go `regexp` / safe JS pattern validation & length caps) to prevent ReDoS attacks.

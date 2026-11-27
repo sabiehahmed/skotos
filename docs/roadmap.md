@@ -1,43 +1,52 @@
 # Roadmap
 
-> **Note:** This is a high-level phase skeleton created during initial setup. We will refine tasks, timelines, and exact stack choices into an actionable implementation plan once core ADRs are finalized.
+All Phase 0 architectural decisions are finalized in [`architecture/adrs/`](../architecture/adrs/README.md) and expanded into engineering deliverables in [`implementation-plan.md`](implementation-plan.md).
 
-## Phase 0 — Planning & Architecture (Current)
+## Phase 0 — Planning & Architecture (Complete)
 
 - [x] Initialize `docs/`, `design/`, and `architecture/` workspace structure
-- [ ] Finalize core technical decisions (ADRs 0001–0005): language/runtime stack, databases, streaming transport, monorepo layout
-- [ ] Draft OpenAPI specifications for Control Plane, Delivery Plane, and Event Ingestion APIs
-- [ ] Define canonical JSON schema for flags, segments, contexts, and the golden evaluation test suite
-- [ ] Create detailed Phase 1 implementation plan
+- [x] Catalog full LaunchDarkly feature parity matrix & cost-effective architecture strategy ([`launchdarkly-feature-catalog.md`](launchdarkly-feature-catalog.md))
+- [x] Finalize ADRs 0001–0006 (Rust backend, React/Vite + standalone `@skotos/ui` CSS Modules, PostgreSQL hybrid schema + dual-path auth, NATS JetStream + R2 snapshots + Ping-to-Re-evaluate, Golden Test Suite SDKs, Phased Postgres -> ClickHouse telemetry)
+- [x] Author detailed phased implementation plan ([`implementation-plan.md`](implementation-plan.md))
 
-## Phase 1 — Control Plane & Evaluation Engine Core
+## Phase 1 — Core Control Plane, Evaluation Engine & Dashboard MVP (Next)
 
-- [ ] Provision local development stack (Docker Compose: primary DB, cache/broker)
-- [ ] Implement Organization, Project, Environment, and Flag CRUD APIs with transactional versioning and audit logs
-- [ ] Implement canonical Evaluation Engine and pass 100% of golden evaluation test cases
-- [ ] Build initial Management Dashboard (flag list, flag editor, targeting rule builder, environment switcher)
+- [ ] **1A**: Monorepo bootstrap (Cargo + pnpm workspaces, Docker Compose `postgres + nats + minio`, ESLint `@skotos/ui` boundary enforcement, CI)
+- [ ] **1B**: `crates/skotos-domain`, `crates/skotos-eval`, and `spec/evaluation-tests/` Golden Test Suite (100+ fixtures)
+- [ ] **1C**: `crates/skotos-storage` (migrations + transactional outbox/audit), `crates/skotos-auth` (SaaS external + self-hosted adapters), `services/control-api` (semantic patches + `/simulate` + `utoipa` OpenAPI -> `packages/api-client`)
+- [ ] **1D**: Standalone `@skotos/ui` library (Radix UI + `.module.css`, zero Tailwind, design tokens, Vitest coverage)
+- [ ] **1E**: `apps/web` Management Dashboard consuming `@skotos/ui` + `@skotos/api-client` exclusively
 
-## Phase 2 — Real-Time Delivery & First SDKs
+## Phase 2 — Real-Time Delivery Plane, Event Ingest & First SDK Suite
 
-- [ ] Build Flag Delivery service (snapshot cache, SSE stream fanout, ETag polling, client-side evaluation endpoint)
-- [ ] Connect Control Plane mutations to Delivery Plane via transactional outbox + pub/sub
-- [ ] Build first Server-Side SDK (streaming, local store, offline/bootstrap mode, golden test compliance)
-- [ ] Build first Client-Side / Browser SDK (React/JS)
+- [ ] Outbox -> R2/S3 pre-compressed snapshots -> NATS JetStream publisher
+- [ ] `services/delivery-edge` (Server SSE `put`/`patch`/`delete`, ETag polling, Client Ping-to-Re-evaluate SSE + `evalx`)
+- [ ] `services/event-ingest` (5s SDK summary rollups -> PostgreSQL counters)
+- [ ] Segments, Prerequisites, Flag Scheduling, Flag Triggers, Signed Webhooks
+- [ ] Launch SDKs + OpenFeature providers: TS/Node Server, Browser/React Client, Go Server, Rust Server
 
-## Phase 3 — Segments, Prerequisites & Governance
+## Phase 3 — Enterprise Governance, Relay Proxy, DevTools & Scale
 
-- [ ] Add reusable Segments (dynamic rules + big static segments) and Flag Prerequisites with cycle validation
-- [ ] Add RBAC, API access tokens, and environment protection settings
-- [ ] Add signed outbound Webhooks and Audit Log search/filtering UI
+- [ ] Custom RBAC policies, Teams, Mandatory Approval Workflows, SAML/SCIM & Self-Hosted OIDC
+- [ ] Flag Workflows, Release Pipelines & Release Plans
+- [ ] Big Segments (Roaring Bitmaps + R2/Redis), open-source `services/relay-proxy`, Edge SDKs, Live Debugger
+- [ ] `skotos-code-refs` CI scanner, `skotos-cli`, Terraform provider, Hosted/Local MCP Server, Slack/Jira/Datadog integrations
 
-## Phase 4 — Analytics, Telemetry & Relay Proxy
+## Phase 4 — ClickHouse Telemetry, Guarded Rollouts & Experimentation Core
 
-- [ ] Build Event Ingestion pipeline (batching, summary aggregation, variation usage counters, stale flag detection)
-- [ ] Add Live Flag Debugger UI
-- [ ] Build standalone Relay Proxy (in-memory & Redis stores)
+- [ ] ClickHouse `TelemetryStore` backend + Real-Time Data Export sinks
+- [ ] Guarded Rollouts (Release Guardian + auto-rollback + SRM checks), Adaptive Triggers, Engineering Insights
+- [ ] A/B/n Experimentation (Frequentist & Bayesian, Funnel/Metric Groups, Mutual Exclusion)
+- [ ] Flag-scoped Feature Monitoring, 2/4/6-Stage Migration Flags, Synced Segments, Python/Java/Mobile SDKs
 
-## Phase 5 — Enterprise Workflows & Experimentation
+## Phase 5 — Warehouse-Native, Full OTel Observability & AgentControl
 
-- [ ] Approval workflows, scheduled changes, and rollback triggers
-- [ ] Experimentation metrics and statistical analysis engine
-- [ ] Multi-region delivery hardening, load testing, and operational runbooks
+- [ ] Warehouse-Native Experimentation (Snowflake/BigQuery/Redshift/Databricks/Postgres), CUPED, Sequential Testing, Multi-Armed Bandits, Global Holdouts
+- [ ] Full OTel Logs, Distributed Traces, Error Monitoring, Ingestion Sampling Rules, Dashboards & Alerts
+- [ ] AgentControl / AI Configs (Completion & Agent modes, Prompt Snippets, Tools Library, Agent Graphs, BYOK Playground, Guardrails, LLM Observability)
+
+## Phase 6 — Session Replays, Online AI Evals & Autonomous Release Autopilot
+
+- [ ] `rrweb` Session Replays stored Zstd-compressed in zero-egress R2/S3
+- [ ] AI Datasets, Offline Batch Evals & Online LLM-as-a-Judge (BYOK) wired to Guardrails & Experiments
+- [ ] AI Release Autopilot GitHub App (risk classifier, auto-flagging, auto-cleanup, auto-fix) & Observability auto-remediation agent

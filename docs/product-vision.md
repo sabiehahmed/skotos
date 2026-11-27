@@ -31,8 +31,9 @@ Enable engineering and product teams to decouple **code deployment** from **feat
 6. **Self-Hostable Edge & Relay Proxy**
    - Optional Relay Proxy that sits inside customer VPCs to multiplex SDK connections and serve cached flag definitions during upstream outages.
 
-## Open Questions for Planning
+## Finalized Strategic Scope
 
-- Is Skotos targeting **multi-tenant SaaS**, **self-hosted open-source**, or **both** from day one?
-- Which initial SDK languages are highest priority for Phase 1 (e.g., TypeScript/Node.js, Go, React, Python, Java)?
-- Will experimentation (metrics + statistical significance engine) be part of v1 or deferred to a later milestone?
+- **Distribution**: **Multi-tenant Cloud SaaS first**, engineered with lean infrastructure so we also ship a clean **Docker Compose / Helm self-hosted edition** for enterprise VPC customers ([ADR-0001](../architecture/adrs/0001-tech-stack-and-monorepo.md)).
+- **Cost Advantage**: Full LaunchDarkly feature parity built on Rust, PostgreSQL, NATS JetStream, zero-egress R2/S3, and ClickHouse (Phase 4+) to undercut LaunchDarkly pricing by **5x–10x** ([LaunchDarkly Feature Catalog](launchdarkly-feature-catalog.md)).
+- **Initial SDK Launch Suite**: TypeScript/Node Server, Browser/React Client, Go Server, and Rust Server — each with first-class **OpenFeature** providers ([ADR-0004](../architecture/adrs/0004-sdk-evaluation-engine.md)).
+- **Experimentation & Observability**: Sequenced into Phases 4–6 behind clean `TelemetryStore` and Warehouse-Native interfaces ([ADR-0005](../architecture/adrs/0005-analytics-and-observability-storage.md)).

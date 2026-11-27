@@ -35,7 +35,8 @@ Skotos SDKs are designed around two core principles: **zero-latency local reads*
 - **Offline & Test Data Modes**: First-class in-memory mock data source (`TestData`) so customer unit/integration tests never hit the network.
 - **Flag Change Listeners**: Pub/sub hooks (`on('change:flag-key', callback)`) for reacting to live config changes.
 
-## Open Questions for Planning
+## Finalized Decisions ([ADR-0004](../architecture/adrs/0004-sdk-evaluation-engine.md))
 
-- Which exact SDKs will we build in Phase 2? (Recommended starter pair: **TypeScript/Node.js Server SDK** + **TypeScript/React Browser SDK**, plus **Go Server SDK** if the backend is in Go.)
-- Should we adopt **OpenFeature** provider compatibility alongside native Skotos SDK APIs?
+- **Phase 2 Launch SDKs**: `@skotos/node-server-sdk` (TS/Node Server), `@skotos/browser-sdk` + `@skotos/react-sdk` (Browser/React Client), `skotos-go-sdk` (Go Server), and `skotos-server-sdk` (Rust Server reusing `crates/skotos-eval`), all passing the canonical `spec/evaluation-tests/` suite.
+- **OpenFeature Compatibility**: Every Skotos SDK ships with an official **OpenFeature** provider from day one so teams can migrate away from LaunchDarkly with minimal application code changes.
+- **Client-Side Streaming**: Browser and mobile SDKs use **Ping-to-Re-evaluate** (`GET /stream/v1/eval/{clientSideId}` -> `GET`/`REPORT /sdk/v1/evalx/...`) per [ADR-0003](../architecture/adrs/0003-streaming-and-snapshot-delivery.md).
