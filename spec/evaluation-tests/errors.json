@@ -1,0 +1,166 @@
+{
+  "suite": "errors",
+  "kind": "evaluation",
+  "flags": {
+    "str-flag": {
+      "key": "str-flag",
+      "version": 1,
+      "on": true,
+      "salt": "e1",
+      "variations": ["hello", "world"],
+      "offVariation": 0,
+      "fallthrough": { "variation": 1 }
+    },
+    "bool-flag": {
+      "key": "bool-flag",
+      "version": 1,
+      "on": true,
+      "salt": "e2",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 0 }
+    },
+    "oob-fallthrough": {
+      "key": "oob-fallthrough",
+      "version": 1,
+      "on": true,
+      "salt": "e3",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 99 }
+    },
+    "oob-off-variation": {
+      "key": "oob-off-variation",
+      "version": 1,
+      "on": false,
+      "salt": "e4",
+      "variations": [true, false],
+      "offVariation": 5,
+      "fallthrough": { "variation": 0 }
+    },
+    "empty-rollout": {
+      "key": "empty-rollout",
+      "version": 1,
+      "on": true,
+      "salt": "e5",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "rollout": { "contextKind": "user", "variations": [] } }
+    },
+    "empty-fallthrough": {
+      "key": "empty-fallthrough",
+      "version": 1,
+      "on": true,
+      "salt": "e6",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": {}
+    }
+  },
+  "tests": [
+    {
+      "name": "missing flag returns defaultValue with FLAG_NOT_FOUND",
+      "flagKey": "nonexistent-flag",
+      "getter": "bool",
+      "defaultValue": true,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": true, "reason": { "kind": "ERROR", "errorKind": "FLAG_NOT_FOUND" } }
+    },
+    {
+      "name": "empty context key returns USER_NOT_SPECIFIED",
+      "flagKey": "bool-flag",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "USER_NOT_SPECIFIED" } }
+    },
+    {
+      "name": "reserved kind='kind' returns USER_NOT_SPECIFIED",
+      "flagKey": "bool-flag",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "kind", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "USER_NOT_SPECIFIED" } }
+    },
+    {
+      "name": "invalid characters in context kind returns USER_NOT_SPECIFIED",
+      "flagKey": "bool-flag",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "bad kind!", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "USER_NOT_SPECIFIED" } }
+    },
+    {
+      "name": "empty multi-context returns USER_NOT_SPECIFIED",
+      "flagKey": "bool-flag",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "multi" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "USER_NOT_SPECIFIED" } }
+    },
+    {
+      "name": "multi-context with one empty nested key returns USER_NOT_SPECIFIED",
+      "flagKey": "bool-flag",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "multi", "user": { "key": "ok" }, "organization": { "key": "" } },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "USER_NOT_SPECIFIED" } }
+    },
+    {
+      "name": "bool getter on string flag returns defaultValue with WRONG_TYPE",
+      "flagKey": "str-flag",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "WRONG_TYPE" } }
+    },
+    {
+      "name": "string getter on boolean flag returns defaultValue with WRONG_TYPE",
+      "flagKey": "bool-flag",
+      "getter": "string",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": "fallback", "reason": { "kind": "ERROR", "errorKind": "WRONG_TYPE" } }
+    },
+    {
+      "name": "number getter on string flag returns defaultValue with WRONG_TYPE",
+      "flagKey": "str-flag",
+      "getter": "number",
+      "defaultValue": 42,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": 42, "reason": { "kind": "ERROR", "errorKind": "WRONG_TYPE" } }
+    },
+    {
+      "name": "out-of-bounds fallthrough variation returns MALFORMED_FLAG",
+      "flagKey": "oob-fallthrough",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" } }
+    },
+    {
+      "name": "out-of-bounds offVariation returns MALFORMED_FLAG",
+      "flagKey": "oob-off-variation",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" } }
+    },
+    {
+      "name": "empty rollout variations returns MALFORMED_FLAG",
+      "flagKey": "empty-rollout",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" } }
+    },
+    {
+      "name": "empty fallthrough with neither variation nor rollout returns MALFORMED_FLAG",
+      "flagKey": "empty-fallthrough",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" } }
+    }
+  ]
+}

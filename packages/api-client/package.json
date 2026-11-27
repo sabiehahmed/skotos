@@ -11,12 +11,16 @@
     }
   },
   "scripts": {
-    "gen": "node -e \"import('node:fs').then((fs) => { const spec = '../../spec/openapi/control-api.json'; console.error(fs.existsSync(spec) ? '@skotos/api-client: OpenAPI TypeScript codegen is not yet wired (Milestone 1C / M4).' : '@skotos/api-client: spec/openapi/control-api.json not yet generated (Milestone 1C / M4).'); process.exit(2); })\"",
+    "gen": "openapi-typescript ../../spec/openapi/control-api.json -o src/schema.d.ts",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --maxWorkers=2"
   },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
   "devDependencies": {
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.9.3",
     "vite": "^8.4.0",
     "vitest": "^5.1.2"

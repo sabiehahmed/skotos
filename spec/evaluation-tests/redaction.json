@@ -1,0 +1,142 @@
+{
+  "suite": "redaction",
+  "kind": "redaction",
+  "tests": [
+    {
+      "name": "no private attributes leaves context intact and strips secondary",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "name": "Ada",
+        "email": "ada@example.com",
+        "_meta": { "secondary": "sec-1" }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": [] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "name": "Ada",
+        "email": "ada@example.com"
+      }
+    },
+    {
+      "name": "per-context privateAttributes strips top-level field and records redactedAttributes",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "email": "ada@example.com",
+        "plan": "pro",
+        "_meta": { "privateAttributes": ["email"] }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": [] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "plan": "pro",
+        "_meta": { "redactedAttributes": ["email"] }
+      }
+    },
+    {
+      "name": "nested JSON pointer privateAttributes strips only nested leaf field",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "address": { "street": "123 Main", "country": "US" },
+        "_meta": { "privateAttributes": ["/address/street"] }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": [] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "address": { "country": "US" },
+        "_meta": { "redactedAttributes": ["/address/street"] }
+      }
+    },
+    {
+      "name": "allAttributesPrivate redacts name and custom attributes but preserves kind, key, anonymous",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "name": "Ada",
+        "anonymous": true,
+        "email": "ada@example.com",
+        "plan": "pro"
+      },
+      "redactionConfig": { "allAttributesPrivate": true, "globalPrivateAttributes": [] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "anonymous": true,
+        "_meta": { "redactedAttributes": ["email", "name", "plan"] }
+      }
+    },
+    {
+      "name": "globalPrivateAttributes applies across all nested kinds in multi-context",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1", "email": "ada@example.com", "role": "admin" },
+        "organization": { "key": "org1", "email": "billing@org.io", "tier": "enterprise" }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": ["email"] },
+      "expected": {
+        "kind": "multi",
+        "user": {
+          "key": "u1",
+          "role": "admin",
+          "_meta": { "redactedAttributes": ["email"] }
+        },
+        "organization": {
+          "key": "org1",
+          "tier": "enterprise",
+          "_meta": { "redactedAttributes": ["email"] }
+        }
+      }
+    },
+    {
+      "name": "protected fields kind, key, and anonymous cannot be redacted",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "anonymous": true,
+        "_meta": { "privateAttributes": ["kind", "key", "anonymous"] }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": ["key"] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "anonymous": true
+      }
+    },
+    {
+      "name": "non-existent private attribute is not added to redactedAttributes",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "plan": "pro",
+        "_meta": { "privateAttributes": ["ssn"] }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": [] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "plan": "pro"
+      }
+    },
+    {
+      "name": "duplicate global and per-context private attributes are deduplicated and sorted",
+      "context": {
+        "kind": "user",
+        "key": "u1",
+        "email": "a@b.com",
+        "phone": "555-1234",
+        "_meta": { "privateAttributes": ["phone", "email"] }
+      },
+      "redactionConfig": { "allAttributesPrivate": false, "globalPrivateAttributes": ["email"] },
+      "expected": {
+        "kind": "user",
+        "key": "u1",
+        "_meta": { "redactedAttributes": ["email", "phone"] }
+      }
+    }
+  ]
+}

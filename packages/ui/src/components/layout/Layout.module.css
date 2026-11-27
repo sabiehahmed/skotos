@@ -1,0 +1,197 @@
+/* Layout & Shell CSS Module */
+
+.appShell {
+  display: grid;
+  grid-template-columns: var(--sk-sidebar-width) minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--sk-color-bg);
+  color: var(--sk-color-text);
+}
+
+.appShellNoSidebar {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--sk-color-surface);
+  border-right: 1px solid var(--sk-color-border);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+.sidebarHeader {
+  padding: var(--sk-space-4);
+  border-bottom: 1px solid var(--sk-color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+}
+
+.sidebarContent {
+  flex: 1;
+  padding: var(--sk-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-1);
+}
+
+.sidebarFooter {
+  padding: var(--sk-space-3);
+  border-top: 1px solid var(--sk-color-border);
+}
+
+.mainColumn {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topBar {
+  height: var(--sk-topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-4);
+  padding: 0 var(--sk-space-6);
+  background: var(--sk-color-surface);
+  border-bottom: 1px solid var(--sk-color-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--sk-z-sticky);
+}
+
+.topBarSection {
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-3);
+}
+
+.envBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-3);
+  padding: var(--sk-space-2) var(--sk-space-6);
+  background: var(--sk-env-accent-subtle);
+  border-bottom: 2px solid var(--sk-env-accent);
+  font-size: var(--sk-text-sm);
+  color: var(--sk-color-text);
+}
+
+.envBannerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+  font-weight: 600;
+}
+
+.envBannerSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--sk-radius-full);
+  background: var(--sk-env-accent);
+  flex-shrink: 0;
+}
+
+.mainContent {
+  flex: 1;
+  padding: var(--sk-space-6);
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sk-space-4);
+  margin-bottom: var(--sk-space-6);
+  flex-wrap: wrap;
+}
+
+.pageHeaderTitles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-1);
+}
+
+.pageHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+  flex-wrap: wrap;
+}
+
+.card {
+  background: var(--sk-color-surface);
+  border: 1px solid var(--sk-color-border);
+  border-radius: var(--sk-radius-lg);
+  box-shadow: var(--sk-shadow-xs);
+}
+
+.cardPadded {
+  padding: var(--sk-space-5);
+}
+
+.cardHeader {
+  padding: var(--sk-space-4) var(--sk-space-5);
+  border-bottom: 1px solid var(--sk-color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-3);
+}
+
+.cardBody {
+  padding: var(--sk-space-5);
+}
+
+.stack {
+  display: flex;
+}
+
+.stackVertical {
+  flex-direction: column;
+}
+
+.stackHorizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+}
+
+.splitPane {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: var(--sk-space-6);
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .splitPane {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.separator {
+  background-color: var(--sk-color-border);
+  flex-shrink: 0;
+}
+
+.separator[data-orientation="horizontal"] {
+  height: 1px;
+  width: 100%;
+}
+
+.separator[data-orientation="vertical"] {
+  width: 1px;
+  align-self: stretch;
+}

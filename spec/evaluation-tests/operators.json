@@ -1,0 +1,481 @@
+{
+  "suite": "operators",
+  "kind": "evaluation",
+  "flags": {
+    "op-in": {
+      "key": "op-in",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "val", "op": "in", "values": ["alpha", 42, true], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-in-negated": {
+      "key": "op-in-negated",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "country", "op": "in", "values": ["KP", "IR"], "negate": true }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-starts-with": {
+      "key": "op-starts-with",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "email", "op": "startsWith", "values": ["admin@", "ops@"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-ends-with": {
+      "key": "op-ends-with",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "email", "op": "endsWith", "values": ["@skotos.dev"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-contains": {
+      "key": "op-contains",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "ua", "op": "contains", "values": ["Firefox", "Safari"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-matches": {
+      "key": "op-matches",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "code", "op": "matches", "values": ["^SKU-[0-9]{4}$"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-lt": {
+      "key": "op-lt",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "age", "op": "lessThan", "values": [18], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-lte": {
+      "key": "op-lte",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "age", "op": "lessThanOrEqual", "values": [18], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-gt": {
+      "key": "op-gt",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "score", "op": "greaterThan", "values": [99.5], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-gte": {
+      "key": "op-gte",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "score", "op": "greaterThanOrEqual", "values": [99.5], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-before": {
+      "key": "op-before",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "joined", "op": "before", "values": ["2025-01-01T00:00:00Z"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-after": {
+      "key": "op-after",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "joined", "op": "after", "values": [1735689600000], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-semver-eq": {
+      "key": "op-semver-eq",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "ver", "op": "semverEqual", "values": ["1.2.0"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-semver-lt": {
+      "key": "op-semver-lt",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "ver", "op": "semverLessThan", "values": ["2.0.0"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-semver-gt": {
+      "key": "op-semver-gt",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "ver", "op": "semverGreaterThan", "values": ["1.5"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-pointer": {
+      "key": "op-pointer",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "/address/country", "op": "in", "values": ["DE"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-pointer-escaped": {
+      "key": "op-pointer-escaped",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "/a~1b/c~0d/e~01f", "op": "in", "values": ["ok"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-builtin-name": {
+      "key": "op-builtin-name",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "name", "op": "startsWith", "values": ["Ada"], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-builtin-anonymous": {
+      "key": "op-builtin-anonymous",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "anonymous", "op": "in", "values": [true], "negate": false }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "op-meta-blocked": {
+      "key": "op-meta-blocked",
+      "version": 1,
+      "on": true,
+      "salt": "s",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [{ "id": "r1", "clauses": [{ "contextKind": "user", "attribute": "/_meta/secondary", "op": "in", "values": ["sec"], "negate": true }], "variation": 1 }],
+      "fallthrough": { "variation": 0 }
+    }
+  },
+  "tests": [
+    {
+      "name": "in matches string",
+      "flagKey": "op-in",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "val": "alpha" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "in matches integer and float numeric equality (42.0 == 42)",
+      "flagKey": "op-in",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "val": 42.0 },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "in does not coerce string '42' to number 42",
+      "flagKey": "op-in",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "val": "42" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "in matches boolean true",
+      "flagKey": "op-in",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "val": true },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "in matches array attribute if any element matches (array OR)",
+      "flagKey": "op-in",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "val": ["zeta", "alpha"] },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "negated in matches present non-listed value",
+      "flagKey": "op-in-negated",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "country": "US" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "negated in rejects listed value",
+      "flagKey": "op-in-negated",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "country": "KP" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "missing attribute returns false WITHOUT applying negate",
+      "flagKey": "op-in-negated",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "null attribute returns false WITHOUT applying negate",
+      "flagKey": "op-in-negated",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "country": null },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "empty array attribute returns false WITHOUT applying negate",
+      "flagKey": "op-in-negated",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "country": [] },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "startsWith matches prefix",
+      "flagKey": "op-starts-with",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "email": "ops@company.io" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "startsWith rejects non-string attribute",
+      "flagKey": "op-starts-with",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "email": 12345 },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "endsWith matches suffix",
+      "flagKey": "op-ends-with",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "email": "dev@skotos.dev" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "endsWith fails on wrong suffix",
+      "flagKey": "op-ends-with",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "email": "dev@other.io" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "contains matches substring",
+      "flagKey": "op-contains",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ua": "Mozilla/5.0 Firefox/130" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "contains fails when absent",
+      "flagKey": "op-contains",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ua": "Chrome/130" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "matches linear-time regex passes",
+      "flagKey": "op-matches",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "code": "SKU-0492" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "matches regex fails non-matching string",
+      "flagKey": "op-matches",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "code": "SKU-42" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "lessThan passes strictly smaller number",
+      "flagKey": "op-lt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "age": 17 },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "lessThan fails equal number",
+      "flagKey": "op-lt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "age": 18 },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "lessThanOrEqual passes equal number",
+      "flagKey": "op-lte",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "age": 18 },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "greaterThan passes strictly greater float",
+      "flagKey": "op-gt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "score": 99.6 },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "greaterThan fails equal float",
+      "flagKey": "op-gt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "score": 99.5 },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "greaterThanOrEqual passes equal float",
+      "flagKey": "op-gte",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "score": 99.5 },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "before compares RFC 3339 timestamps",
+      "flagKey": "op-before",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "joined": "2024-12-31T23:59:59Z" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "before compares numeric epoch ms against RFC 3339",
+      "flagKey": "op-before",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "joined": 1735689599999 },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "before rejects exact equal timestamp",
+      "flagKey": "op-before",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "joined": "2025-01-01T00:00:00Z" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "after compares RFC 3339 timezone offset against epoch ms",
+      "flagKey": "op-after",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "joined": "2025-01-01T02:00:00+01:00" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "semverEqual matches 2-component shorthand (1.2 == 1.2.0)",
+      "flagKey": "op-semver-eq",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ver": "1.2" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "semverEqual ignores build metadata (1.2.0+build.42 == 1.2.0)",
+      "flagKey": "op-semver-eq",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ver": "1.2.0+build.42" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "semverEqual rejects leading v prefix (v1.2.0)",
+      "flagKey": "op-semver-eq",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ver": "v1.2.0" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "semverLessThan ranks prerelease lower than release (2.0.0-alpha.1 < 2.0.0)",
+      "flagKey": "op-semver-lt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ver": "2.0.0-alpha.1" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "semverLessThan handles 1-component shorthand (1 < 2.0.0)",
+      "flagKey": "op-semver-lt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ver": "1" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "semverGreaterThan compares against 2-component target (1.5.1 > 1.5)",
+      "flagKey": "op-semver-gt",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "ver": "1.5.1" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "RFC 6901 JSON Pointer resolves nested object attribute",
+      "flagKey": "op-pointer",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "address": { "country": "DE" } },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "RFC 6901 JSON Pointer unescapes ~1, ~0, and ~01 in exact order",
+      "flagKey": "op-pointer-escaped",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "a/b": { "c~d": { "e~1f": "ok" } } },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "built-in name attribute is targetable",
+      "flagKey": "op-builtin-name",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "name": "Ada Lovelace" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "built-in anonymous attribute is targetable",
+      "flagKey": "op-builtin-anonymous",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "anonymous": true },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r1" } }
+    },
+    {
+      "name": "reserved _meta path is blocked even when negate is true",
+      "flagKey": "op-meta-blocked",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "_meta": { "secondary": "other" } },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    }
+  ]
+}

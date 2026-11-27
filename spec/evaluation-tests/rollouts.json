@@ -1,0 +1,321 @@
+{
+  "suite": "rollouts",
+  "kind": "evaluation",
+  "flags": {
+    "rollout-boundary-below": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["var-a", "var-b"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "variations": [
+            { "variation": 0, "weight": 75425 },
+            { "variation": 1, "weight": 24575 }
+          ]
+        }
+      }
+    },
+    "rollout-boundary-above": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["var-a", "var-b"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "variations": [
+            { "variation": 0, "weight": 75426 },
+            { "variation": 1, "weight": 24574 }
+          ]
+        }
+      }
+    },
+    "rollout-three-way": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["low", "mid", "high"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "variations": [
+            { "variation": 0, "weight": 50000 },
+            { "variation": 1, "weight": 30000 },
+            { "variation": 2, "weight": 20000 }
+          ]
+        }
+      }
+    },
+    "rollout-bucket-by-int": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["first", "second"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "bucketBy": "accountNum",
+          "variations": [
+            { "variation": 0, "weight": 10000 },
+            { "variation": 1, "weight": 90000 }
+          ]
+        }
+      }
+    },
+    "rollout-bucket-by-org": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["first", "second"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "organization",
+          "variations": [
+            { "variation": 0, "weight": 85000 },
+            { "variation": 1, "weight": 15000 }
+          ]
+        }
+      }
+    },
+    "rollout-seed-experiment": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["control", "treatment", "untracked-var"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "seed": 42,
+          "kind": "experiment",
+          "variations": [
+            { "variation": 0, "weight": 30000, "untracked": false },
+            { "variation": 1, "weight": 40000, "untracked": false },
+            { "variation": 2, "weight": 30000, "untracked": true }
+          ]
+        }
+      }
+    },
+    "rollout-rule-experiment": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["control", "treatment"],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "exp-rule",
+          "clauses": [
+            { "contextKind": "user", "attribute": "beta", "op": "in", "values": [true], "negate": false }
+          ],
+          "rollout": {
+            "contextKind": "user",
+            "seed": 42,
+            "kind": "experiment",
+            "variations": [
+              { "variation": 0, "weight": 30000, "untracked": false },
+              { "variation": 1, "weight": 70000, "untracked": false }
+            ]
+          }
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "rollout-zero-first-weight": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["zero-wt", "nonzero-wt"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "organization",
+          "kind": "experiment",
+          "variations": [
+            { "variation": 0, "weight": 0 },
+            { "variation": 1, "weight": 100000 }
+          ]
+        }
+      }
+    },
+    "rollout-all-zero-weights": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["v0", "v1"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "variations": [
+            { "variation": 0, "weight": 0 },
+            { "variation": 1, "weight": 0 }
+          ]
+        }
+      }
+    },
+    "rollout-partial-sum": {
+      "key": "rollout-flag",
+      "version": 1,
+      "on": true,
+      "salt": "salt-1",
+      "variations": ["v0", "v1"],
+      "offVariation": 0,
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "user",
+          "variations": [
+            { "variation": 0, "weight": 10000 },
+            { "variation": 1, "weight": 20000 }
+          ]
+        }
+      }
+    }
+  },
+  "tests": [
+    {
+      "name": "exact SHA-1 bucket 75425 falls into second variation when weight0 == 75425",
+      "flagKey": "rollout-boundary-below",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "var-b", "variationIndex": 1, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "exact SHA-1 bucket 75425 falls into first variation when weight0 == 75426",
+      "flagKey": "rollout-boundary-above",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "var-a", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "secondary attribute shifts bucket from 75425 to 33438",
+      "flagKey": "rollout-three-way",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a", "_meta": { "secondary": "sec-1" } },
+      "expected": { "value": "low", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "three-way rollout bucket 75425 lands in mid bucket [50000, 80000)",
+      "flagKey": "rollout-three-way",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "mid", "variationIndex": 1, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "three-way rollout bucket 89158 lands in high bucket [80000, 100000)",
+      "flagKey": "rollout-three-way",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-c" },
+      "expected": { "value": "high", "variationIndex": 2, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "integer bucketBy attribute (12345 -> bucket 9161 < 10000) selects first variation",
+      "flagKey": "rollout-bucket-by-int",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a", "accountNum": 12345 },
+      "expected": { "value": "first", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "unhashable float bucketBy falls back to bucket 0",
+      "flagKey": "rollout-bucket-by-int",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a", "accountNum": 12.34 },
+      "expected": { "value": "first", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "unhashable bool bucketBy falls back to bucket 0",
+      "flagKey": "rollout-bucket-by-int",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a", "accountNum": true },
+      "expected": { "value": "first", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "missing bucketBy attribute falls back to bucket 0",
+      "flagKey": "rollout-bucket-by-int",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "first", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "organization rollout uses org-1 (bucket 85500 >= 85000 -> second)",
+      "flagKey": "rollout-bucket-by-org",
+      "defaultValue": "d",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "user-a" },
+        "organization": { "key": "org-1" }
+      },
+      "expected": { "value": "second", "variationIndex": 1, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "experiment rollout with seed 42 (user-b -> bucket 26390) sets inExperiment=true",
+      "flagKey": "rollout-seed-experiment",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-b" },
+      "expected": {
+        "value": "control",
+        "variationIndex": 0,
+        "reason": { "kind": "FALLTHROUGH", "inExperiment": true }
+      }
+    },
+    {
+      "name": "experiment rollout with seed 42 (user-a -> bucket 68715) lands in treatment with inExperiment=true",
+      "flagKey": "rollout-seed-experiment",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": {
+        "value": "treatment",
+        "variationIndex": 1,
+        "reason": { "kind": "FALLTHROUGH", "inExperiment": true }
+      }
+    },
+    {
+      "name": "experiment rollout inside rule sets ruleIndex, ruleId, and inExperiment=true",
+      "flagKey": "rollout-rule-experiment",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a", "beta": true },
+      "expected": {
+        "value": "treatment",
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "exp-rule", "inExperiment": true }
+      }
+    },
+    {
+      "name": "missing contextKind in experiment rollout falls back to bucket 0 (first weight>0) with inExperiment=false",
+      "flagKey": "rollout-zero-first-weight",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "nonzero-wt", "variationIndex": 1, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "all-zero rollout weights fall back to first variation",
+      "flagKey": "rollout-all-zero-weights",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "v0", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "partial rollout weight sum (< 100000) falls back to last variation for high bucket",
+      "flagKey": "rollout-partial-sum",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "user-a" },
+      "expected": { "value": "v1", "variationIndex": 1, "reason": { "kind": "FALLTHROUGH" } }
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "suite": "multi-context",
+  "kind": "evaluation",
+  "flags": {
+    "multi-cross-kind": {
+      "key": "multi-cross-kind",
+      "version": 1,
+      "on": true,
+      "salt": "mc1",
+      "variations": ["default", "org-targeted", "user-and-org", "device-mobile"],
+      "offVariation": 0,
+      "targets": [
+        { "contextKind": "organization", "values": ["org-vip"], "variation": 1 }
+      ],
+      "rules": [
+        {
+          "id": "r-user-org",
+          "clauses": [
+            { "contextKind": "user", "attribute": "role", "op": "in", "values": ["admin"], "negate": false },
+            { "contextKind": "organization", "attribute": "plan", "op": "in", "values": ["enterprise"], "negate": false }
+          ],
+          "variation": 2
+        },
+        {
+          "id": "r-device",
+          "clauses": [
+            { "contextKind": "device", "attribute": "/os/family", "op": "in", "values": ["iOS", "Android"], "negate": false },
+            { "contextKind": "device", "attribute": "appVersion", "op": "semverGreaterThan", "values": ["3.0"], "negate": false }
+          ],
+          "variation": 3
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "custom-kind-flag": {
+      "key": "custom-kind-flag",
+      "version": 1,
+      "on": true,
+      "salt": "mc2",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-service",
+          "clauses": [
+            { "contextKind": "service.region-1", "attribute": "tier", "op": "in", "values": ["canary"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "multi-negated-missing-kind": {
+      "key": "multi-negated-missing-kind",
+      "version": 1,
+      "on": true,
+      "salt": "mc3",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-neg",
+          "clauses": [
+            { "contextKind": "organization", "attribute": "tier", "op": "in", "values": ["banned"], "negate": true }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "kind-attribute-match": {
+      "key": "kind-attribute-match",
+      "version": 1,
+      "on": true,
+      "salt": "mc4",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-kind",
+          "clauses": [
+            { "contextKind": "device", "attribute": "kind", "op": "in", "values": ["device"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    }
+  },
+  "tests": [
+    {
+      "name": "organization individual target matches inside multi-context",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1", "role": "admin" },
+        "organization": { "key": "org-vip", "plan": "enterprise" }
+      },
+      "expected": { "value": "org-targeted", "variationIndex": 1, "reason": { "kind": "TARGET_MATCH" } }
+    },
+    {
+      "name": "cross-kind AND rule matches when both user and organization satisfy clauses",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1", "role": "admin" },
+        "organization": { "key": "org-2", "plan": "enterprise" }
+      },
+      "expected": {
+        "value": "user-and-org",
+        "variationIndex": 2,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-user-org" }
+      }
+    },
+    {
+      "name": "cross-kind AND rule fails when organization clause mismatches",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1", "role": "admin" },
+        "organization": { "key": "org-2", "plan": "starter" }
+      },
+      "expected": { "value": "default", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "device nested JSON pointer and semver clauses match in multi-context",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1" },
+        "device": { "key": "dev-1", "os": { "family": "iOS" }, "appVersion": "3.2.1" }
+      },
+      "expected": {
+        "value": "device-mobile",
+        "variationIndex": 3,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 1, "ruleId": "r-device" }
+      }
+    },
+    {
+      "name": "device rule fails when appVersion is not greater than 3.0",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1" },
+        "device": { "key": "dev-1", "os": { "family": "Android" }, "appVersion": "3.0.0" }
+      },
+      "expected": { "value": "default", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "single organization context matches organization target directly",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": { "kind": "organization", "key": "org-vip" },
+      "expected": { "value": "org-targeted", "variationIndex": 1, "reason": { "kind": "TARGET_MATCH" } }
+    },
+    {
+      "name": "custom context kind with dot and hyphen matches rule",
+      "flagKey": "custom-kind-flag",
+      "defaultValue": false,
+      "context": { "kind": "service.region-1", "key": "svc-9", "tier": "canary" },
+      "expected": {
+        "value": true,
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-service" }
+      }
+    },
+    {
+      "name": "missing contextKind in negated clause returns false WITHOUT applying negate",
+      "flagKey": "multi-negated-missing-kind",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1", "tier": "pro" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "present organization kind with non-banned tier passes negated clause",
+      "flagKey": "multi-negated-missing-kind",
+      "defaultValue": false,
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1" },
+        "organization": { "key": "org-9", "tier": "pro" }
+      },
+      "expected": {
+        "value": true,
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-neg" }
+      }
+    },
+    {
+      "name": "built-in kind attribute matches device context inside multi-context",
+      "flagKey": "kind-attribute-match",
+      "defaultValue": false,
+      "context": {
+        "kind": "multi",
+        "user": { "key": "u1" },
+        "device": { "key": "d1" }
+      },
+      "expected": {
+        "value": true,
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-kind" }
+      }
+    },
+    {
+      "name": "built-in kind attribute does not match when device kind is absent",
+      "flagKey": "kind-attribute-match",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "legacy single context without kind defaults to user kind",
+      "flagKey": "multi-cross-kind",
+      "defaultValue": "d",
+      "context": { "key": "u1" },
+      "expected": { "value": "default", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    }
+  ]
+}

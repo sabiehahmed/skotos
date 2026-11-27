@@ -1,0 +1,262 @@
+{
+  "suite": "basic",
+  "kind": "evaluation",
+  "flags": {
+    "bool-off": {
+      "key": "bool-off",
+      "version": 1,
+      "on": false,
+      "salt": "s1",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 0 }
+    },
+    "bool-off-no-off-var": {
+      "key": "bool-off-no-off-var",
+      "version": 1,
+      "on": false,
+      "salt": "s1",
+      "variations": [true, false],
+      "fallthrough": { "variation": 0 }
+    },
+    "bool-on-fallthrough": {
+      "key": "bool-on-fallthrough",
+      "version": 2,
+      "on": true,
+      "salt": "s2",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 0 }
+    },
+    "string-multivariate": {
+      "key": "string-multivariate",
+      "version": 3,
+      "on": true,
+      "salt": "s3",
+      "variations": ["control", "variant-a", "variant-b"],
+      "offVariation": 0,
+      "targets": [
+        { "contextKind": "user", "values": ["vip-1", "vip-2"], "variation": 2 }
+      ],
+      "rules": [
+        {
+          "id": "rule-beta",
+          "clauses": [
+            { "contextKind": "user", "attribute": "beta", "op": "in", "values": [true], "negate": false }
+          ],
+          "variation": 1
+        },
+        {
+          "id": "rule-pro",
+          "clauses": [
+            { "contextKind": "user", "attribute": "plan", "op": "in", "values": ["pro"], "negate": false }
+          ],
+          "variation": 2
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "number-flag": {
+      "key": "number-flag",
+      "version": 1,
+      "on": true,
+      "salt": "s4",
+      "variations": [10, 25.5, 100],
+      "offVariation": 0,
+      "targets": [
+        { "contextKind": "user", "values": ["fast"], "variation": 2 }
+      ],
+      "fallthrough": { "variation": 1 }
+    },
+    "json-flag": {
+      "key": "json-flag",
+      "version": 1,
+      "on": true,
+      "salt": "s5",
+      "variations": [
+        { "theme": "classic", "limit": 5 },
+        { "theme": "modern", "limit": 50 }
+      ],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-json",
+          "clauses": [
+            { "contextKind": "user", "attribute": "tier", "op": "in", "values": ["enterprise"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "multi-clause-and": {
+      "key": "multi-clause-and",
+      "version": 1,
+      "on": true,
+      "salt": "s6",
+      "variations": ["nope", "matched"],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-and",
+          "clauses": [
+            { "contextKind": "user", "attribute": "country", "op": "in", "values": ["US"], "negate": false },
+            { "contextKind": "user", "attribute": "plan", "op": "in", "values": ["pro", "enterprise"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "empty-clauses-rule": {
+      "key": "empty-clauses-rule",
+      "version": 1,
+      "on": true,
+      "salt": "s7",
+      "variations": ["a", "b"],
+      "offVariation": 0,
+      "rules": [
+        { "id": "r-empty", "clauses": [], "variation": 1 }
+      ],
+      "fallthrough": { "variation": 0 }
+    }
+  },
+  "tests": [
+    {
+      "name": "off flag returns offVariation with OFF reason",
+      "flagKey": "bool-off",
+      "getter": "bool",
+      "defaultValue": true,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "variationIndex": 1, "reason": { "kind": "OFF" } }
+    },
+    {
+      "name": "off flag with no offVariation returns defaultValue and null variationIndex",
+      "flagKey": "bool-off-no-off-var",
+      "getter": "bool",
+      "defaultValue": true,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": true, "reason": { "kind": "OFF" } }
+    },
+    {
+      "name": "on flag with no rules returns fallthrough",
+      "flagKey": "bool-on-fallthrough",
+      "getter": "bool",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": true, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "individual target takes precedence over rules",
+      "flagKey": "string-multivariate",
+      "getter": "string",
+      "defaultValue": "default",
+      "context": { "kind": "user", "key": "vip-1", "beta": true },
+      "expected": { "value": "variant-b", "variationIndex": 2, "reason": { "kind": "TARGET_MATCH" } }
+    },
+    {
+      "name": "first matching rule wins over later matching rule",
+      "flagKey": "string-multivariate",
+      "getter": "string",
+      "defaultValue": "default",
+      "context": { "kind": "user", "key": "u2", "beta": true, "plan": "pro" },
+      "expected": {
+        "value": "variant-a",
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "rule-beta" }
+      }
+    },
+    {
+      "name": "second rule matches when first rule fails",
+      "flagKey": "string-multivariate",
+      "getter": "string",
+      "defaultValue": "default",
+      "context": { "kind": "user", "key": "u3", "beta": false, "plan": "pro" },
+      "expected": {
+        "value": "variant-b",
+        "variationIndex": 2,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 1, "ruleId": "rule-pro" }
+      }
+    },
+    {
+      "name": "non-matching user falls through to default variation",
+      "flagKey": "string-multivariate",
+      "getter": "string",
+      "defaultValue": "default",
+      "context": { "kind": "user", "key": "u4", "plan": "free" },
+      "expected": { "value": "control", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "number flag returns float fallthrough",
+      "flagKey": "number-flag",
+      "getter": "number",
+      "defaultValue": 0,
+      "context": { "kind": "user", "key": "regular" },
+      "expected": { "value": 25.5, "variationIndex": 1, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "number flag returns targeted integer",
+      "flagKey": "number-flag",
+      "getter": "number",
+      "defaultValue": 0,
+      "context": { "kind": "user", "key": "fast" },
+      "expected": { "value": 100, "variationIndex": 2, "reason": { "kind": "TARGET_MATCH" } }
+    },
+    {
+      "name": "json flag returns matched object variation",
+      "flagKey": "json-flag",
+      "getter": "json",
+      "defaultValue": {},
+      "context": { "kind": "user", "key": "u5", "tier": "enterprise" },
+      "expected": {
+        "value": { "theme": "modern", "limit": 50 },
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-json" }
+      }
+    },
+    {
+      "name": "json flag falls through to object variation",
+      "flagKey": "json-flag",
+      "getter": "json",
+      "defaultValue": {},
+      "context": { "kind": "user", "key": "u6", "tier": "starter" },
+      "expected": {
+        "value": { "theme": "classic", "limit": 5 },
+        "variationIndex": 0,
+        "reason": { "kind": "FALLTHROUGH" }
+      }
+    },
+    {
+      "name": "multi-clause rule requires all clauses to match (AND passes)",
+      "flagKey": "multi-clause-and",
+      "getter": "string",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "u7", "country": "US", "plan": "enterprise" },
+      "expected": {
+        "value": "matched",
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-and" }
+      }
+    },
+    {
+      "name": "multi-clause rule fails when one clause does not match",
+      "flagKey": "multi-clause-and",
+      "getter": "string",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "u8", "country": "CA", "plan": "enterprise" },
+      "expected": { "value": "nope", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "rule with empty clauses matches vacuously",
+      "flagKey": "empty-clauses-rule",
+      "getter": "string",
+      "defaultValue": "d",
+      "context": { "kind": "user", "key": "u9" },
+      "expected": {
+        "value": "b",
+        "variationIndex": 1,
+        "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-empty" }
+      }
+    }
+  ]
+}

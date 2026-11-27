@@ -1,0 +1,214 @@
+/* Data & Feature Flag Domain Widgets CSS Module */
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--sk-color-border);
+  border-radius: var(--sk-radius-lg);
+  background: var(--sk-color-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--sk-text-sm);
+}
+
+.table th {
+  text-align: left;
+  padding: var(--sk-space-3) var(--sk-space-4);
+  font-size: var(--sk-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sk-color-text-muted);
+  background: var(--sk-color-surface-subtle);
+  border-bottom: 1px solid var(--sk-color-border);
+}
+
+.table td {
+  padding: var(--sk-space-3) var(--sk-space-4);
+  border-bottom: 1px solid var(--sk-color-border);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.tableRowClickable {
+  cursor: pointer;
+}
+
+.tableRowClickable:hover td {
+  background: var(--sk-color-surface-hover);
+}
+
+/* JsonEditor */
+.jsonEditorWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jsonStatus {
+  font-size: var(--sk-text-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jsonValid {
+  color: var(--sk-color-success);
+}
+
+.jsonInvalid {
+  color: var(--sk-color-danger);
+}
+
+/* DiffViewer */
+.diffList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-2);
+}
+
+.diffItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+  padding: var(--sk-space-2) var(--sk-space-3);
+  border-radius: var(--sk-radius-md);
+  border: 1px solid var(--sk-color-border);
+  background: var(--sk-color-surface-subtle);
+  font-size: var(--sk-text-sm);
+}
+
+.diffJsonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sk-space-3);
+}
+
+@media (max-width: 720px) {
+  .diffJsonGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* RolloutAllocator */
+.rolloutWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-3);
+  padding: var(--sk-space-3);
+  border: 1px solid var(--sk-color-border);
+  border-radius: var(--sk-radius-md);
+  background: var(--sk-color-surface-subtle);
+}
+
+.rolloutBar {
+  display: flex;
+  height: 10px;
+  border-radius: var(--sk-radius-full);
+  overflow: hidden;
+  background: var(--sk-color-border);
+}
+
+.rolloutRow {
+  display: grid;
+  grid-template-columns: 14px minmax(110px, 1fr) 100px 64px;
+  gap: var(--sk-space-2);
+  align-items: center;
+}
+
+.rolloutSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--sk-radius-full);
+}
+
+.rolloutTotal {
+  font-size: var(--sk-text-xs);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* RuleBuilder */
+.ruleList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-4);
+}
+
+.ruleCard {
+  border: 1px solid var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-md);
+  background: var(--sk-color-surface);
+  overflow: hidden;
+}
+
+.ruleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-2);
+  padding: var(--sk-space-2) var(--sk-space-3);
+  background: var(--sk-color-surface-subtle);
+  border-bottom: 1px solid var(--sk-color-border);
+}
+
+.ruleBody {
+  padding: var(--sk-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-3);
+}
+
+.clauseRow {
+  display: grid;
+  grid-template-columns: 110px minmax(120px, 1fr) 160px minmax(140px, 1.3fr) auto auto;
+  gap: var(--sk-space-2);
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .clauseRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ruleServeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-3);
+  flex-wrap: wrap;
+  padding-top: var(--sk-space-2);
+  border-top: 1px dashed var(--sk-color-border);
+}
+
+/* AuditTimeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-3);
+}
+
+.timelineItem {
+  border: 1px solid var(--sk-color-border);
+  border-radius: var(--sk-radius-md);
+  background: var(--sk-color-surface);
+  padding: var(--sk-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-2);
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-2);
+  flex-wrap: wrap;
+}

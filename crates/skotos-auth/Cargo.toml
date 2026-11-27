@@ -1,6 +1,6 @@
 [package]
 name = "skotos-auth"
-description = "Pluggable dual-path identity providers, API tokens, and RBAC authorization"
+description = "Pluggable dual-path authentication (Cloud SaaS OIDC & Self-Hosted), API tokens, and RBAC"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,7 +8,24 @@ publish.workspace = true
 repository.workspace = true
 
 [dependencies]
+argon2.workspace = true
+async-trait.workspace = true
+base64.workspace = true
+chrono.workspace = true
+hex.workspace = true
+hmac.workspace = true
+jsonwebtoken.workspace = true
+rand.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
 skotos-domain.workspace = true
+skotos-storage.workspace = true
+subtle.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true

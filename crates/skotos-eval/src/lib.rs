@@ -1,6 +1,24 @@
 //! Canonical pure synchronous Skotos feature flag evaluation engine.
 //!
-//! Full evaluation pipeline and golden suite are implemented in Milestone 1B (M2).
+//! Produces deterministic evaluations verified against `spec/evaluation-tests/`
+//! and powers Control Plane simulation, Delivery Edge `evalx`, Relay Proxy, and
+//! the Rust Server SDK.
+
+pub mod bucketing;
+pub mod evaluator;
+pub mod operators;
+pub mod redaction;
+pub mod segment;
+pub mod store;
+
+pub use bucketing::{
+    build_hash_input, evaluate_rollout, extract_bucket_value, hash_to_bucket, RolloutResult,
+    BUCKET_SCALE,
+};
+pub use evaluator::{bool_variation, evaluate, json_variation, number_variation, string_variation};
+pub use operators::parse_semver_relaxed;
+pub use redaction::{redact_context, RedactionConfig};
+pub use store::{EvalStore, InMemoryEvalStore};
 
 /// Canonical crate identifier for workspace wiring verification.
 pub const CRATE_NAME: &str = "skotos-eval";

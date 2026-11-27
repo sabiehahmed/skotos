@@ -1,6 +1,32 @@
-//! Core Skotos domain entities, validation, and semantic flag patch logic.
-//!
-//! Full domain models are implemented in Milestone 1B (M2).
+//! Core Skotos domain entities, multi-context model, validation, evaluation
+//! compilation, and semantic flag patch engine.
+
+pub mod context;
+pub mod entities;
+pub mod error;
+pub mod eval_model;
+pub mod patch;
+
+pub use context::{validate_context_kind, AttributeRef, Context, ContextMeta, SingleContext};
+pub use entities::{
+    default_context_kind, validate_hex_color, validate_key, ApiToken, AuditLogEntry, BuiltInRole,
+    Clause, ClauseOp, ClientSideAvailability, Environment, EnvironmentKey, EnvironmentKeyKind,
+    FeatureFlag, FlagEnvConfig, FlagEnvConfigBody, FlagEnvRevision, FlagKind, Member, Organization,
+    OutboxEvent, PlanTier, Prerequisite, Project, Rollout, RolloutKind, Segment, SegmentKind,
+    SegmentRule, SegmentTarget, Target, TargetingRule, Variation, VariationOrRollout,
+    WeightedVariation,
+};
+pub use error::DomainError;
+pub use eval_model::{
+    compile_eval_flag, compile_eval_flag_with_flags, compile_eval_segment, EvalFlag,
+    EvalPrerequisite, EvalRollout, EvalRule, EvalSegment, EvalTarget, EvalVariationOrRollout,
+    EvalWeightedVariation, EvaluationDetail, EvaluationErrorKind, EvaluationReason,
+};
+pub use patch::{
+    apply_flag_patch, detect_prerequisite_cycle, validate_clause, validate_flag_env_config,
+    validate_rollout, validate_variation_or_rollout, variation_in_use_locations,
+    FlagPatchInstruction, PatchResult, PatchSummaryItem, ROLLOUT_TOTAL_WEIGHT,
+};
 
 /// Canonical crate identifier for workspace wiring verification.
 pub const CRATE_NAME: &str = "skotos-domain";

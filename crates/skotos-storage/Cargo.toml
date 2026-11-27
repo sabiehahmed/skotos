@@ -1,6 +1,6 @@
 [package]
 name = "skotos-storage"
-description = "PostgreSQL storage repositories, embedded migrations, and transactional outbox"
+description = "PostgreSQL 16+ storage repositories, embedded SQLx migrations, and transactional outbox"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -8,7 +8,17 @@ publish.workspace = true
 repository.workspace = true
 
 [dependencies]
+base64.workspace = true
+chrono.workspace = true
+hex.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
 skotos-domain.workspace = true
+sqlx.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true

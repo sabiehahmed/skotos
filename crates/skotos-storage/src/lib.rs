@@ -1,6 +1,19 @@
-//! PostgreSQL storage repositories, embedded SQLx migrations, and transactional outbox.
-//!
-//! Full PostgreSQL schema and repositories are implemented in Milestone 1C (M4).
+//! PostgreSQL 16+ storage repositories, embedded SQLx migrations, and transactional outbox.
+
+pub mod error;
+pub mod keys;
+pub mod repo;
+
+pub use error::StorageError;
+pub use keys::{
+    generate_client_side_id, generate_prefixed_secret, generate_salt, sha256_hex,
+    GeneratedSecretKey,
+};
+pub use repo::{
+    run_migrations, AuditActor, AuditLogFilter, AuditLogPage, CreateFlagInput,
+    CreatedApiTokenOutcome, FlagWithEnvironments, MemberWithPassword, PatchFlagOutcome,
+    RotatedKeyOutcome, Storage, MIGRATOR,
+};
 
 /// Canonical crate identifier for workspace wiring verification.
 pub const CRATE_NAME: &str = "skotos-storage";
