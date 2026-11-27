@@ -1,0 +1,3 @@
+{
+  "install": "sed -i '/case \\$- in/,/esac/d' ~/.bashrc 2>/dev/null || true && mkdir -p \"$HOME/.local/bin\" && (grep -qxF 'export PATH=\"$HOME/.local/bin:$PATH\"' ~/.bashrc || echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc) && (command -v markdownlint-cli2 >/dev/null 2>&1 || npm install -g markdownlint-cli2 --no-audit --no-fund) && command -v markdownlint-cli2 >/dev/null && command -v prettier >/dev/null"
+}
