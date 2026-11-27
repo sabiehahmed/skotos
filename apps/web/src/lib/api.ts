@@ -23,6 +23,13 @@ export type BuiltInRole = components["schemas"]["BuiltInRole"];
 export type FlagKind = components["schemas"]["FlagKind"];
 export type Variation = components["schemas"]["Variation"];
 export type ClauseOp = components["schemas"]["ClauseOp"];
+export type Segment = components["schemas"]["Segment"];
+export type ScheduledChange = components["schemas"]["ScheduledChange"];
+export type FlagTrigger = components["schemas"]["FlagTrigger"];
+export type TriggerAction = components["schemas"]["TriggerAction"];
+export type Webhook = components["schemas"]["Webhook"];
+export type WebhookDelivery = components["schemas"]["WebhookDelivery"];
+export type FlagEvalUsage = components["schemas"]["FlagEvalUsage"];
 
 const baseUrl =
   import.meta.env.VITE_API_BASE_URL ||

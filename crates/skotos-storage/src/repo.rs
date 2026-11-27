@@ -127,7 +127,7 @@ struct AuditCursorPayload {
 /// Multi-tenant PostgreSQL repository facade.
 #[derive(Debug, Clone)]
 pub struct Storage {
-    pool: PgPool,
+    pub(crate) pool: PgPool,
 }
 
 impl Storage {
@@ -667,7 +667,7 @@ impl Storage {
         let project = self.get_project(org_id, project_key).await?;
         let rows = sqlx::query(
             "SELECT id, project_id, key, name, color, client_side_id, require_comments, confirm_changes, revision, created_at
-             FROM environments WHERE org_id = $1 AND project_id = $2 ORDER BY created_at ASC",
+             FROM environments WHERE org_id = $1 AND project_id = $2 ORDER BY created_at ASC, key ASC",
         )
         .bind(org_id)
         .bind(project.id)
@@ -1936,8 +1936,17 @@ impl Storage {
         .ok_or_else(|| StorageError::NotFound(format!("flag '{flag_key}'")))?;
         let before = parse_flag_row(&flag_row)?;
 
-        let env_ids: Vec<Uuid> = sqlx::query_scalar(
-            "UPDATE environments SET revision = revision + 1 WHERE org_id = $1 AND project_id = $2 RETURNING id",
+        let env_versions: Vec<(Uuid, i64)> = sqlx::query_as(
+            "SELECT env_id, version FROM flag_env_configs WHERE org_id = $1 AND flag_id = $2",
+        )
+        .bind(org_id)
+        .bind(before.id)
+        .fetch_all(&mut *tx)
+        .await?;
+        let version_map: HashMap<Uuid, i64> = env_versions.into_iter().collect();
+
+        let env_rows: Vec<(Uuid, i64)> = sqlx::query_as(
+            "UPDATE environments SET revision = revision + 1 WHERE org_id = $1 AND project_id = $2 RETURNING id, revision",
         )
         .bind(org_id)
         .bind(project_id)
@@ -1966,13 +1975,22 @@ impl Storage {
         )
         .await?;
 
-        for env_id in env_ids {
+        let client_side_affected = before.client_side_availability.any_enabled();
+        for (env_id, env_rev) in env_rows {
+            let tombstone_version = version_map.get(&env_id).copied().unwrap_or(1) + 1;
             insert_outbox_event(
                 &mut tx,
                 org_id,
                 Some(env_id),
                 "flag.deleted",
-                json!({ "flagId": before.id, "flagKey": before.key, "envId": env_id }),
+                json!({
+                    "flagId": before.id,
+                    "flagKey": before.key,
+                    "envId": env_id,
+                    "version": tombstone_version,
+                    "envRevision": env_rev,
+                    "clientSideAffected": client_side_affected
+                }),
             )
             .await?;
         }
@@ -2341,7 +2359,7 @@ async fn insert_environment_tx(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn insert_audit_log(
+pub(crate) async fn insert_audit_log(
     tx: &mut Transaction<'_, Postgres>,
     org_id: Uuid,
     project_id: Option<Uuid>,
@@ -2381,7 +2399,7 @@ async fn insert_audit_log(
     Ok(())
 }
 
-async fn insert_outbox_event(
+pub(crate) async fn insert_outbox_event(
     tx: &mut Transaction<'_, Postgres>,
     org_id: Uuid,
     env_id: Option<Uuid>,
@@ -2402,7 +2420,7 @@ async fn insert_outbox_event(
     Ok(())
 }
 
-fn map_unique_err(resource: &'static str) -> impl FnOnce(sqlx::Error) -> StorageError {
+pub(crate) fn map_unique_err(resource: &'static str) -> impl FnOnce(sqlx::Error) -> StorageError {
     move |err| {
         if let sqlx::Error::Database(ref db_err) = err {
             if db_err.code().as_deref() == Some("23505") {
@@ -2504,7 +2522,9 @@ fn parse_project_row(row: &sqlx::postgres::PgRow) -> Result<Project, StorageErro
     })
 }
 
-fn parse_environment_row(row: &sqlx::postgres::PgRow) -> Result<Environment, StorageError> {
+pub(crate) fn parse_environment_row(
+    row: &sqlx::postgres::PgRow,
+) -> Result<Environment, StorageError> {
     Ok(Environment {
         id: row.get("id"),
         project_id: row.get("project_id"),
@@ -2540,7 +2560,7 @@ fn parse_env_key_row(row: &sqlx::postgres::PgRow) -> Result<EnvironmentKey, Stor
     })
 }
 
-fn parse_flag_row(row: &sqlx::postgres::PgRow) -> Result<FeatureFlag, StorageError> {
+pub(crate) fn parse_flag_row(row: &sqlx::postgres::PgRow) -> Result<FeatureFlag, StorageError> {
     let variations: Vec<Variation> = serde_json::from_value(row.get("variations_jsonb"))
         .map_err(|e| StorageError::Validation(DomainError::Validation(e.to_string())))?;
     let csa: ClientSideAvailability =
@@ -2564,7 +2584,9 @@ fn parse_flag_row(row: &sqlx::postgres::PgRow) -> Result<FeatureFlag, StorageErr
     })
 }
 
-fn parse_flag_env_config_row(row: &sqlx::postgres::PgRow) -> Result<FlagEnvConfig, StorageError> {
+pub(crate) fn parse_flag_env_config_row(
+    row: &sqlx::postgres::PgRow,
+) -> Result<FlagEnvConfig, StorageError> {
     let config: FlagEnvConfigBody = serde_json::from_value(row.get("config_jsonb"))
         .map_err(|e| StorageError::Validation(DomainError::Validation(e.to_string())))?;
     Ok(FlagEnvConfig {
@@ -2595,7 +2617,7 @@ fn parse_flag_revision_row(row: &sqlx::postgres::PgRow) -> Result<FlagEnvRevisio
     })
 }
 
-fn parse_segment_row(row: &sqlx::postgres::PgRow) -> Result<Segment, StorageError> {
+pub(crate) fn parse_segment_row(row: &sqlx::postgres::PgRow) -> Result<Segment, StorageError> {
     #[derive(Deserialize, Default)]
     #[serde(rename_all = "camelCase")]
     struct SegBody {

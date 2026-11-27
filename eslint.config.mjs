@@ -28,14 +28,38 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
 
-  // Browser/TS baseline across workspace packages and apps
+  // Browser/TS baseline across workspace packages, apps, and browser/react SDKs
   {
-    files: ["packages/**/*.{ts,tsx}", "apps/**/*.{ts,tsx}"],
+    files: [
+      "packages/**/*.{ts,tsx}",
+      "apps/**/*.{ts,tsx}",
+      "sdks/browser/**/*.{ts,tsx}",
+      "sdks/react/**/*.{ts,tsx}",
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {
         ...globals.browser,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
+
+  // Node SDK TypeScript baseline
+  {
+    files: ["sdks/node-server/**/*.ts"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.node,
         ...globals.es2022,
       },
     },
@@ -70,9 +94,9 @@ export default [
     },
   },
 
-  // React 19 flat config scoped to packages/ui and apps/web
+  // React 19 flat config scoped to packages/ui, apps/web, and sdks/react
   {
-    files: ["packages/ui/**/*.{ts,tsx}", "apps/web/**/*.{ts,tsx}"],
+    files: ["packages/ui/**/*.{ts,tsx}", "apps/web/**/*.{ts,tsx}", "sdks/react/**/*.{ts,tsx}"],
     ...reactPlugin.configs.flat.recommended,
     ...reactPlugin.configs.flat["jsx-runtime"],
     plugins: {

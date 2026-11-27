@@ -5,7 +5,12 @@ members = [
     "crates/skotos-eval",
     "crates/skotos-storage",
     "crates/skotos-auth",
+    "crates/skotos-telemetry",
+    "crates/skotos-fanout",
     "services/control-api",
+    "services/delivery-edge",
+    "services/event-ingest",
+    "sdks/rust-server",
 ]
 
 [workspace.package]
@@ -27,6 +32,8 @@ skotos-domain = { path = "crates/skotos-domain" }
 skotos-eval = { path = "crates/skotos-eval" }
 skotos-storage = { path = "crates/skotos-storage" }
 skotos-auth = { path = "crates/skotos-auth" }
+skotos-telemetry = { path = "crates/skotos-telemetry" }
+skotos-fanout = { path = "crates/skotos-fanout" }
 
 # M2 (1B) — skotos-domain & skotos-eval
 serde = { version = "1", features = ["derive"] }
@@ -56,7 +63,16 @@ sha2 = "0.10"
 hmac = "0.12"
 base64 = "0.22"
 jsonwebtoken = "9"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
 rand = "0.8"
 subtle = "2"
 async-trait = "0.1"
+
+# Phase 2 — fanout, delivery-edge, event-ingest & Rust SDK
+async-nats = "0.38"
+object_store = { version = "0.11", features = ["aws"] }
+flate2 = "1"
+zstd = "0.13"
+bytes = "1"
+futures = "0.3"
+dashmap = "6"

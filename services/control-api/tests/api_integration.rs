@@ -50,6 +50,9 @@ async fn setup_test_app() -> (axum::Router, Storage, String, Uuid) {
 
     let state = AppState {
         api_token_verifier: ApiTokenVerifier::new(storage.clone()),
+        telemetry: Arc::new(skotos_telemetry::PostgresTelemetryStore::new(
+            storage.pool().clone(),
+        )),
         storage: storage.clone(),
         identity_provider: Arc::new(adapter),
         authorizer: Authorizer,

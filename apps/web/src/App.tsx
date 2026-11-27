@@ -40,12 +40,14 @@ import { AuditLogPage } from "./pages/AuditLogPage";
 import { FlagDetailPage } from "./pages/FlagDetailPage";
 import { FlagsListPage } from "./pages/FlagsListPage";
 import { LoginPage } from "./pages/LoginPage";
+import { SegmentsPage } from "./pages/SegmentsPage";
 import {
   EnvironmentsSettingsPage,
   MembersSettingsPage,
   ProjectsSettingsPage,
   TokensSettingsPage,
 } from "./pages/SettingsPages";
+import { WebhooksPage } from "./pages/WebhooksPage";
 
 export const WEB_APP_NAME = "@skotos/web";
 
@@ -163,7 +165,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             }
           >
             <Button
-              variant={isPath("/projects/") ? "secondary" : "ghost"}
+              variant={location.pathname.includes("/flags") ? "secondary" : "ghost"}
               style={{ justifyContent: "flex-start" }}
               onClick={() =>
                 void navigate({
@@ -175,6 +177,20 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             >
               <Icons.Flag size={15} />
               Feature Flags
+            </Button>
+            <Button
+              variant={location.pathname.includes("/segments") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/segments",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.Filter size={15} />
+              Segments
             </Button>
             <Button
               variant={isPath("/audit-log") ? "secondary" : "ghost"}
@@ -208,6 +224,14 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             >
               <Icons.Layers size={15} />
               Environments &amp; Keys
+            </Button>
+            <Button
+              variant={isPath("/settings/webhooks") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() => void navigate({ to: "/settings/webhooks" })}
+            >
+              <Icons.Terminal size={15} />
+              Webhooks
             </Button>
             <Button
               variant={isPath("/settings/tokens") ? "secondary" : "ghost"}
@@ -290,6 +314,17 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               }),
           },
           {
+            id: "segments",
+            label: "Go to Segments",
+            hint: activeProjectKey,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/segments",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
             id: "audit",
             label: "Go to Audit Log",
             onSelect: () => void navigate({ to: "/audit-log" }),
@@ -298,6 +333,11 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             id: "envs",
             label: "Manage Environments & SDK Keys",
             onSelect: () => void navigate({ to: "/settings/environments" }),
+          },
+          {
+            id: "webhooks",
+            label: "Manage Outbound Webhooks",
+            onSelect: () => void navigate({ to: "/settings/webhooks" }),
           },
           {
             id: "tokens",
@@ -420,6 +460,7 @@ function FlagDetailRouteView() {
       projectKey={projectKey}
       flagKey={flagKey}
       activeEnv={activeEnv}
+      environments={environments}
       userRole={meQuery.data.role}
       onBack={() =>
         void navigate({
@@ -428,6 +469,33 @@ function FlagDetailRouteView() {
           search: activeEnv ? { env: activeEnv.key } : {},
         })
       }
+    />
+  );
+}
+
+function SegmentsRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const search = useSearch({ strict: false }) as EnvSearch;
+  const meQuery = useAuthMe();
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  const environments = envsQuery.data?.items ?? [];
+  const activeEnv = environments.find((e) => e.key === search.env) ?? environments[0];
+
+  if (!meQuery.data) return null;
+
+  return (
+    <SegmentsPage
+      projectKey={projectKey}
+      activeEnv={activeEnv}
+      userRole={meQuery.data.role}
     />
   );
 }
@@ -447,6 +515,12 @@ function SettingsProjectsRouteView() {
   const meQuery = useAuthMe();
   if (!meQuery.data) return null;
   return <ProjectsSettingsPage userRole={meQuery.data.role} />;
+}
+
+function SettingsWebhooksRouteView() {
+  const meQuery = useAuthMe();
+  if (!meQuery.data) return null;
+  return <WebhooksPage userRole={meQuery.data.role} />;
 }
 
 function SettingsTokensRouteView() {
@@ -500,6 +574,15 @@ function buildAppRouter(initialEntries?: string[]) {
     component: FlagDetailRouteView,
   });
 
+  const segmentsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/segments",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: SegmentsRouteView,
+  });
+
   const auditLogRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/audit-log",
@@ -516,6 +599,12 @@ function buildAppRouter(initialEntries?: string[]) {
     getParentRoute: () => rootRoute,
     path: "/settings/environments",
     component: SettingsEnvsRouteView,
+  });
+
+  const settingsWebhooksRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/settings/webhooks",
+    component: SettingsWebhooksRouteView,
   });
 
   const settingsTokensRoute = createRoute({
@@ -536,9 +625,11 @@ function buildAppRouter(initialEntries?: string[]) {
     authCallbackRoute,
     flagsRoute,
     flagDetailRoute,
+    segmentsRoute,
     auditLogRoute,
     settingsProjectsRoute,
     settingsEnvsRoute,
+    settingsWebhooksRoute,
     settingsTokensRoute,
     settingsMembersRoute,
   ]);

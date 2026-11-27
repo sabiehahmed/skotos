@@ -52,12 +52,14 @@ import {
   type FlagPatchInstruction,
   type FlagResponse,
   type SimulateFlagResponse,
+  type TriggerAction,
 } from "../lib/api";
 
 export interface FlagDetailPageProps {
   projectKey: string;
   flagKey: string;
   activeEnv?: Environment;
+  environments?: Environment[];
   userRole: BuiltInRole;
   onBack: () => void;
 }
@@ -101,6 +103,7 @@ export function FlagDetailPage({
   projectKey,
   flagKey,
   activeEnv,
+  environments = [],
   userRole,
   onBack,
 }: FlagDetailPageProps) {
@@ -129,6 +132,42 @@ export function FlagDetailPage({
         await skotosApi.GET(
           "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/revisions",
           { params: { path: { projectKey, flagKey, envKey }, query: { limit: 50 } } },
+        ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const usageQuery = useQuery({
+    queryKey: ["flag-usage", projectKey, flagKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/usage",
+          { params: { path: { projectKey, flagKey, envKey }, query: { days: 30 } } },
+        ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const schedulesQuery = useQuery({
+    queryKey: ["flag-schedules", projectKey, flagKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules",
+          { params: { path: { projectKey, flagKey, envKey } } },
+        ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const triggersQuery = useQuery({
+    queryKey: ["flag-triggers", projectKey, flagKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers",
+          { params: { path: { projectKey, flagKey, envKey } } },
         ),
       ),
     enabled: Boolean(envKey),
@@ -172,6 +211,32 @@ export function FlagDetailPage({
   // Delete modal
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteText, setDeleteText] = useState("");
+
+  // Phase 2 Automation state (Copy Env, Schedules, Triggers)
+  const copyTargetEnvs = useMemo(
+    () => environments.filter((e) => e.key !== envKey),
+    [environments, envKey],
+  );
+  const [copyTargetEnvKey, setCopyTargetEnvKey] = useState("");
+  const [copyOnState, setCopyOnState] = useState(false);
+  const [copyComment, setCopyComment] = useState("");
+
+  const [schedAction, setSchedAction] = useState<"turnFlagOn" | "turnFlagOff">("turnFlagOn");
+  const [schedAt, setSchedAt] = useState(() => {
+    const dt = new Date(Date.now() + 60 * 60 * 1000);
+    return dt.toISOString().slice(0, 16);
+  });
+  const [schedComment, setSchedComment] = useState("");
+
+  const [triggerAction, setTriggerAction] = useState<TriggerAction>("turnFlagOff");
+  const [triggerDesc, setTriggerDesc] = useState("");
+  const [createdTriggerPath, setCreatedTriggerPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (copyTargetEnvs.length > 0 && !copyTargetEnvs.some((e) => e.key === copyTargetEnvKey)) {
+      setCopyTargetEnvKey(copyTargetEnvs[0]?.key ?? "");
+    }
+  }, [copyTargetEnvs, copyTargetEnvKey]);
 
   // Embedded Test Context Simulator state
   const [simMode, setSimMode] = useState<"form" | "json">("form");
@@ -541,6 +606,114 @@ export function FlagDetailPage({
       onBack();
     },
     onError: (err) => toast({ title: "Delete failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const copyEnvMutation = useMutation({
+    mutationFn: async () =>
+      unwrapApiResult(
+        await skotosApi.POST("/api/v1/projects/{projectKey}/flags/{flagKey}/copy", {
+          params: { path: { projectKey, flagKey } },
+          body: {
+            sourceEnvironmentKey: envKey,
+            targetEnvironmentKey: copyTargetEnvKey,
+            copyOnState,
+            comment: copyComment.trim() || undefined,
+          },
+        }),
+      ),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["flag", projectKey, flagKey] }),
+        qc.invalidateQueries({ queryKey: ["flags", projectKey] }),
+      ]);
+      setCopyComment("");
+      toast({
+        title: `Copied targeting from ${envKey} to ${copyTargetEnvKey}`,
+        tone: "success",
+      });
+    },
+    onError: (err) =>
+      toast({ title: "Copy targeting failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const createScheduleMutation = useMutation({
+    mutationFn: async () =>
+      unwrapApiResult(
+        await skotosApi.POST(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules",
+          {
+            params: { path: { projectKey, flagKey, envKey } },
+            body: {
+              executeAt: new Date(schedAt).toISOString(),
+              instructions: [{ kind: schedAction }],
+              comment: schedComment.trim() || undefined,
+            },
+          },
+        ),
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["flag-schedules", projectKey, flagKey, envKey] });
+      setSchedComment("");
+      toast({ title: "Scheduled flag change created", tone: "success" });
+    },
+    onError: (err) =>
+      toast({ title: "Schedule failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const cancelScheduleMutation = useMutation({
+    mutationFn: async (scheduleId: string) =>
+      unwrapApiResult(
+        await skotosApi.DELETE(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules/{scheduleId}",
+          { params: { path: { projectKey, flagKey, envKey, scheduleId } } },
+        ),
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["flag-schedules", projectKey, flagKey, envKey] });
+      toast({ title: "Scheduled change canceled", tone: "success" });
+    },
+    onError: (err) =>
+      toast({ title: "Cancel failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const createTriggerMutation = useMutation({
+    mutationFn: async () =>
+      unwrapApiResult(
+        await skotosApi.POST(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers",
+          {
+            params: { path: { projectKey, flagKey, envKey } },
+            body: {
+              action: triggerAction,
+              description: triggerDesc.trim(),
+            },
+          },
+        ),
+      ),
+    onSuccess: async (created) => {
+      await qc.invalidateQueries({ queryKey: ["flag-triggers", projectKey, flagKey, envKey] });
+      setCreatedTriggerPath(created.triggerPath);
+      setTriggerDesc("");
+      toast({ title: "Flag trigger URL created", tone: "success" });
+    },
+    onError: (err) =>
+      toast({ title: "Trigger creation failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const deleteTriggerMutation = useMutation({
+    mutationFn: async (triggerId: string) =>
+      unwrapApiResult(
+        await skotosApi.DELETE(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers/{triggerId}",
+          { params: { path: { projectKey, flagKey, envKey, triggerId } } },
+        ),
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["flag-triggers", projectKey, flagKey, envKey] });
+      toast({ title: "Flag trigger deleted", tone: "success" });
+    },
+    onError: (err) =>
+      toast({ title: "Delete trigger failed", description: formatErrorMessage(err), tone: "danger" }),
   });
 
   if (flagQuery.isPending) {
@@ -1025,6 +1198,335 @@ export function FlagDetailPage({
     />
   );
 
+  const usage = usageQuery.data;
+  const schedules = schedulesQuery.data?.items ?? [];
+  const triggers = triggersQuery.data?.items ?? [];
+
+  const automationTab = (
+    <Stack gap={5}>
+      {/* Evaluation Usage & Stale Detection */}
+      <Card padded>
+        <Stack gap={4}>
+          <Stack direction="horizontal" align="center" justify="space-between">
+            <Stack gap={1}>
+              <Heading level={3}>Evaluation Usage (Last 30 Days)</Heading>
+              <Text size="sm" tone="muted">
+                Aggregated from 5-second SDK evaluation summaries in {activeEnv?.name ?? envKey}.
+              </Text>
+            </Stack>
+            {usageQuery.isPending ? (
+              <Badge tone="neutral">Loading...</Badge>
+            ) : (usage?.totalEvaluations ?? 0) === 0 ? (
+              <Badge tone="warning">Stale · 0 evaluations (30d)</Badge>
+            ) : (
+              <Badge tone="success">
+                {usage?.totalEvaluations.toLocaleString()} evaluations
+              </Badge>
+            )}
+          </Stack>
+
+          {usage && (
+            <Stack gap={3}>
+              <Stack direction="horizontal" align="center" gap={3} style={{ flexWrap: "wrap" }}>
+                <Text size="sm" tone="muted">
+                  Last evaluated:{" "}
+                  {usage.lastEvaluatedAt
+                    ? new Date(usage.lastEvaluatedAt).toLocaleString()
+                    : "Never"}
+                </Text>
+                {(usage.contextKinds ?? []).length > 0 && (
+                  <Stack direction="horizontal" align="center" gap={1}>
+                    <Text size="xs" tone="muted">
+                      Context kinds:
+                    </Text>
+                    {(usage.contextKinds ?? []).map((kind) => (
+                      <Badge key={kind} tone="neutral">
+                        {kind}
+                      </Badge>
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
+
+              {(usage.variations ?? []).length > 0 && (
+                <Stack direction="horizontal" gap={2} style={{ flexWrap: "wrap" }}>
+                  {(usage.variations ?? []).map((v) => {
+                    const matched = flag.variations[v.variationIndex];
+                    const label = matched?.name ?? `Variation #${v.variationIndex}`;
+                    return (
+                      <Badge key={v.variationIndex} tone="accent">
+                        {label}: {v.count.toLocaleString()}
+                      </Badge>
+                    );
+                  })}
+                </Stack>
+              )}
+            </Stack>
+          )}
+        </Stack>
+      </Card>
+
+      {/* Copy Targeting to Another Environment */}
+      <Card padded>
+        <Stack gap={4}>
+          <Stack gap={1}>
+            <Heading level={3}>Copy Targeting to Another Environment</Heading>
+            <Text size="sm" tone="muted">
+              Promote individual targets, rules, prerequisites, and fallthrough from{" "}
+              {activeEnv?.name ?? envKey} into a target environment.
+            </Text>
+          </Stack>
+          {copyTargetEnvs.length === 0 ? (
+            <Alert tone="info">
+              Create another environment in Settings to copy targeting rules across environments.
+            </Alert>
+          ) : (
+            <Stack gap={3}>
+              <Stack direction="horizontal" gap={3} align="flex-end" style={{ flexWrap: "wrap" }}>
+                <FormField label="Target Environment" htmlFor="copy-target-env">
+                  <Select
+                    id="copy-target-env"
+                    value={copyTargetEnvKey}
+                    disabled={!writerAllowed}
+                    options={copyTargetEnvs.map((e) => ({ value: e.key, label: e.name }))}
+                    onValueChange={setCopyTargetEnvKey}
+                  />
+                </FormField>
+                <FormField label="Audit Comment" htmlFor="copy-env-comment">
+                  <Input
+                    id="copy-env-comment"
+                    placeholder="Promote verified targeting rules..."
+                    disabled={!writerAllowed}
+                    value={copyComment}
+                    onChange={(e) => setCopyComment(e.target.value)}
+                  />
+                </FormField>
+                <Button
+                  variant="primary"
+                  disabled={!writerAllowed || !copyTargetEnvKey || copyEnvMutation.isPending}
+                  onClick={() => copyEnvMutation.mutate()}
+                >
+                  <Icons.Copy size={14} />
+                  {copyEnvMutation.isPending ? "Copying..." : "Copy Targeting"}
+                </Button>
+              </Stack>
+              <Switch
+                checked={copyOnState}
+                disabled={!writerAllowed}
+                onCheckedChange={setCopyOnState}
+                label="Also copy ON/OFF targeting switch state"
+              />
+            </Stack>
+          )}
+        </Stack>
+      </Card>
+
+      {/* Scheduled Flag Changes */}
+      <Card padded>
+        <Stack gap={4}>
+          <Stack gap={1}>
+            <Heading level={3}>Scheduled Changes</Heading>
+            <Text size="sm" tone="muted">
+              Schedule an automated targeting toggle executed by the background scheduler worker.
+            </Text>
+          </Stack>
+
+          {writerAllowed && (
+            <Stack direction="horizontal" gap={3} align="flex-end" style={{ flexWrap: "wrap" }}>
+              <FormField label="Action" htmlFor="sched-action">
+                <Select
+                  id="sched-action"
+                  value={schedAction}
+                  options={[
+                    { value: "turnFlagOn", label: "Turn Targeting ON" },
+                    { value: "turnFlagOff", label: "Turn Targeting OFF" },
+                  ]}
+                  onValueChange={(val) => setSchedAction(val as "turnFlagOn" | "turnFlagOff")}
+                />
+              </FormField>
+              <FormField label="Execute At (UTC)" htmlFor="sched-at">
+                <Input
+                  id="sched-at"
+                  type="datetime-local"
+                  value={schedAt}
+                  onChange={(e) => setSchedAt(e.target.value)}
+                />
+              </FormField>
+              <FormField label="Comment" htmlFor="sched-comment">
+                <Input
+                  id="sched-comment"
+                  placeholder="Scheduled launch window..."
+                  value={schedComment}
+                  onChange={(e) => setSchedComment(e.target.value)}
+                />
+              </FormField>
+              <Button
+                variant="primary"
+                disabled={!schedAt || createScheduleMutation.isPending}
+                onClick={() => createScheduleMutation.mutate()}
+              >
+                <Icons.Clock size={14} />
+                {createScheduleMutation.isPending ? "Scheduling..." : "Schedule Change"}
+              </Button>
+            </Stack>
+          )}
+
+          <Separator />
+
+          {schedules.length === 0 ? (
+            <Text size="sm" tone="muted">
+              No scheduled changes in this environment.
+            </Text>
+          ) : (
+            <Stack gap={2}>
+              {schedules.map((sc) => (
+                <Card key={sc.id} padded>
+                  <Stack direction="horizontal" align="center" justify="space-between" gap={3}>
+                    <Stack gap={1}>
+                      <Stack direction="horizontal" align="center" gap={2}>
+                        <Badge
+                          tone={
+                            sc.status === "executed"
+                              ? "success"
+                              : sc.status === "failed"
+                                ? "danger"
+                                : sc.status === "pending"
+                                  ? "accent"
+                                  : "neutral"
+                          }
+                        >
+                          {sc.status}
+                        </Badge>
+                        <Text size="sm" bold>
+                          {new Date(sc.executeAt).toLocaleString()}
+                        </Text>
+                      </Stack>
+                      <Text size="xs" tone="muted">
+                        {sc.comment || JSON.stringify(sc.instructions)}
+                      </Text>
+                    </Stack>
+                    {writerAllowed && sc.status === "pending" && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={cancelScheduleMutation.isPending}
+                        onClick={() => cancelScheduleMutation.mutate(sc.id)}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Card>
+
+      {/* Flag Triggers (APM / Monitoring Webhook Rollbacks) */}
+      <Card padded>
+        <Stack gap={4}>
+          <Stack gap={1}>
+            <Heading level={3}>Flag Triggers (APM Kill-Switch URLs)</Heading>
+            <Text size="sm" tone="muted">
+              Generate unauthenticated POST trigger URLs for Datadog, PagerDuty, or Prometheus
+              alerts to toggle targeting immediately.
+            </Text>
+          </Stack>
+
+          {createdTriggerPath && (
+            <Alert tone="warning" title="Copy your one-time trigger URL now">
+              <Stack gap={2}>
+                <Text size="sm">
+                  The plaintext trigger token is only shown once. Configure your monitoring alert to
+                  send an HTTP POST request to:
+                </Text>
+                <CodeBlock label="Trigger Endpoint Path" code={`POST ${createdTriggerPath}`} />
+              </Stack>
+            </Alert>
+          )}
+
+          {writerAllowed && (
+            <Stack direction="horizontal" gap={3} align="flex-end" style={{ flexWrap: "wrap" }}>
+              <FormField label="Trigger Action" htmlFor="trigger-action">
+                <Select
+                  id="trigger-action"
+                  value={triggerAction}
+                  options={[
+                    { value: "turnFlagOff", label: "Turn Targeting OFF (Kill-switch)" },
+                    { value: "turnFlagOn", label: "Turn Targeting ON" },
+                  ]}
+                  onValueChange={(val) => setTriggerAction(val as TriggerAction)}
+                />
+              </FormField>
+              <FormField label="Description" htmlFor="trigger-desc">
+                <Input
+                  id="trigger-desc"
+                  placeholder="Datadog p99 error-rate rollback..."
+                  value={triggerDesc}
+                  onChange={(e) => setTriggerDesc(e.target.value)}
+                />
+              </FormField>
+              <Button
+                variant="primary"
+                disabled={createTriggerMutation.isPending}
+                onClick={() => createTriggerMutation.mutate()}
+              >
+                <Icons.Plus size={14} />
+                {createTriggerMutation.isPending ? "Creating..." : "Create Trigger URL"}
+              </Button>
+            </Stack>
+          )}
+
+          <Separator />
+
+          {triggers.length === 0 ? (
+            <Text size="sm" tone="muted">
+              No flag triggers configured in this environment.
+            </Text>
+          ) : (
+            <Stack gap={2}>
+              {triggers.map((tr) => (
+                <Card key={tr.id} padded>
+                  <Stack direction="horizontal" align="center" justify="space-between" gap={3}>
+                    <Stack gap={1}>
+                      <Stack direction="horizontal" align="center" gap={2}>
+                        <Badge tone={tr.action === "turnFlagOff" ? "danger" : "success"}>
+                          {tr.action}
+                        </Badge>
+                        <Text size="sm" mono>
+                          {tr.tokenPrefix}…
+                        </Text>
+                        <Badge tone="neutral">Fired {tr.triggerCount}×</Badge>
+                      </Stack>
+                      <Text size="xs" tone="muted">
+                        {tr.description || "No description"} ·{" "}
+                        {tr.lastTriggeredAt
+                          ? `Last fired ${new Date(tr.lastTriggeredAt).toLocaleString()}`
+                          : "Never fired"}
+                      </Text>
+                    </Stack>
+                    {writerAllowed && (
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        disabled={deleteTriggerMutation.isPending}
+                        onClick={() => deleteTriggerMutation.mutate(tr.id)}
+                      >
+                        <Icons.Trash2 size={14} aria-hidden="true" />
+                        Revoke
+                      </Button>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Card>
+    </Stack>
+  );
+
   return (
     <Stack gap={5}>
       <PageHeader
@@ -1055,6 +1557,7 @@ export function FlagDetailPage({
         items={[
           { value: "targeting", label: "Targeting", content: targetingTab },
           { value: "variations", label: "Variations", content: variationsTab },
+          { value: "automation", label: "Usage & Automation", content: automationTab },
           { value: "settings", label: "Settings", content: settingsTab },
           { value: "history", label: "History", content: historyTab },
         ]}

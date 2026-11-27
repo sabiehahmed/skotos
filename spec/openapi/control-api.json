@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Skotos Control Plane API",
-    "description": "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, simulations, revisions, audit logs, API tokens, and members.",
+    "description": "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, scheduling, triggers, webhooks, usage analytics, simulations, revisions, audit logs, API tokens, and members.",
     "license": {
       "name": ""
     },
@@ -946,6 +946,56 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/flags/bulk-patch": {
+      "post": {
+        "tags": [
+          "flags"
+        ],
+        "operationId": "bulk_patch_flags",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPatchFlagsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkPatchFlagsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/environments/{envKey}/keys": {
       "get": {
         "tags": [
@@ -1055,6 +1105,329 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments": {
+      "get": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "list_segments",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SegmentListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "create_segment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSegmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Segment"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}": {
+      "get": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "get_segment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Segment"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "delete_segment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "patch_segment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchSegmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchSegmentResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/usage": {
+      "get": {
+        "tags": [
+          "usage"
+        ],
+        "operationId": "get_environment_usage",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentUsageResponse"
                 }
               }
             }
@@ -1383,6 +1756,66 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/copy": {
+      "post": {
+        "tags": [
+          "flags"
+        ],
+        "operationId": "copy_flag_env",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CopyFlagEnvRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagEnvConfig"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/restore/{version}": {
       "post": {
         "tags": [
@@ -1549,6 +1982,174 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules": {
+      "get": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "list_scheduled_changes",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledChangeListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "create_scheduled_change",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduledChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledChange"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/schedules/{scheduleId}": {
+      "delete": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "cancel_scheduled_change",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scheduleId",
+            "in": "path",
+            "description": "Scheduled change ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/simulate": {
       "post": {
         "tags": [
@@ -1618,6 +2219,232 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers": {
+      "get": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "list_flag_triggers",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagTriggerListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "create_flag_trigger",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFlagTriggerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateFlagTriggerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/triggers/{triggerId}": {
+      "delete": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "delete_flag_trigger",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "triggerId",
+            "in": "path",
+            "description": "Trigger ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/usage": {
+      "get": {
+        "tags": [
+          "usage"
+        ],
+        "operationId": "get_flag_usage",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagEvalUsage"
                 }
               }
             }
@@ -1731,6 +2558,212 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/triggers/{token}": {
+      "post": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "execute_flag_trigger",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "Secret flag trigger token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecuteTriggerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks": {
+      "get": {
+        "tags": [
+          "webhooks"
+        ],
+        "operationId": "list_webhooks",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "webhooks"
+        ],
+        "operationId": "create_webhook",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateWebhookResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/{webhookId}": {
+      "delete": {
+        "tags": [
+          "webhooks"
+        ],
+        "operationId": "delete_webhook",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "in": "path",
+            "description": "Webhook ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "webhooks"
+        ],
+        "operationId": "update_webhook",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "in": "path",
+            "description": "Webhook ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/{webhookId}/deliveries": {
+      "get": {
+        "tags": [
+          "webhooks"
+        ],
+        "operationId": "list_webhook_deliveries",
+        "parameters": [
+          {
+            "name": "webhookId",
+            "in": "path",
+            "description": "Webhook ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryListResponse"
                 }
               }
             }
@@ -2039,6 +3072,47 @@
           "owner"
         ]
       },
+      "BulkPatchFlagsRequest": {
+        "type": "object",
+        "required": [
+          "flagKeys",
+          "instructions"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "flagKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          }
+        }
+      },
+      "BulkPatchFlagsResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatchFlagResponse"
+            }
+          }
+        }
+      },
       "Clause": {
         "type": "object",
         "required": [
@@ -2087,10 +3161,6 @@
       },
       "ClientSideAvailability": {
         "type": "object",
-        "required": [
-          "usingEnvironmentId",
-          "usingMobileKey"
-        ],
         "properties": {
           "usingEnvironmentId": {
             "type": "boolean"
@@ -2126,6 +3196,37 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "CopyFlagEnvRequest": {
+        "type": "object",
+        "required": [
+          "sourceEnvironmentKey",
+          "targetEnvironmentKey"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "copyOnState": {
+            "type": "boolean"
+          },
+          "expectedVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "sourceEnvironmentKey": {
+            "type": "string"
+          },
+          "targetEnvironmentKey": {
+            "type": "string"
           }
         }
       },
@@ -2259,6 +3360,39 @@
           }
         }
       },
+      "CreateFlagTriggerRequest": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/TriggerAction"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateFlagTriggerResponse": {
+        "type": "object",
+        "required": [
+          "trigger",
+          "plaintextToken",
+          "triggerPath"
+        ],
+        "properties": {
+          "plaintextToken": {
+            "type": "string"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/FlagTrigger"
+          },
+          "triggerPath": {
+            "type": "string"
+          }
+        }
+      },
       "CreateMemberRequest": {
         "type": "object",
         "required": [
@@ -2323,6 +3457,79 @@
           }
         }
       },
+      "CreateScheduledChangeRequest": {
+        "type": "object",
+        "required": [
+          "executeAt",
+          "instructions"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "executeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          }
+        }
+      },
+      "CreateSegmentRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "properties": {
+          "excluded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludedContexts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentTarget"
+            }
+          },
+          "included": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "includedContexts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentTarget"
+            }
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SegmentKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentRule"
+            }
+          }
+        }
+      },
       "CreateVariationInput": {
         "type": "object",
         "required": [
@@ -2349,6 +3556,54 @@
             ]
           },
           "value": {}
+        }
+      },
+      "CreateWebhookRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "url"
+        ],
+        "properties": {
+          "envFilter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "secret": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateWebhookResponse": {
+        "type": "object",
+        "required": [
+          "webhook",
+          "secret"
+        ],
+        "properties": {
+          "secret": {
+            "type": "string"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/Webhook"
+          }
         }
       },
       "Environment": {
@@ -2474,6 +3729,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Environment"
+            }
+          }
+        }
+      },
+      "EnvironmentUsageResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagEvalUsage"
             }
           }
         }
@@ -2621,6 +3890,34 @@
           }
         ],
         "description": "Structured explanation of why a variation was served."
+      },
+      "ExecuteTriggerResponse": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "environmentKey",
+          "action",
+          "newVersion",
+          "on"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/TriggerAction"
+          },
+          "environmentKey": {
+            "type": "string"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "newVersion": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "on": {
+            "type": "boolean"
+          }
+        }
       },
       "FeatureFlag": {
         "type": "object",
@@ -2836,6 +4133,41 @@
           "version": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "FlagEvalUsage": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "totalEvaluations"
+        ],
+        "properties": {
+          "contextKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "lastEvaluatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "totalEvaluations": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "variations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariationUsageCount"
+            }
           }
         }
       },
@@ -3445,6 +4777,81 @@
           }
         }
       },
+      "FlagTrigger": {
+        "type": "object",
+        "required": [
+          "id",
+          "flagId",
+          "envId",
+          "action",
+          "tokenPrefix",
+          "enabled",
+          "triggerCount",
+          "createdAt"
+        ],
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/TriggerAction"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flagId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lastTriggeredAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "tokenPrefix": {
+            "type": "string"
+          },
+          "triggerCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "FlagTriggerListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagTrigger"
+            }
+          }
+        }
+      },
       "HealthResponse": {
         "type": "object",
         "required": [
@@ -3612,6 +5019,51 @@
           },
           "flag": {
             "$ref": "#/components/schemas/FeatureFlag"
+          },
+          "summaries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatchSummaryItem"
+            }
+          }
+        }
+      },
+      "PatchSegmentRequest": {
+        "type": "object",
+        "required": [
+          "instructions"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentPatchInstruction"
+            }
+          }
+        }
+      },
+      "PatchSegmentResponse": {
+        "type": "object",
+        "required": [
+          "segment",
+          "summaries"
+        ],
+        "properties": {
+          "segment": {
+            "$ref": "#/components/schemas/Segment"
           },
           "summaries": {
             "type": "array",
@@ -3846,6 +5298,470 @@
           }
         }
       },
+      "ScheduledChange": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "flagId",
+          "envId",
+          "executeAt",
+          "instructions",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "executeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "executedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "flagId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {},
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ScheduledChangeStatus"
+          }
+        }
+      },
+      "ScheduledChangeListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledChange"
+            }
+          }
+        }
+      },
+      "ScheduledChangeStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "executed",
+          "failed",
+          "canceled"
+        ]
+      },
+      "Segment": {
+        "type": "object",
+        "required": [
+          "id",
+          "envId",
+          "key",
+          "name",
+          "kind",
+          "version",
+          "salt",
+          "updatedAt"
+        ],
+        "properties": {
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "excluded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "excludedContexts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentTarget"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "included": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "includedContexts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentTarget"
+            }
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SegmentKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentRule"
+            }
+          },
+          "salt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SegmentKind": {
+        "type": "string",
+        "enum": [
+          "standard",
+          "big",
+          "synced"
+        ]
+      },
+      "SegmentListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            }
+          }
+        }
+      },
+      "SegmentPatchInstruction": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "updateName"
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "values",
+              "kind"
+            ],
+            "properties": {
+              "contextKind": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "addIncluded"
+                ]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "values",
+              "kind"
+            ],
+            "properties": {
+              "contextKind": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "removeIncluded"
+                ]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "values",
+              "kind"
+            ],
+            "properties": {
+              "contextKind": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "addExcluded"
+                ]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "values",
+              "kind"
+            ],
+            "properties": {
+              "contextKind": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "removeExcluded"
+                ]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "clauses",
+              "kind"
+            ],
+            "properties": {
+              "bucketBy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "clauses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Clause"
+                }
+              },
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "addRule"
+                ]
+              },
+              "rolloutContextKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "weight": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "ruleId",
+              "clauses",
+              "kind"
+            ],
+            "properties": {
+              "bucketBy": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "clauses": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Clause"
+                }
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "updateRule"
+                ]
+              },
+              "rolloutContextKind": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ruleId": {
+                "type": "string"
+              },
+              "weight": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "format": "int32",
+                "minimum": 0
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "ruleId",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "removeRule"
+                ]
+              },
+              "ruleId": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "description": "Semantic instruction patches for segment mutations."
+      },
+      "SegmentRule": {
+        "type": "object",
+        "properties": {
+          "bucketBy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "clauses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Clause"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "rolloutContextKind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "weight": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "SegmentTarget": {
+        "type": "object",
+        "properties": {
+          "contextKind": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "SimulateFlagRequest": {
         "type": "object",
         "required": [
@@ -3965,6 +5881,13 @@
           }
         ]
       },
+      "TriggerAction": {
+        "type": "string",
+        "enum": [
+          "turnFlagOn",
+          "turnFlagOff"
+        ]
+      },
       "UpdateEnvironmentRequest": {
         "type": "object",
         "properties": {
@@ -4026,6 +5949,47 @@
           }
         }
       },
+      "UpdateWebhookRequest": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "envFilter": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "events": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "Variation": {
         "type": "object",
         "required": [
@@ -4074,6 +6038,157 @@
           }
         }
       },
+      "VariationUsageCount": {
+        "type": "object",
+        "required": [
+          "variationIndex",
+          "count"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "variationIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "name",
+          "url",
+          "enabled",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "envFilter": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "WebhookDelivery": {
+        "type": "object",
+        "required": [
+          "id",
+          "webhookId",
+          "eventType",
+          "attempt",
+          "success",
+          "deliveredAt"
+        ],
+        "properties": {
+          "attempt": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statusCode": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "success": {
+            "type": "boolean"
+          },
+          "webhookId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "WebhookDeliveryListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebhookDelivery"
+            }
+          }
+        }
+      },
+      "WebhookListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Webhook"
+            }
+          }
+        }
+      },
       "WeightedVariation": {
         "type": "object",
         "required": [
@@ -4118,6 +6233,22 @@
     {
       "name": "flags",
       "description": "Feature flag management, semantic patching, simulation, and version restore"
+    },
+    {
+      "name": "segments",
+      "description": "Rule-based and list-based user/context segments"
+    },
+    {
+      "name": "automation",
+      "description": "Scheduled flag changes and APM rollback triggers"
+    },
+    {
+      "name": "webhooks",
+      "description": "HMAC-SHA256 signed outbound webhooks"
+    },
+    {
+      "name": "usage",
+      "description": "Flag evaluation summary counters and stale detection"
     },
     {
       "name": "audit-log",

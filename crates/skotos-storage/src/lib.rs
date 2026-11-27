@@ -2,12 +2,18 @@
 
 pub mod error;
 pub mod keys;
+pub mod phase2;
 pub mod repo;
 
 pub use error::StorageError;
 pub use keys::{
     generate_client_side_id, generate_prefixed_secret, generate_salt, sha256_hex,
     GeneratedSecretKey,
+};
+pub use phase2::{
+    ClaimedOutboxEvent, CreateSegmentInput, CreatedTriggerOutcome, CreatedWebhookOutcome,
+    DueScheduledChange, EnvironmentAuthRecord, EnvironmentCompileBundle, EnvironmentKeyHashRecord,
+    ExecutedTriggerOutcome, PatchSegmentOutcome, WebhookWithSecret,
 };
 pub use repo::{
     run_migrations, AuditActor, AuditLogFilter, AuditLogPage, CreateFlagInput,

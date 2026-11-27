@@ -1,0 +1,34 @@
+[package]
+name = "skotos-fanout"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = []
+workers = ["dep:skotos-storage"]
+
+[dependencies]
+skotos-domain.workspace = true
+skotos-storage = { workspace = true, optional = true }
+async-nats.workspace = true
+bytes.workspace = true
+chrono.workspace = true
+flate2.workspace = true
+hex.workspace = true
+hmac.workspace = true
+object_store.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+subtle.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+zstd.workspace = true
