@@ -1,65 +1,66 @@
-# Flag Delivery Pipeline
+# Flag Delivery Pipeline (Finalized Architecture)
 
-This document details how a flag change made by an engineer propagates from the Control Plane to tens of thousands of connected SDKs within milliseconds — reliably, without lost updates, and safely through network partitions.
+This document defines the exact end-to-end propagation mechanics from a Control Plane mutation to connected Server-Side SDKs, Browser/Mobile SDKs, and VPC Relay Proxies ([ADR-0003](adrs/0003-streaming-and-snapshot-delivery.md)).
 
 ## End-to-End Propagation Flow
 
 ```mermaid
 sequenceDiagram
-    participant Op as Operator / UI
-    participant CP as Control Plane API
-    participant DB as Primary DB (+ Outbox)
-    participant Pub as Outbox Relay & PubSub
-    participant Cache as Snapshot Store
-    participant Edge as Delivery / SSE Node
-    participant SDK as Server-Side SDK
+    participant Op as Operator / apps/web
+    participant CP as services/control-api
+    participant DB as PostgreSQL (+ Outbox)
+    participant Worker as Outbox & Snapshot Worker
+    participant R2 as R2 / S3 (+ CDN)
+    participant NATS as NATS JetStream
+    participant Edge as services/delivery-edge
+    participant ServerSDK as Server-Side SDK
+    participant ClientSDK as Browser / Mobile SDK
 
-    Op->>CP: PATCH /flags/new-checkout (turn ON)
-    CP->>DB: BEGIN TX: update flag (version++), insert audit_log, insert outbox_event, COMMIT
+    Op->>CP: PATCH /api/v1/.../flags/new-checkout (turnFlagOn)
+    CP->>DB: BEGIN TX: flag_env_configs (version++), revisions, audit_logs, outbox_events, COMMIT
     CP-->>Op: 200 OK (version: 14)
 
-    Pub->>DB: Poll / CDC outbox_event
-    Pub->>Cache: Update env snapshot & flag entry (version: 14)
-    Pub->>Edge: Publish patch event on channel env:{envId}
-    Edge->>SDK: SSE event: patch {"path":"/flags/new-checkout","data":{...,"version":14}}
-    SDK->>SDK: Apply if incoming.version > local.version
+    Worker->>DB: Claim outbox_events (FOR UPDATE SKIP LOCKED)
+    Worker->>R2: Upload pre-compressed env snapshot (gzip + zstd, rev 14)
+    Worker->>NATS: Publish skotos.env.{envId}.events (patch, rev 14, clientSideAffected=true)
+
+    NATS->>Edge: Deliver patch event (1 NATS sub per active envId)
+    Edge->>Edge: Update in-memory LRU ruleset & pre-compressed put buffer
+    Edge->>ServerSDK: SSE event: patch {"path":"/flags/new-checkout","data":{...,"version":14}}
+    ServerSDK->>ServerSDK: Apply locally if incoming.version > local.version
+
+    Edge->>ClientSDK: SSE event: ping {"rev":14}
+    ClientSDK->>Edge: GET /sdk/v1/evalx/{clientSideId}/contexts/{ctx}?rev=14
+    Edge-->>ClientSDK: 200 OK (evaluated flags map, ETag + CDN cacheable)
 ```
 
 ## Consistency & Ordering Guarantees
 
 1. **Transactional Outbox (Zero Dual-Write Bugs)**:
-   - Flag mutation, audit log entry, and outbox event are written in a **single ACID database transaction**.
-   - Even if the message broker blips, the outbox relay retries publishing until acknowledged.
-2. **Monotonic Versioning**:
-   - Every flag and segment carries an integer `version` incremented on each write.
-   - SDKs and Delivery caches ignore any incoming `patch` or `delete` whose `version <= stored.version`, making at-least-once delivery safe and idempotent.
-3. **Tombstones for Deletes**:
-   - Deleting/archiving a flag emits a `delete` event carrying the next `version` rather than erasing version history, preventing race conditions between concurrent `put` and `patch` messages.
+   - Flag/segment config write, append-only revision snapshot, audit log entry, and `outbox_events` row commit in a **single PostgreSQL ACID transaction**.
+   - If R2 or NATS experiences a transient blip, the outbox worker retries with exponential backoff until published.
+2. **Monotonic Versioning & Tombstones**:
+   - Every flag and segment carries an integer `version` incremented on each mutation; each environment also tracks a monotonic `revision`.
+   - SDKs and Delivery Edge caches ignore any `patch` or `delete` where `incoming.version <= stored.version`.
+   - Archiving or deleting a flag emits a `delete` tombstone with `version + 1` so stale `put`/`patch` races never resurrect deleted entities.
 
-## Handling Scale Challenges
+## Low-COGS Scale Engineering
 
-### 1. Reconnect Storms (Thundering Herd)
+### 1. High-Density Rust/Tokio SSE Edge (`services/delivery-edge`)
 
-When a Delivery Edge node restarts or a customer deploys 500 pods simultaneously:
+- Each open SSE connection holds only a minimal async channel receiver (~2–4 KB RAM per idle socket), supporting `100k–250k+` concurrent connections on a single modest VM.
+- **Single NATS Subscription Per Environment**: Regardless of whether 1 or 50,000 SDK instances connect for an environment, `delivery-edge` maintains exactly **one** subscription on `skotos.env.{envId}.events` and fans out in-process via a `tokio::sync::broadcast` channel.
+- **Slow Consumer Protection**: Bounded per-connection broadcast channels drop slow/stalled clients cleanly (triggering automatic SDK reconnect with a fresh `put` snapshot) so memory stays strictly bounded.
 
-- **Pre-serialized Snapshots**: Keep each environment's full `put` JSON payload pre-serialized (and pre-gzipped) in the Snapshot Store / memory cache so serving 10,000 simultaneous initial connects does **zero database queries** and minimal CPU work.
-- **SDK Jittered Backoff**: All SDKs add randomized jitter to reconnect delays.
-- **Relay Proxy Multiplexing**: High-scale customers deploy the Skotos Relay Proxy inside their VPC so 5,000 app instances collapse into 1–2 upstream SSE connections.
+### 2. Reconnect Storms & Zero-Egress Snapshots (R2/S3 + CDN)
 
-### 2. Memory Per Connection
+- Whenever an environment changes, the outbox worker compiles and pre-compresses (`gzip` + `zstd`) the environment ruleset **once** and writes it to **Cloudflare R2** (SaaS, `$0` egress) or S3/MinIO (self-hosted).
+- `delivery-edge` caches the pre-compressed `put` bytes in memory; 10,000 simultaneous pod cold starts stream pre-compressed bytes directly without touching PostgreSQL or re-serializing JSON.
+- Polling SDKs (`GET /sdk/v1/latest-all`) use strong `ETag` (`"rev-{revision}"`) returning `304 Not Modified` and can sit directly behind CDN edge caches.
 
-- SSE edge nodes maintain a lightweight `envId -> Set<ClientStream>` subscription map.
-- Only one fanout subscription per active `envId` is opened against the Pub/Sub backbone regardless of how many SDK clients connect for that environment.
-- Slow consumers with full write buffers are disconnected cleanly rather than letting memory balloon; on reconnect they receive a fresh `put` snapshot.
+### 3. Client-Side MAU Efficiency: Ping-to-Re-evaluate
 
-### 3. Client-Side Stream Fanout
-
-- Browser/mobile SDKs cannot receive raw targeting rules.
-- Options for client-side streaming:
-  - **Ping-to-Re-evaluate**: Edge sends a lightweight SSE `ping` when any client-side-enabled flag in the environment changes; client SDK re-fetches `/evalx` (CDN-cacheable, simple, low edge CPU).
-  - **Targeted Push**: Edge re-evaluates only the changed flag for connected client contexts and pushes the new value directly (lower latency, higher edge memory/CPU).
-
-## Open Questions for Planning
-
-- For client-side streaming in Phase 2, start with **Ping-to-Re-evaluate** (simpler, CDN-friendly) or **direct re-evaluation push**?
-- Should Snapshot payloads be stored in Redis, S3/object storage + CDN, or an in-process LRU backed by Redis?
+- Browser/mobile SSE streams (`/stream/v1/eval/{clientSideId}`) do **not** store per-user contexts in edge memory.
+- When a client-side-enabled flag changes, `delivery-edge` broadcasts a tiny SSE `ping` (`{"rev":14}`).
+- Clients immediately fetch `/sdk/v1/evalx/{clientSideId}/contexts/{base64urlContext}?rev=14` (or `REPORT /sdk/v1/evalx/{clientSideId}/context` for large/sensitive contexts), which runs `crates/skotos-eval` in microseconds on stateless edge nodes and benefits from CDN caching for anonymous/public contexts.
+- Server-only flag edits (`clientSideAvailability = false`) do **not** emit client `ping` frames, eliminating unnecessary browser traffic storms.

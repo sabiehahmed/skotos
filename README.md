@@ -2,13 +2,13 @@
 
 **Skotos** is a LaunchDarkly-style feature flagging, targeting, and experimentation platform designed for low-latency flag evaluation, real-time streaming updates, and enterprise-grade governance.
 
-> **Status:** Planning & Architecture Phase
+> **Status:** Architecture Finalized (ADRs 0001–0006 Accepted) — Ready for Phase 1 Implementation
 
 ## Repository Structure
 
 ```text
 skotos/
-├── docs/           # Product vision, requirements, glossary, roadmap, and RFCs
+├── docs/           # Product vision, feature catalog, requirements, roadmap, implementation plan, and RFCs
 ├── design/         # Domain model, evaluation semantics, API contracts, SDKs, and UI/UX
 └── architecture/   # System architecture, delivery pipelines, reliability, security, and ADRs
 ```
@@ -19,6 +19,7 @@ skotos/
   - [Docs Index](docs/README.md)
   - [Product Vision](docs/product-vision.md)
   - [LaunchDarkly Feature Catalog & Cost Strategy](docs/launchdarkly-feature-catalog.md)
+  - [Implementation Plan](docs/implementation-plan.md)
   - [Domain Glossary](docs/glossary.md)
   - [Requirements](docs/requirements.md)
   - [Roadmap](docs/roadmap.md)

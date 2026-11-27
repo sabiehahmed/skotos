@@ -10,11 +10,12 @@ ADRs capture significant architectural choices, the context behind them, the alt
 
 ## ADR Index
 
-| ID   | Decision                                                                            | Status   | Target Phase |
-| ---- | ----------------------------------------------------------------------------------- | -------- | ------------ |
-| 0000 | [ADR Template](0000-template.md)                                                    | Template | —            |
-| 0001 | Core Tech Stack & Monorepo Structure (Backend, Frontend, Build System)              | Planned  | Phase 0      |
-| 0002 | Primary Data Store & Flag Schema Strategy (Relational vs JSONB vs Hybrid)           | Planned  | Phase 0      |
-| 0003 | Real-Time Streaming & Fanout Backbone (Redis vs NATS vs Kafka vs PG Notify)         | Planned  | Phase 0      |
-| 0004 | Multi-SDK Evaluation Engine Strategy (Shared Core vs Ported + Golden Tests)         | Planned  | Phase 0      |
-| 0005 | Event Ingestion & Analytics Storage (ClickHouse vs Postgres/Timescale vs Buffering) | Planned  | Phase 0      |
+| ID   | Decision                                                                                                                        | Status   | Date       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------- |
+| 0000 | [ADR Template](0000-template.md)                                                                                                | Template | —          |
+| 0001 | [Core Tech Stack & Polyglot Monorepo (Rust + React/Vite + Cargo/pnpm)](0001-tech-stack-and-monorepo.md)                         | Accepted | 2026-11-27 |
+| 0002 | [Primary Data Store, Hybrid Schema & Dual-Path Auth](0002-primary-datastore-and-schema.md)                                      | Accepted | 2026-11-27 |
+| 0003 | [Real-Time Streaming Fanout, R2/S3 Snapshots & Ping-to-Re-evaluate Client Delivery](0003-streaming-and-snapshot-delivery.md)    | Accepted | 2026-11-27 |
+| 0004 | [Multi-SDK Evaluation Engine & Golden Test Suite Strategy](0004-sdk-evaluation-engine.md)                                       | Accepted | 2026-11-27 |
+| 0005 | [Event Ingestion, Analytics & Observability Storage (Postgres -> ClickHouse + R2)](0005-analytics-and-observability-storage.md) | Accepted | 2026-11-27 |
+| 0006 | [Standalone UI Component Library (`@skotos/ui`) & Zero-Tailwind CSS Modules](0006-ui-component-library-css-modules.md)          | Accepted | 2026-11-27 |

@@ -1,68 +1,96 @@
-# API Contracts
+# API Contracts (Finalized Specification)
 
-Skotos separates its HTTP/streaming APIs into **three distinct surfaces** with different authentication models, scaling profiles, and availability requirements.
+Skotos splits its HTTP/streaming surface into **three independent APIs** with automated **OpenAPI 3.1** generation via Rust `utoipa` (`services/control-api` -> `spec/openapi/control-api.json` -> `packages/api-client`).
 
-## 1. Control Plane API (`/api/v1/...`)
+## 1. Control Plane API (`services/control-api`, `/api/v1/...`)
 
-Used by the Management Dashboard, CLI, Terraform provider, and CI/CD automation.
-
-- **Auth**: User session / JWT (dashboard) or scoped API Access Token (`Authorization: Bearer sk_api_...`).
-- **Consistency**: Strongly consistent reads/writes against the primary store; optimistic concurrency via `If-Match` / `version` headers where appropriate.
-- **Core Endpoints (Draft)**:
-  - `GET/POST /api/v1/projects`
-  - `GET/PATCH/DELETE /api/v1/projects/{projectKey}`
+- **Auth**: Verified via `crates/skotos-auth` (`Authorization: Bearer <jwt-or-api-token>` or `HttpOnly` session cookie).
+- **Optimistic Concurrency**: `If-Match` / `expectedVersion` prevents silent lost updates when two operators edit a flag simultaneously.
+- **Core Resources**:
+  - `GET/POST /api/v1/projects`, `GET/PATCH/DELETE /api/v1/projects/{projectKey}`
   - `GET/POST /api/v1/projects/{projectKey}/environments`
-  - `POST /api/v1/projects/{projectKey}/environments/{envKey}/sdk-key/rotate`
+  - `POST /api/v1/projects/{projectKey}/environments/{envKey}/keys/rotate`
   - `GET/POST /api/v1/projects/{projectKey}/flags`
-  - `GET/PATCH/DELETE /api/v1/projects/{projectKey}/flags/{flagKey}` (supports semantic JSON Patch or structured instruction patches so audit diffs are human-readable)
+  - `GET/PATCH/DELETE /api/v1/projects/{projectKey}/flags/{flagKey}`
+  - `POST /api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/simulate` (runs `crates/skotos-eval` against saved or unsaved draft rules for the UI "Test Context" panel)
+  - `GET /api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/revisions` & `POST .../restore/{version}`
   - `GET/POST/PATCH/DELETE /api/v1/projects/{projectKey}/environments/{envKey}/segments`
-  - `GET /api/v1/audit-log` (cursor-paginated, filterable by project, env, flag, actor, time range)
+  - `GET /api/v1/audit-log` (cursor-paginated)
   - `GET/POST/DELETE /api/v1/webhooks`
 
-## 2. Flag Delivery Plane API
+### Semantic Instruction Patch Protocol
 
-Strictly read-only, cache-friendly, and decoupled from Control Plane writes.
+Flag and segment mutations use **Semantic Instruction Patches** ([ADR-0001](../architecture/adrs/0001-tech-stack-and-monorepo.md)) rather than raw full-document overwrites. Every patch produces clean human-readable audit logs, safe approvals, and composable scheduled changes:
+
+```json
+{
+  "environmentKey": "production",
+  "expectedVersion": 13,
+  "comment": "Ramp checkout rollout to 25% for US enterprise orgs",
+  "instructions": [
+    { "kind": "turnFlagOn" },
+    {
+      "kind": "addRule",
+      "clauses": [
+        {
+          "contextKind": "organization",
+          "attribute": "region",
+          "op": "in",
+          "values": ["us-east", "us-west"],
+          "negate": false
+        }
+      ],
+      "rollout": {
+        "contextKind": "user",
+        "bucketBy": "key",
+        "variations": [
+          { "variationId": "var_on", "weight": 25000 },
+          { "variationId": "var_off", "weight": 75000 }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Core instruction kinds (`FlagPatchInstruction` enum in `crates/skotos-domain`):
+
+- `turnFlagOn`, `turnFlagOff`, `updateOffVariation`
+- `addTargets`, `removeTargets`
+- `addRule`, `updateRule`, `removeRule`, `reorderRules`
+- `updateFallthrough`
+- `addPrerequisite`, `removePrerequisite`
+- `addVariation`, `updateVariation`, `removeVariation`
+- `updateClientSideAvailability`, `archiveFlag`, `restoreFlag`
+
+## 2. Flag Delivery Plane API (`services/delivery-edge`)
+
+Strictly read-only, DB-free on the hot path, and isolated from Control Plane outages.
 
 ### A. Server-Side SDK Streaming (`GET /stream/v1/all`)
 
 - **Auth**: `Authorization: <sdk-key>`
-- **Protocol**: `text/event-stream` (Server-Sent Events)
-- **Event Types**:
-  - `put`: Full environment snapshot `{ "path": "/", "data": { "flags": {...}, "segments": {...} } }` sent immediately on connect.
-  - `patch`: Single flag or segment update `{ "path": "/flags/{key}", "data": { ... } }` or `{ "path": "/segments/{key}", "data": { ... } }`.
-  - `delete`: Tombstone `{ "path": "/flags/{key}", "version": 42 }` so SDKs never re-apply older state.
-- **Heartbeats**: Periodic SSE comment (`: keepalive\n\n`) every 30s to keep proxies/load balancers alive and allow dead-connection detection.
+- **Protocol**: `text/event-stream` (SSE)
+- **Events**:
+  - `put`: Full pre-compressed environment snapshot `{ "path": "/", "data": { "flags": {...}, "segments": {...} } }`.
+  - `patch`: Single flag/segment delta `{ "path": "/flags/{key}", "data": { ... } }`.
+  - `delete`: Monotonic tombstone `{ "path": "/flags/{key}", "version": 42 }`.
+  - Heartbeat comment `: keepalive\n\n` every 30s.
 
 ### B. Server-Side SDK Polling (`GET /sdk/v1/latest-all`)
 
 - **Auth**: `Authorization: <sdk-key>`
-- **Caching**: Returns `ETag` and honors `If-None-Match` -> `304 Not Modified`.
+- **Caching**: Strong `ETag: "rev-{revision}"` + `If-None-Match` -> `304 Not Modified`; backed by R2/CDN pre-compressed snapshots.
 
-### C. Client-Side / Mobile Evaluation
+### C. Client-Side & Mobile Evaluation (Ping-to-Re-evaluate)
 
-Client SDKs must **never** receive raw targeting rules (which may leak customer names, beta cohorts, or private rules). Instead, the Delivery Plane evaluates flags server-side for the given context:
+- `GET /stream/v1/eval/{clientSideId}`: Lightweight SSE stream emitting `event: ping\ndata: {"rev":42}\n\n` only when a `clientSideAvailability = true` flag changes.
+- `GET /sdk/v1/evalx/{clientSideId}/contexts/{base64urlContext}?rev=42&withReasons=false`: CDN-cacheable evaluated flag map.
+- `REPORT /sdk/v1/evalx/{clientSideId}/context`: Evaluates large or sensitive contexts in the request body without exposing attributes in URLs.
 
-- `GET /sdk/v1/evalx/{clientSideId}/contexts/{base64urlContext}` (cacheable at CDN/edge for public contexts)
-- `REPORT /sdk/v1/evalx/{clientSideId}/context` (JSON body for large or sensitive contexts without putting attributes in URLs)
-- `GET /stream/v1/eval/{clientSideId}/contexts/{base64urlContext}` (SSE stream emitting `ping` or `put`/`patch` of evaluated results when relevant flags change)
-- Optional query param `?withReasons=true` to include evaluation reasons.
+## 3. Event Ingestion API (`services/event-ingest`)
 
-## 3. Event Ingestion API (`POST /events/v1/...`)
-
-High-throughput, fire-and-forget asynchronous ingestion from SDKs.
-
-- **Auth**: SDK Key, Mobile Key, or Client-Side ID.
-- **Endpoints**:
-  - `POST /events/v1/bulk` (server-side SDKs, `Content-Encoding: gzip`, `X-Skotos-Payload-ID` for idempotency)
-  - `POST /events/v1/client/{clientSideId}` (browser/mobile SDKs, CORS-enabled)
-- **Event Kinds**:
-  - `summary`: Aggregated evaluation counts per `(flagKey, version, variation, value, contextKinds)` over a flush window (dramatically reduces ingestion volume).
-  - `feature` / `debug`: Individual detailed evaluations (only emitted when flag tracking or live debugging is enabled).
-  - `identify`: Context discovery for autocomplete/insights in the dashboard.
-  - `custom`: Conversion/metric events for experimentation.
-- **Response**: `202 Accepted` immediately after schema/auth check and enqueue.
-
-## Open Questions for Planning
-
-- Should Control Plane mutations use RFC 6902 JSON Patch, semantic instruction patches (e.g., `turnFlagOn`, `addRule`, `updateFallthrough`), or both? (Semantic instructions make audit logs and approval diffs dramatically cleaner.)
-- Should we author formal OpenAPI 3.1 specs under `design/openapi/` before coding handlers?
+- `POST /events/v1/bulk` (Server SDKs, gzipped batches, `X-Skotos-Payload-ID` idempotency, returns `202 Accepted`).
+- `POST /events/v1/client/{clientSideId}` (Browser/Mobile SDKs, CORS-enabled, returns `202 Accepted`).
+- `POST /otlp/v1/traces`, `/otlp/v1/logs`, `/otlp/v1/metrics` (Phase 4–5 OpenTelemetry ingestion).
+- Event kinds: `summary` (5s local SDK rollups), `feature`, `debug`, `identify`, `custom`.

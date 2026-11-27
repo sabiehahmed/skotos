@@ -11,6 +11,7 @@ This folder holds product-level specifications, requirements, shared domain voca
 | [Domain Glossary](glossary.md)                                  | Ubiquitous terminology shared across APIs, SDKs, and UI                        |
 | [Requirements](requirements.md)                                 | Functional scope (P0/P1/P2) and non-functional SLAs                            |
 | [Roadmap](roadmap.md)                                           | Phased delivery milestones from MVP to enterprise scale                        |
+| [Implementation Plan](implementation-plan.md)                   | Finalized Phase 1–6 build plan, milestones (1A–1E), and exit criteria          |
 | [RFCs](rfcs/README.md)                                          | Proposal workflow and template for major feature changes                       |
 
 ## Related Folders
