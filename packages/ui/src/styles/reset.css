@@ -1,0 +1,43 @@
+/* Minimal Base Reset for @skotos/ui */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--sk-color-bg);
+  color: var(--sk-color-text);
+  font-family: var(--sk-font-sans);
+  font-size: 16px;
+  line-height: var(--sk-leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--sk-color-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--sk-font-mono);
+}

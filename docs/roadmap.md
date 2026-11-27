@@ -9,15 +9,15 @@ All Phase 0 architectural decisions are finalized in [`architecture/adrs/`](../a
 - [x] Finalize ADRs 0001–0006 (Rust backend, React/Vite + standalone `@skotos/ui` CSS Modules, PostgreSQL hybrid schema + dual-path auth, NATS JetStream + R2 snapshots + Ping-to-Re-evaluate, Golden Test Suite SDKs, Phased Postgres -> ClickHouse telemetry)
 - [x] Author detailed phased implementation plan ([`implementation-plan.md`](implementation-plan.md))
 
-## Phase 1 — Core Control Plane, Evaluation Engine & Dashboard MVP (Next)
+## Phase 1 — Core Control Plane, Evaluation Engine & Dashboard MVP (Complete)
 
-- [ ] **1A**: Monorepo bootstrap (Cargo + pnpm workspaces, Docker Compose `postgres + nats + minio`, ESLint `@skotos/ui` boundary enforcement, CI)
-- [ ] **1B**: `crates/skotos-domain`, `crates/skotos-eval`, and `spec/evaluation-tests/` Golden Test Suite (100+ fixtures)
-- [ ] **1C**: `crates/skotos-storage` (migrations + transactional outbox/audit), `crates/skotos-auth` (SaaS external + self-hosted adapters), `services/control-api` (semantic patches + `/simulate` + `utoipa` OpenAPI -> `packages/api-client`)
-- [ ] **1D**: Standalone `@skotos/ui` library (Radix UI + `.module.css`, zero Tailwind, design tokens, Vitest coverage)
-- [ ] **1E**: `apps/web` Management Dashboard consuming `@skotos/ui` + `@skotos/api-client` exclusively
+- [x] **1A**: Monorepo bootstrap (Cargo + pnpm workspaces, Docker Compose `postgres + nats + minio`, ESLint `@skotos/ui` boundary enforcement, CI)
+- [x] **1B**: `crates/skotos-domain`, `crates/skotos-eval`, and `spec/evaluation-tests/` Golden Test Suite (124 fixtures)
+- [x] **1C**: `crates/skotos-storage` (migrations + transactional outbox/audit), `crates/skotos-auth` (SaaS external + self-hosted adapters), `services/control-api` (semantic patches + `/simulate` + `utoipa` OpenAPI -> `packages/api-client`)
+- [x] **1D**: Standalone `@skotos/ui` library (Radix UI + `.module.css`, zero Tailwind, design tokens, Vitest + WCAG 2.1 AA axe coverage)
+- [x] **1E**: `apps/web` Management Dashboard consuming `@skotos/ui` + `@skotos/api-client` exclusively
 
-## Phase 2 — Real-Time Delivery Plane, Event Ingest & First SDK Suite
+## Phase 2 — Real-Time Delivery Plane, Event Ingest & First SDK Suite (Next)
 
 - [ ] Outbox -> R2/S3 pre-compressed snapshots -> NATS JetStream publisher
 - [ ] `services/delivery-edge` (Server SSE `put`/`patch`/`delete`, ETag polling, Client Ping-to-Re-evaluate SSE + `evalx`)

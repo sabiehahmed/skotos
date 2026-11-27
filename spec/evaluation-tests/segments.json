@@ -1,0 +1,316 @@
+{
+  "suite": "segments",
+  "kind": "evaluation",
+  "segments": {
+    "beta-users": {
+      "key": "beta-users",
+      "version": 1,
+      "salt": "seg-1",
+      "included": ["alice", "both-user"],
+      "excluded": ["bob", "both-user"],
+      "includedContexts": [
+        { "contextKind": "organization", "values": ["org-vip"] }
+      ],
+      "excludedContexts": [
+        { "contextKind": "organization", "values": ["org-blocked"] }
+      ],
+      "rules": [
+        {
+          "id": "sr-1",
+          "clauses": [
+            { "contextKind": "user", "attribute": "email", "op": "endsWith", "values": ["@beta.io"], "negate": false }
+          ]
+        },
+        {
+          "id": "sr-2",
+          "clauses": [
+            { "contextKind": "organization", "attribute": "plan", "op": "in", "values": ["enterprise"], "negate": false }
+          ]
+        }
+      ]
+    },
+    "seg-rollout": {
+      "key": "seg-rollout",
+      "version": 1,
+      "salt": "seg-salt",
+      "rules": [
+        {
+          "id": "sr-pct",
+          "clauses": [
+            { "contextKind": "user", "attribute": "active", "op": "in", "values": [true], "negate": false }
+          ],
+          "weight": 50000,
+          "rolloutContextKind": "user"
+        }
+      ]
+    },
+    "seg-leaf": {
+      "key": "seg-leaf",
+      "version": 1,
+      "salt": "sl",
+      "included": ["leaf-user"]
+    },
+    "seg-left": {
+      "key": "seg-left",
+      "version": 1,
+      "salt": "sleft",
+      "rules": [
+        {
+          "id": "sl1",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-leaf"], "negate": false }
+          ]
+        }
+      ]
+    },
+    "seg-right": {
+      "key": "seg-right",
+      "version": 1,
+      "salt": "sright",
+      "rules": [
+        {
+          "id": "sr1",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-leaf"], "negate": false }
+          ]
+        }
+      ]
+    },
+    "seg-diamond": {
+      "key": "seg-diamond",
+      "version": 1,
+      "salt": "sd",
+      "rules": [
+        {
+          "id": "sd1",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-left"], "negate": false },
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-right"], "negate": false }
+          ]
+        }
+      ]
+    },
+    "seg-cycle-a": {
+      "key": "seg-cycle-a",
+      "version": 1,
+      "salt": "sca",
+      "rules": [
+        {
+          "id": "ca",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-cycle-b"], "negate": false }
+          ]
+        }
+      ]
+    },
+    "seg-cycle-b": {
+      "key": "seg-cycle-b",
+      "version": 1,
+      "salt": "scb",
+      "rules": [
+        {
+          "id": "cb",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-cycle-a"], "negate": false }
+          ]
+        }
+      ]
+    }
+  },
+  "flags": {
+    "flag-beta-seg": {
+      "key": "flag-beta-seg",
+      "version": 1,
+      "on": true,
+      "salt": "fs1",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-seg",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["beta-users"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "flag-seg-rollout": {
+      "key": "flag-seg-rollout",
+      "version": 1,
+      "on": true,
+      "salt": "fs2",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-seg-roll",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-rollout"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "flag-missing-seg": {
+      "key": "flag-missing-seg",
+      "version": 1,
+      "on": true,
+      "salt": "fs3",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-miss",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["unknown-seg"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "flag-missing-seg-negated": {
+      "key": "flag-missing-seg-negated",
+      "version": 1,
+      "on": true,
+      "salt": "fs4",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-miss-neg",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["unknown-seg"], "negate": true }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "flag-seg-diamond": {
+      "key": "flag-seg-diamond",
+      "version": 1,
+      "on": true,
+      "salt": "fs5",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-dia",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-diamond"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "flag-seg-cycle": {
+      "key": "flag-seg-cycle",
+      "version": 1,
+      "on": true,
+      "salt": "fs6",
+      "variations": [false, true],
+      "offVariation": 0,
+      "rules": [
+        {
+          "id": "r-cyc",
+          "clauses": [
+            { "contextKind": "user", "attribute": "", "op": "segmentMatch", "values": ["seg-cycle-a"], "negate": false }
+          ],
+          "variation": 1
+        }
+      ],
+      "fallthrough": { "variation": 0 }
+    }
+  },
+  "tests": [
+    {
+      "name": "segment included list matches user",
+      "flagKey": "flag-beta-seg",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "alice" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-seg" } }
+    },
+    {
+      "name": "segment included takes precedence over excluded",
+      "flagKey": "flag-beta-seg",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "both-user" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-seg" } }
+    },
+    {
+      "name": "segment excluded overrides matching dynamic rule",
+      "flagKey": "flag-beta-seg",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "bob", "email": "bob@beta.io" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "segment dynamic rule matches when not excluded",
+      "flagKey": "flag-beta-seg",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "carol", "email": "carol@beta.io" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-seg" } }
+    },
+    {
+      "name": "segment includedContexts matches non-user kind",
+      "flagKey": "flag-beta-seg",
+      "defaultValue": false,
+      "context": { "kind": "multi", "user": { "key": "u1" }, "organization": { "key": "org-vip" } },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-seg" } }
+    },
+    {
+      "name": "segment excludedContexts overrides organization dynamic rule",
+      "flagKey": "flag-beta-seg",
+      "defaultValue": false,
+      "context": { "kind": "multi", "user": { "key": "u1" }, "organization": { "key": "org-blocked", "plan": "enterprise" } },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "segment rule rollout matches user-b (bucket 32605 < 50000)",
+      "flagKey": "flag-seg-rollout",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "user-b", "active": true },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-seg-roll" } }
+    },
+    {
+      "name": "segment rule rollout excludes user-a (bucket 63610 >= 50000)",
+      "flagKey": "flag-seg-rollout",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "user-a", "active": true },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "missing segment evaluates to false when negate=false",
+      "flagKey": "flag-missing-seg",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "missing segment applies negate=true and evaluates to true",
+      "flagKey": "flag-missing-seg-negated",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-miss-neg" } }
+    },
+    {
+      "name": "diamond nested segment DAG succeeds without false cycle error",
+      "flagKey": "flag-seg-diamond",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "leaf-user" },
+      "expected": { "value": true, "variationIndex": 1, "reason": { "kind": "RULE_MATCH", "ruleIndex": 0, "ruleId": "r-dia" } }
+    },
+    {
+      "name": "cyclic segment reference returns ERROR(MALFORMED_FLAG)",
+      "flagKey": "flag-seg-cycle",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": false, "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" } }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skotos Golden Evaluation Test Suite",
+  "type": "object",
+  "required": ["suite", "tests"],
+  "properties": {
+    "suite": { "type": "string" },
+    "kind": {
+      "type": "string",
+      "enum": ["evaluation", "redaction"],
+      "default": "evaluation"
+    },
+    "flags": { "type": "object" },
+    "segments": { "type": "object" },
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "context", "expected"],
+        "properties": {
+          "name": { "type": "string" },
+          "flagKey": { "type": "string" },
+          "getter": {
+            "type": "string",
+            "enum": ["any", "bool", "string", "number", "json"]
+          },
+          "defaultValue": {},
+          "context": { "type": "object" },
+          "flags": { "type": "object" },
+          "segments": { "type": "object" },
+          "redactionConfig": {
+            "type": "object",
+            "properties": {
+              "allAttributesPrivate": { "type": "boolean" },
+              "globalPrivateAttributes": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "expected": {}
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,24 @@
-//! Skotos Control Plane API service.
-//!
-//! Full Axum REST server, SQLx migration runner, and OpenAPI 3.1 exporter are
-//! implemented in Milestone 1C (M4).
+//! Skotos Control Plane REST API service, PostgreSQL migration runner, and OpenAPI 3.1 exporter.
+
+pub mod config;
+pub mod dto;
+pub mod extract;
+pub mod problem;
+pub mod routes;
+
+use std::sync::Arc;
+
+use axum::Router;
+use skotos_auth::{
+    ApiTokenVerifier, AuthMode, Authorizer, ExternalAuthAdapter, IdentityProvider,
+    SelfHostedAuthAdapter,
+};
+use skotos_storage::{run_migrations, Storage};
+use sqlx::postgres::PgPoolOptions;
+
+pub use config::AppConfig;
+pub use extract::AppState;
+pub use routes::{build_router, ApiDoc};
 
 /// Canonical service name.
 pub const SERVICE_NAME: &str = "control-api";
@@ -11,7 +28,7 @@ pub const USAGE: &str = "\
 Usage: control-api [OPTIONS]
 
 Options:
-  --migrate-only    Run embedded PostgreSQL migrations and exit (implemented in Milestone 1C / M4)
+  --migrate-only    Run embedded PostgreSQL migrations and exit
   -h, --help        Print this help message
 ";
 
@@ -53,6 +70,68 @@ pub fn linked_crates() -> [&'static str; 4] {
         skotos_storage::CRATE_NAME,
         skotos_auth::CRATE_NAME,
     ]
+}
+
+/// Connects to PostgreSQL, optionally runs embedded migrations, initializes the configured
+/// [`IdentityProvider`] (bootstrapping admin in self-hosted mode), and builds the Axum router.
+pub async fn init_app(config: &AppConfig) -> Result<(AppState, Router), String> {
+    let pool = PgPoolOptions::new()
+        .max_connections(config.database_max_connections)
+        .connect(&config.database_url)
+        .await
+        .map_err(|e| format!("failed to connect to PostgreSQL: {e}"))?;
+
+    if config.run_migrations {
+        run_migrations(&pool)
+            .await
+            .map_err(|e| format!("failed to run database migrations: {e}"))?;
+    }
+
+    let storage = Storage::new(pool);
+
+    let identity_provider: Arc<dyn IdentityProvider> = match config.auth_mode {
+        AuthMode::SelfHosted => {
+            let adapter =
+                SelfHostedAuthAdapter::new(storage.clone(), config.session_secret.clone())
+                    .map_err(|e| format!("self-hosted auth init failed: {e}"))?;
+            adapter
+                .ensure_bootstrap_admin(&config.bootstrap)
+                .await
+                .map_err(|e| format!("bootstrap admin init failed: {e}"))?;
+            Arc::new(adapter)
+        }
+        AuthMode::External => {
+            let oidc_cfg = config
+                .external_oidc
+                .clone()
+                .ok_or_else(|| "missing external OIDC configuration".to_string())?;
+            Arc::new(ExternalAuthAdapter::new(storage.clone(), oidc_cfg))
+        }
+    };
+
+    let state = AppState {
+        api_token_verifier: ApiTokenVerifier::new(storage.clone()),
+        storage,
+        identity_provider,
+        authorizer: Authorizer,
+        cookie_secure: config.cookie_secure,
+    };
+
+    let router = build_router(state.clone(), &config.cors_origins);
+    Ok((state, router))
+}
+
+/// Runs only the embedded PostgreSQL migrations and exits.
+pub async fn run_migrations_only(config: &AppConfig) -> Result<(), String> {
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&config.database_url)
+        .await
+        .map_err(|e| format!("failed to connect to PostgreSQL: {e}"))?;
+    run_migrations(&pool)
+        .await
+        .map_err(|e| format!("failed to run database migrations: {e}"))?;
+    Ok(())
 }
 
 #[cfg(test)]

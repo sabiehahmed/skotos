@@ -1,6 +1,20 @@
 //! Pluggable dual-path authentication (Cloud SaaS OIDC & Self-Hosted), API tokens, and RBAC.
-//!
-//! Full identity adapters and authorizer are implemented in Milestone 1C (M4).
+
+pub mod error;
+pub mod password;
+pub mod principal;
+pub mod provider;
+
+pub use error::{AuthError, AuthzError};
+pub use password::{
+    hash_password, sign_session_cookie, verify_password, verify_session_cookie, SessionPayload,
+    SESSION_COOKIE_NAME,
+};
+pub use principal::{Action, ActorType, AuthMode, AuthenticatedPrincipal, Authorizer, ResourceRef};
+pub use provider::{
+    ApiTokenVerifier, BootstrapAdminConfig, ExternalAuthAdapter, ExternalAuthConfig,
+    IdentityProvider, PublicAuthConfig, SelfHostedAuthAdapter,
+};
 
 /// Canonical crate identifier for workspace wiring verification.
 pub const CRATE_NAME: &str = "skotos-auth";

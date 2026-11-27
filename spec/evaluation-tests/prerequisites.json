@@ -1,0 +1,300 @@
+{
+  "suite": "prerequisites",
+  "kind": "evaluation",
+  "flags": {
+    "base-on": {
+      "key": "base-on",
+      "version": 1,
+      "on": true,
+      "salt": "p1",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 0 }
+    },
+    "base-off-matches-var": {
+      "key": "base-off-matches-var",
+      "version": 1,
+      "on": false,
+      "salt": "p2",
+      "variations": [true, false],
+      "offVariation": 0,
+      "fallthrough": { "variation": 0 }
+    },
+    "base-wrong-var": {
+      "key": "base-wrong-var",
+      "version": 1,
+      "on": true,
+      "salt": "p3",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 1 }
+    },
+    "child-pass": {
+      "key": "child-pass",
+      "version": 1,
+      "on": true,
+      "salt": "p4",
+      "variations": ["enabled", "disabled"],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "base-on", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "child-prereq-off": {
+      "key": "child-prereq-off",
+      "version": 1,
+      "on": true,
+      "salt": "p5",
+      "variations": ["enabled", "disabled"],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "base-off-matches-var", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "child-prereq-wrong-var": {
+      "key": "child-prereq-wrong-var",
+      "version": 1,
+      "on": true,
+      "salt": "p6",
+      "variations": ["enabled", "disabled"],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "base-wrong-var", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "child-prereq-missing": {
+      "key": "child-prereq-missing",
+      "version": 1,
+      "on": true,
+      "salt": "p7",
+      "variations": ["enabled", "disabled"],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "does-not-exist", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "chain-mid": {
+      "key": "chain-mid",
+      "version": 1,
+      "on": true,
+      "salt": "p8",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "base-on", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "chain-top": {
+      "key": "chain-top",
+      "version": 1,
+      "on": true,
+      "salt": "p9",
+      "variations": ["ok", "fail"],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "chain-mid", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "diamond-d": {
+      "key": "diamond-d",
+      "version": 1,
+      "on": true,
+      "salt": "d",
+      "variations": [true, false],
+      "offVariation": 1,
+      "fallthrough": { "variation": 0 }
+    },
+    "diamond-b": {
+      "key": "diamond-b",
+      "version": 1,
+      "on": true,
+      "salt": "b",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "diamond-d", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "diamond-c": {
+      "key": "diamond-c",
+      "version": 1,
+      "on": true,
+      "salt": "c",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "diamond-d", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "diamond-a": {
+      "key": "diamond-a",
+      "version": 1,
+      "on": true,
+      "salt": "a",
+      "variations": ["diamond-ok", "diamond-off"],
+      "offVariation": 1,
+      "prerequisites": [
+        { "key": "diamond-b", "variation": 0 },
+        { "key": "diamond-c", "variation": 0 }
+      ],
+      "fallthrough": { "variation": 0 }
+    },
+    "self-cycle": {
+      "key": "self-cycle",
+      "version": 1,
+      "on": true,
+      "salt": "sc",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "self-cycle", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "cycle-a": {
+      "key": "cycle-a",
+      "version": 1,
+      "on": true,
+      "salt": "ca",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "cycle-b", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "cycle-b": {
+      "key": "cycle-b",
+      "version": 1,
+      "on": true,
+      "salt": "cb",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "cycle-a", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "cycle3-a": {
+      "key": "cycle3-a",
+      "version": 1,
+      "on": true,
+      "salt": "c3a",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "cycle3-b", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "cycle3-b": {
+      "key": "cycle3-b",
+      "version": 1,
+      "on": true,
+      "salt": "c3b",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "cycle3-c", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "cycle3-c": {
+      "key": "cycle3-c",
+      "version": 1,
+      "on": true,
+      "salt": "c3c",
+      "variations": [true, false],
+      "offVariation": 1,
+      "prerequisites": [{ "key": "cycle3-a", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    },
+    "child-no-off-var": {
+      "key": "child-no-off-var",
+      "version": 1,
+      "on": true,
+      "salt": "nooff",
+      "variations": ["enabled", "disabled"],
+      "prerequisites": [{ "key": "base-wrong-var", "variation": 0 }],
+      "fallthrough": { "variation": 0 }
+    }
+  },
+  "tests": [
+    {
+      "name": "passing prerequisite allows child flag evaluation",
+      "flagKey": "child-pass",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": "enabled", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "off prerequisite fails even if its offVariation matches required variation",
+      "flagKey": "child-prereq-off",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": "disabled",
+        "variationIndex": 1,
+        "reason": { "kind": "PREREQUISITE_FAILED", "prerequisiteKey": "base-off-matches-var" }
+      }
+    },
+    {
+      "name": "prerequisite evaluating to wrong variation returns offVariation and PREREQUISITE_FAILED",
+      "flagKey": "child-prereq-wrong-var",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": "disabled",
+        "variationIndex": 1,
+        "reason": { "kind": "PREREQUISITE_FAILED", "prerequisiteKey": "base-wrong-var" }
+      }
+    },
+    {
+      "name": "missing prerequisite fails cleanly with PREREQUISITE_FAILED",
+      "flagKey": "child-prereq-missing",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": "disabled",
+        "variationIndex": 1,
+        "reason": { "kind": "PREREQUISITE_FAILED", "prerequisiteKey": "does-not-exist" }
+      }
+    },
+    {
+      "name": "failed prerequisite on flag with no offVariation returns defaultValue",
+      "flagKey": "child-no-off-var",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": "fallback",
+        "reason": { "kind": "PREREQUISITE_FAILED", "prerequisiteKey": "base-wrong-var" }
+      }
+    },
+    {
+      "name": "3-level prerequisite chain succeeds",
+      "flagKey": "chain-top",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": "ok", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "diamond prerequisite DAG (A -> B,C -> D) succeeds without false cycle error",
+      "flagKey": "diamond-a",
+      "defaultValue": "fallback",
+      "context": { "kind": "user", "key": "u1" },
+      "expected": { "value": "diamond-ok", "variationIndex": 0, "reason": { "kind": "FALLTHROUGH" } }
+    },
+    {
+      "name": "direct self-cycle returns ERROR(MALFORMED_FLAG)",
+      "flagKey": "self-cycle",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": false,
+        "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" }
+      }
+    },
+    {
+      "name": "2-node prerequisite cycle returns ERROR(MALFORMED_FLAG)",
+      "flagKey": "cycle-a",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": false,
+        "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" }
+      }
+    },
+    {
+      "name": "3-node prerequisite cycle returns ERROR(MALFORMED_FLAG)",
+      "flagKey": "cycle3-a",
+      "defaultValue": false,
+      "context": { "kind": "user", "key": "u1" },
+      "expected": {
+        "value": false,
+        "reason": { "kind": "ERROR", "errorKind": "MALFORMED_FLAG" }
+      }
+    }
+  ]
+}

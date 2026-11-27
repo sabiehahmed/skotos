@@ -1,0 +1,480 @@
+/* Forms & Interactive Controls CSS Module */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sk-space-2);
+  border-radius: var(--sk-radius-md);
+  font-weight: 550;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--sk-duration-fast) var(--sk-ease-out),
+    border-color var(--sk-duration-fast) var(--sk-ease-out),
+    color var(--sk-duration-fast) var(--sk-ease-out);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.button:focus-visible {
+  outline: none;
+  box-shadow: var(--sk-focus-ring);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSm {
+  height: 30px;
+  padding: 0 var(--sk-space-3);
+  font-size: var(--sk-text-xs);
+}
+
+.btnMd {
+  height: 36px;
+  padding: 0 var(--sk-space-4);
+  font-size: var(--sk-text-sm);
+}
+
+.btnLg {
+  height: 42px;
+  padding: 0 var(--sk-space-5);
+  font-size: var(--sk-text-md);
+}
+
+.btnPrimary {
+  background: var(--sk-color-accent);
+  color: var(--sk-color-text-inverse);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: var(--sk-color-accent-hover);
+  text-decoration: none;
+}
+
+.btnSecondary {
+  background: var(--sk-color-surface);
+  color: var(--sk-color-text);
+  border-color: var(--sk-color-border-strong);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: var(--sk-color-surface-hover);
+  text-decoration: none;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--sk-color-text-secondary);
+}
+
+.btnGhost:hover:not(:disabled) {
+  background: var(--sk-color-surface-hover);
+  color: var(--sk-color-text);
+  text-decoration: none;
+}
+
+.btnDanger {
+  background: var(--sk-color-danger);
+  color: #ffffff;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: var(--sk-color-danger-hover);
+  text-decoration: none;
+}
+
+.iconButton {
+  padding: 0;
+  width: 34px;
+  height: 34px;
+}
+
+.iconButtonSm {
+  width: 28px;
+  height: 28px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--sk-text-sm);
+  font-weight: 550;
+  color: var(--sk-color-text);
+}
+
+.requiredMark {
+  color: var(--sk-color-danger);
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldHint {
+  font-size: var(--sk-text-xs);
+  color: var(--sk-color-text-muted);
+}
+
+.fieldError {
+  font-size: var(--sk-text-xs);
+  color: var(--sk-color-danger);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  background: var(--sk-color-surface);
+  color: var(--sk-color-text);
+  border: 1px solid var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-md);
+  font-size: var(--sk-text-sm);
+  transition: border-color var(--sk-duration-fast) var(--sk-ease-out),
+    box-shadow var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.input {
+  height: 36px;
+  padding: 0 var(--sk-space-3);
+}
+
+.textarea {
+  min-height: 84px;
+  padding: var(--sk-space-2) var(--sk-space-3);
+  resize: vertical;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--sk-color-border-focus);
+  box-shadow: var(--sk-focus-ring);
+}
+
+.input:disabled,
+.textarea:disabled {
+  background: var(--sk-color-surface-subtle);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.inputInvalid {
+  border-color: var(--sk-color-danger);
+}
+
+.inputMono {
+  font-family: var(--sk-font-mono);
+}
+
+/* Radix Select */
+.selectTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-2);
+  height: 36px;
+  padding: 0 var(--sk-space-3);
+  min-width: 140px;
+  background: var(--sk-color-surface);
+  color: var(--sk-color-text);
+  border: 1px solid var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-md);
+  font-size: var(--sk-text-sm);
+  cursor: pointer;
+}
+
+.selectTrigger:focus-visible {
+  outline: none;
+  border-color: var(--sk-color-border-focus);
+  box-shadow: var(--sk-focus-ring);
+}
+
+.selectTrigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.selectContent {
+  background: var(--sk-color-surface-elevated);
+  border: 1px solid var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-md);
+  box-shadow: var(--sk-shadow-md);
+  padding: 4px;
+  z-index: var(--sk-z-dropdown);
+  min-width: var(--radix-select-trigger-width);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.selectItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sk-space-2);
+  padding: 6px var(--sk-space-3);
+  border-radius: var(--sk-radius-sm);
+  font-size: var(--sk-text-sm);
+  cursor: pointer;
+  outline: none;
+  color: var(--sk-color-text);
+}
+
+.selectItem[data-highlighted] {
+  background: var(--sk-color-accent-subtle);
+  color: var(--sk-color-accent);
+}
+
+/* Radix Checkbox */
+.checkboxRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+  font-size: var(--sk-text-sm);
+  cursor: pointer;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--sk-radius-xs);
+  border: 1px solid var(--sk-color-border-strong);
+  background: var(--sk-color-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.checkbox[data-state="checked"] {
+  background: var(--sk-color-accent);
+  border-color: var(--sk-color-accent);
+  color: #ffffff;
+}
+
+.checkbox:focus-visible {
+  outline: none;
+  box-shadow: var(--sk-focus-ring);
+}
+
+/* Radix Switch */
+.switchRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+}
+
+.switchRoot {
+  width: 40px;
+  height: 22px;
+  background: var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-full);
+  border: none;
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--sk-duration-fast) var(--sk-ease-out);
+  flex-shrink: 0;
+}
+
+.switchRoot[data-state="checked"] {
+  background: var(--sk-color-success);
+}
+
+.switchRoot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switchRoot:focus-visible {
+  outline: none;
+  box-shadow: var(--sk-focus-ring);
+}
+
+.switchThumb {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: var(--sk-radius-full);
+  box-shadow: var(--sk-shadow-xs);
+  transform: translateX(2px);
+  transition: transform var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.switchThumb[data-state="checked"] {
+  transform: translateX(20px);
+}
+
+/* Radix ToggleGroup */
+.toggleGroup {
+  display: inline-flex;
+  background: var(--sk-color-surface-subtle);
+  padding: 3px;
+  border-radius: var(--sk-radius-md);
+  border: 1px solid var(--sk-color-border);
+  gap: 2px;
+}
+
+.toggleGroupItem {
+  border: none;
+  background: transparent;
+  color: var(--sk-color-text-secondary);
+  padding: 5px 12px;
+  border-radius: var(--sk-radius-sm);
+  font-size: var(--sk-text-xs);
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.toggleGroupItem[data-state="on"] {
+  background: var(--sk-color-surface);
+  color: var(--sk-color-text);
+  box-shadow: var(--sk-shadow-xs);
+}
+
+/* Radix Slider */
+.sliderRoot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  touch-action: none;
+  width: 100%;
+  height: 20px;
+}
+
+.sliderTrack {
+  background: var(--sk-color-surface-subtle);
+  border: 1px solid var(--sk-color-border);
+  position: relative;
+  flex-grow: 1;
+  border-radius: var(--sk-radius-full);
+  height: 6px;
+}
+
+.sliderRange {
+  position: absolute;
+  background: var(--sk-color-accent);
+  border-radius: var(--sk-radius-full);
+  height: 100%;
+}
+
+.sliderThumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background: var(--sk-color-surface);
+  border: 2px solid var(--sk-color-accent);
+  border-radius: var(--sk-radius-full);
+  cursor: pointer;
+}
+
+.sliderThumb:focus-visible {
+  outline: none;
+  box-shadow: var(--sk-focus-ring);
+}
+
+/* TagInput */
+.tagBox {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 4px 8px;
+  border: 1px solid var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-md);
+  background: var(--sk-color-surface);
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--sk-radius-full);
+  background: var(--sk-color-accent-subtle);
+  color: var(--sk-color-accent);
+  font-size: var(--sk-text-xs);
+  font-weight: 550;
+}
+
+.tagRemoveBtn {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tagInputField {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  min-width: 100px;
+  font-size: var(--sk-text-sm);
+  color: var(--sk-color-text);
+}
+
+/* Combobox */
+.comboboxWrap {
+  position: relative;
+}
+
+.comboboxDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--sk-color-surface-elevated);
+  border: 1px solid var(--sk-color-border-strong);
+  border-radius: var(--sk-radius-md);
+  box-shadow: var(--sk-shadow-md);
+  padding: 4px;
+  z-index: var(--sk-z-dropdown);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.comboboxOption {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: var(--sk-radius-sm);
+  font-size: var(--sk-text-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--sk-color-text);
+}
+
+.comboboxOption:hover {
+  background: var(--sk-color-accent-subtle);
+  color: var(--sk-color-accent);
+}
+
+/* KeyValueEditor */
+.kvList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-space-2);
+}
+
+.kvRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: var(--sk-space-2);
+  align-items: center;
+}
