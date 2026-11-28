@@ -11,15 +11,15 @@ use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use skotos_domain::{
-    FlagEvalUsage, FlagMonitoringSummary, FlagVariationMonitoring, MetricDefinition,
-    MigrationStageMetrics, MigrationTelemetrySummary, VariationSufficientStats,
+    ContextCatalog, FlagEvalUsage, FlagMonitoringSummary, FlagVariationMonitoring,
+    MetricDefinition, MigrationStageMetrics, MigrationTelemetrySummary, VariationSufficientStats,
     VariationUsageCount,
 };
 use uuid::Uuid;
 
 use crate::{
-    CustomEventRecord, ExposureRecord, MigrationOpRecord, SummaryRollupIncrement, TelemetryError,
-    TelemetryStore,
+    assemble_context_catalog, ContextObservation, CustomEventRecord, ExposureRecord,
+    MigrationOpRecord, SummaryRollupIncrement, TelemetryError, TelemetryStore,
 };
 
 #[derive(Debug, Clone)]
@@ -127,6 +127,20 @@ impl ClickHouseTelemetryStore {
                 PARTITION BY toYYYYMM(occurred_at)
                 ORDER BY (org_id, env_id, flag_key, stage, occurred_at)
                 TTL toDateTime(occurred_at) + INTERVAL 90 DAY"
+            ),
+            // One row per (kind, item) sighting; item_type is 'kind', 'attribute' or 'key'.
+            // ReplacingMergeTree keeps the newest sighting; values are never stored.
+            format!(
+                "CREATE TABLE IF NOT EXISTS {database}.context_catalog (
+                    org_id UUID,
+                    env_id UUID,
+                    context_kind LowCardinality(String),
+                    item_type LowCardinality(String),
+                    item String CODEC(ZSTD(3)),
+                    last_seen_at DateTime64(3) CODEC(Delta, ZSTD(3))
+                ) ENGINE = ReplacingMergeTree(last_seen_at)
+                ORDER BY (org_id, env_id, context_kind, item_type, item)
+                TTL toDateTime(last_seen_at) + INTERVAL 90 DAY"
             ),
         ]
     }
@@ -633,4 +647,80 @@ impl TelemetryStore for ClickHouseTelemetryStore {
             generated_at: Utc::now(),
         })
     }
+
+    async fn record_context_observations(
+        &self,
+        observations: &[ContextObservation],
+    ) -> Result<(), TelemetryError> {
+        let mut rows: Vec<Value> = Vec::new();
+        for o in observations {
+            let ts = o.seen_at.format("%Y-%m-%d %H:%M:%S%.3f").to_string();
+            let mut push = |item_type: &str, item: &str| {
+                rows.push(json!({
+                    "org_id": o.org_id,
+                    "env_id": o.env_id,
+                    "context_kind": o.context_kind,
+                    "item_type": item_type,
+                    "item": item,
+                    "last_seen_at": ts,
+                }));
+            };
+            push("kind", "");
+            for a in &o.attributes {
+                push("attribute", a);
+            }
+            for k in &o.keys {
+                push("key", k);
+            }
+        }
+        self.insert_json_each_row("context_catalog", &rows).await
+    }
+
+    async fn query_context_catalog(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        lookback_days: i64,
+    ) -> Result<ContextCatalog, TelemetryError> {
+        let since = (Utc::now() - Duration::days(lookback_days.clamp(1, 365)))
+            .format("%Y-%m-%d %H:%M:%S%.3f");
+        let sql = format!(
+            "SELECT context_kind, item_type, item, max(last_seen_at) AS seen
+             FROM context_catalog
+             WHERE org_id = '{org_id}' AND env_id = '{env_id}' AND last_seen_at >= '{since}'
+             GROUP BY context_kind, item_type, item
+             ORDER BY seen DESC, item ASC
+             LIMIT 1 BY context_kind, item_type, item"
+        );
+        let rows = self.query_json_rows(&sql).await?;
+        let mut kinds = Vec::new();
+        let mut attributes = Vec::new();
+        let mut keys = Vec::new();
+        for r in rows {
+            let kind = r["context_kind"].as_str().unwrap_or_default().to_string();
+            let item = r["item"].as_str().unwrap_or_default().to_string();
+            let seen = r["seen"]
+                .as_str()
+                .and_then(parse_ch_datetime)
+                .unwrap_or_else(Utc::now);
+            match r["item_type"].as_str() {
+                Some("kind") => kinds.push((kind, seen)),
+                Some("attribute") => attributes.push((kind, item, seen)),
+                Some("key") => keys.push((kind, item)),
+                _ => {}
+            }
+        }
+        Ok(assemble_context_catalog(kinds, attributes, keys))
+    }
+}
+
+fn parse_ch_datetime(raw: &str) -> Option<DateTime<Utc>> {
+    DateTime::parse_from_rfc3339(raw)
+        .map(|t| t.with_timezone(&Utc))
+        .ok()
+        .or_else(|| {
+            chrono::NaiveDateTime::parse_from_str(raw, "%Y-%m-%d %H:%M:%S%.f")
+                .ok()
+                .map(|n| n.and_utc())
+        })
 }
