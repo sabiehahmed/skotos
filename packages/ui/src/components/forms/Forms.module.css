@@ -208,6 +208,13 @@
   cursor: pointer;
 }
 
+.selectTrigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .selectTrigger:hover:not(:disabled) {
   background: var(--sk-color-surface-hover);
 }
