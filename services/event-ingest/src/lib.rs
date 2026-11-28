@@ -353,13 +353,16 @@ async fn process_event_payload(
         }
     }
 
-    // 4. Extract hourly summary rollups, experiment exposures, custom metric events, and migration ops
+    // 4. Extract hourly summary rollups, experiment exposures, custom metric events, migration ops,
+    //    and context catalog observations
     let increments = extract_rollup_increments(resolved.org_id, resolved.env_id, &events);
     let exposures = skotos_telemetry::extract_exposures(resolved.org_id, resolved.env_id, &events);
     let custom_events =
         skotos_telemetry::extract_custom_events(resolved.org_id, resolved.env_id, &events);
     let migration_ops =
         skotos_telemetry::extract_migration_ops(resolved.org_id, resolved.env_id, &events);
+    let context_observations =
+        skotos_telemetry::extract_context_observations(resolved.org_id, resolved.env_id, &events);
     let accepted_events = events.len();
 
     // 5. Phase 3 Live Events Debugger: publish ephemeral debug events onto core NATS (zero storage cost)
@@ -399,6 +402,16 @@ async fn process_event_payload(
     if !migration_ops.is_empty() {
         if let Err(err) = state.telemetry.record_migration_ops(&migration_ops).await {
             warn!(error = %err, "failed persisting migration op metrics batch");
+        }
+    }
+    // Context catalog (kinds, attribute names, recent keys) for rule clause dropdowns
+    if !context_observations.is_empty() {
+        if let Err(err) = state
+            .telemetry
+            .record_context_observations(&context_observations)
+            .await
+        {
+            warn!(error = %err, "failed persisting context catalog observations");
         }
     }
 

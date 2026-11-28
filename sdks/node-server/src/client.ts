@@ -148,6 +148,15 @@ export interface SkotosNodeConfig {
   pollIntervalMs?: number;
   flushIntervalMs?: number;
   redaction?: RedactionConfig;
+  /**
+   * Send a redacted copy of each context the first time it is evaluated in a window, so
+   * the dashboard can suggest context kinds, attribute names and keys. Default true.
+   */
+  sendIndexEvents?: boolean;
+  /** Max distinct contexts remembered between index windows. Default 1000. */
+  contextKeysCapacity?: number;
+  /** How often the remembered contexts reset, re-sending index events. Default 5 minutes. */
+  contextKeysFlushIntervalMs?: number;
 }
 
 type ChangeListener = (flagKey: string) => void;
@@ -174,6 +183,8 @@ export class SkotosNodeClient {
   >();
   private flagContextKinds = new Map<string, Set<string>>();
   private rawEvents: unknown[] = [];
+  private indexedContexts = new Set<string>();
+  private indexWindowStartMs = Date.now();
 
   constructor(config: SkotosNodeConfig, existingStore?: VersionedFeatureStore) {
     this.cfg = config;
@@ -368,6 +379,34 @@ export class SkotosNodeClient {
     }
     for (const [k] of getContextKinds(ctx)) {
       kinds.add(k);
+    }
+    this.maybeIndexContext(ctx);
+  }
+
+  /** Queues one `index` event per distinct context per window (LaunchDarkly-style). */
+  private maybeIndexContext(ctx: SkotosContext) {
+    if (this.cfg.sendIndexEvents === false) return;
+    const now = Date.now();
+    if (now - this.indexWindowStartMs >= (this.cfg.contextKeysFlushIntervalMs ?? 300_000)) {
+      this.indexedContexts.clear();
+      this.indexWindowStartMs = now;
+    }
+    const id = getContextKinds(ctx)
+      .map(([k, sc]) => `${k}:${sc.key}`)
+      .sort()
+      .join("|");
+    if (!id || this.indexedContexts.has(id)) return;
+    if (this.indexedContexts.size >= (this.cfg.contextKeysCapacity ?? 1_000)) {
+      const oldest = this.indexedContexts.values().next().value;
+      if (oldest !== undefined) this.indexedContexts.delete(oldest);
+    }
+    this.indexedContexts.add(id);
+    if (this.rawEvents.length < 5_000) {
+      this.rawEvents.push({
+        kind: "index",
+        creationDate: now,
+        context: redactContext(ctx, this.cfg.redaction),
+      });
     }
   }
 

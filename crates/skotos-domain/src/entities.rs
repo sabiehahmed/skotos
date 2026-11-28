@@ -729,6 +729,39 @@ pub struct FlagEvalUsage {
     pub last_evaluated_at: Option<DateTime<Utc>>,
 }
 
+/// Context kinds, attribute names and recent context keys that SDKs have sent for an
+/// environment. Powers the rule clause dropdowns in the management UI.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextCatalog {
+    #[serde(default)]
+    pub kinds: Vec<ContextKindCatalogEntry>,
+}
+
+/// One context kind seen from SDKs, most recently seen attributes and keys first.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextKindCatalogEntry {
+    pub kind: String,
+    pub last_seen_at: DateTime<Utc>,
+    #[serde(default)]
+    pub attributes: Vec<ContextAttributeCatalogEntry>,
+    /// Recently seen non-anonymous context keys, newest first (capped).
+    #[serde(default)]
+    pub recent_keys: Vec<String>,
+}
+
+/// A top-level attribute name seen on a context kind. Values are never stored.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextAttributeCatalogEntry {
+    pub name: String,
+    pub last_seen_at: DateTime<Utc>,
+}
+
 /// Auth registry record exported to R2/S3 and NATS so `delivery-edge` and `event-ingest`
 /// authenticate SDK/Mobile keys and Client-Side IDs with zero PostgreSQL calls on the hot path.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

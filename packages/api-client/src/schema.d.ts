@@ -404,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/context-catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_context_catalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/environments/{envKey}/experiments": {
         parameters: {
             query?: never;
@@ -1706,6 +1722,28 @@ export interface components {
         /** @description Evaluation context: either a single context ({"kind":"user","key":"...",...}) or a multi-context ({"kind":"multi","user":{...},"organization":{...}}) */
         Context: {
             [key: string]: unknown;
+        };
+        /** @description A top-level attribute name seen on a context kind. Values are never stored. */
+        ContextAttributeCatalogEntry: {
+            /** Format: date-time */
+            lastSeenAt: string;
+            name: string;
+        };
+        /**
+         * @description Context kinds, attribute names and recent context keys that SDKs have sent for an
+         *     environment. Powers the rule clause dropdowns in the management UI.
+         */
+        ContextCatalog: {
+            kinds?: components["schemas"]["ContextKindCatalogEntry"][];
+        };
+        /** @description One context kind seen from SDKs, most recently seen attributes and keys first. */
+        ContextKindCatalogEntry: {
+            attributes?: components["schemas"]["ContextAttributeCatalogEntry"][];
+            kind: string;
+            /** Format: date-time */
+            lastSeenAt: string;
+            /** @description Recently seen non-anonymous context keys, newest first (capped). */
+            recentKeys?: string[];
         };
         /** @description Metadata attached to a single evaluation context (`_meta`). */
         ContextMeta: {
@@ -4393,6 +4431,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Environment"];
+                };
+            };
+        };
+    };
+    get_context_catalog: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContextCatalog"];
                 };
             };
         };

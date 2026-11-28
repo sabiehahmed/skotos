@@ -35,7 +35,9 @@ import {
   type DiffInstructionSummary,
   type KeyValuePair,
   type RolloutValue,
+  type RuleBuilderClause,
   type RuleBuilderRule,
+  type SuggestOption,
 } from "@skotos/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -150,6 +152,29 @@ export function FlagDetailPage({
         ),
       ),
     enabled: Boolean(envKey),
+  });
+
+  const segmentsQuery = useQuery({
+    queryKey: ["segments", projectKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments/{envKey}/segments", {
+          params: { path: { projectKey, envKey } },
+        }),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const contextCatalogQuery = useQuery({
+    queryKey: ["context-catalog", projectKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments/{envKey}/context-catalog", {
+          params: { path: { projectKey, envKey }, query: { days: 30 } },
+        }),
+      ),
+    enabled: Boolean(envKey),
+    staleTime: 60_000,
   });
 
   const schedulesQuery = useQuery({
@@ -411,6 +436,56 @@ export function FlagDetailPage({
       })),
     [flagQuery.data],
   );
+
+  // Rule clause dropdown suggestions beyond the built-in presets, learned from SDK traffic.
+  const SEEN_GROUP = "Seen from SDKs";
+  const catalogKinds = contextCatalogQuery.data?.kinds;
+
+  const seenContextKindOptions = useMemo<SuggestOption[]>(() => {
+    const kinds = new Set<string>([
+      ...(catalogKinds ?? []).map((k) => k.kind),
+      ...(usageQuery.data?.contextKinds ?? []),
+    ]);
+    return Array.from(kinds).map((kind) => ({ value: kind, description: "seen", group: SEEN_GROUP }));
+  }, [catalogKinds, usageQuery.data]);
+
+  const seenAttributeOptions = useMemo<Record<string, SuggestOption[]>>(
+    () =>
+      Object.fromEntries(
+        (catalogKinds ?? []).map((k) => [
+          k.kind,
+          (k.attributes ?? []).map((a) => ({ value: a.name, group: SEEN_GROUP })),
+        ]),
+      ),
+    [catalogKinds],
+  );
+
+  const recentKeyOptions = useMemo<Record<string, SuggestOption[]>>(
+    () =>
+      Object.fromEntries(
+        (catalogKinds ?? []).map((k) => [
+          k.kind,
+          (k.recentKeys ?? []).map((key) => ({ value: key, group: "Recently seen keys" })),
+        ]),
+      ),
+    [catalogKinds],
+  );
+
+  const segmentOptions = useMemo<SuggestOption[]>(
+    () =>
+      (segmentsQuery.data?.items ?? []).map((seg) => ({
+        value: seg.key,
+        description: seg.name && seg.name !== seg.key ? seg.name : undefined,
+        group: "Segments",
+      })),
+    [segmentsQuery.data],
+  );
+
+  const clauseValueSuggestions = (clause: RuleBuilderClause): SuggestOption[] => {
+    if (clause.op === "segmentMatch") return segmentOptions;
+    if (clause.attribute.trim() === "key") return recentKeyOptions[clause.contextKind.trim()] ?? [];
+    return [];
+  };
 
   // Compile semantic FlagPatchInstruction[] diff from current envConfig -> draft state
   const { instructions: draftInstructions, summaries: draftSummaries } = useMemo<{
@@ -1001,6 +1076,9 @@ export function FlagDetailPage({
                   variations={variationOptions}
                   disabled={!writerAllowed || flag.archived}
                   onChange={setDraftRules}
+                  contextKindSuggestions={seenContextKindOptions}
+                  attributeSuggestions={seenAttributeOptions}
+                  getValueSuggestions={clauseValueSuggestions}
                 />
               </Stack>
 

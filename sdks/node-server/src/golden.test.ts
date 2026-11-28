@@ -119,4 +119,25 @@ describe("@skotos/node-server-sdk canonical golden evaluation suite", () => {
     expect(missing.errorCode).toBe("FLAG_NOT_FOUND");
     await client.close();
   });
+
+  it("queues one redacted index event per distinct context", async () => {
+    const td = new TestData().setBoolFlag("ai-copilot", true);
+    const client = SkotosNodeClient.withTestData(td);
+    const raw = () => (client as unknown as { rawEvents: Array<Record<string, unknown>> }).rawEvents;
+
+    const alice = { kind: "user", key: "alice", email: "a@x.co", plan: "pro" };
+    client.boolVariation("ai-copilot", alice, false);
+    client.boolVariation("ai-copilot", alice, false);
+    client.boolVariation("ai-copilot", { kind: "device", key: "d1", osName: "ios" }, false);
+
+    const index = raw().filter((e) => e.kind === "index");
+    expect(index).toHaveLength(2);
+    expect(index[0]?.context).toMatchObject({ kind: "user", key: "alice", plan: "pro" });
+
+    // index events + one summary
+    expect(await client.flush()).toBe(3);
+    client.boolVariation("ai-copilot", alice, false);
+    expect(raw().filter((e) => e.kind === "index")).toHaveLength(0);
+    await client.close();
+  });
 });
