@@ -354,10 +354,11 @@ fn build_delivery_event(
     })
 }
 
-/// Periodically claims due `scheduled_changes` and executes their semantic `FlagPatchInstruction`s.
+/// Periodically claims due `scheduled_changes`, workflows, and active Guarded Rollouts.
 #[derive(Clone)]
 pub struct SchedulerWorker {
     storage: Storage,
+    telemetry: Option<std::sync::Arc<dyn skotos_telemetry::TelemetryStore>>,
     poll_interval: Duration,
 }
 
@@ -365,8 +366,17 @@ impl SchedulerWorker {
     pub fn new(storage: Storage, poll_interval: Duration) -> Self {
         Self {
             storage,
+            telemetry: None,
             poll_interval,
         }
+    }
+
+    pub fn with_telemetry(
+        mut self,
+        telemetry: std::sync::Arc<dyn skotos_telemetry::TelemetryStore>,
+    ) -> Self {
+        self.telemetry = Some(telemetry);
+        self
     }
 
     pub async fn process_due_once(&self) -> Result<usize, FanoutError> {
@@ -503,6 +513,26 @@ impl SchedulerWorker {
                 .await;
         }
 
+        // 4. Phase 4 Guarded Rollouts automated guardrail evaluator & auto-rollback
+        if let Some(telemetry) = &self.telemetry {
+            let active = self.storage.list_monitoring_guarded_rollouts(25).await?;
+            for item in active {
+                if let Ok(eval) = evaluate_guarded_rollout(
+                    &self.storage,
+                    telemetry.as_ref(),
+                    &item.rollout,
+                    &item.project_key,
+                    &item.env_key,
+                )
+                .await
+                {
+                    if eval.auto_rolled_back {
+                        total += 1;
+                    }
+                }
+            }
+        }
+
         Ok(total)
     }
 
@@ -526,4 +556,137 @@ impl SchedulerWorker {
         }
         info!("Skotos Scheduled Changes worker stopped");
     }
+}
+
+/// Evaluates all guardrail metrics and SRM for a `GuardedRollout`.
+/// If any guardrail detects a statistically significant regression and `auto_rollback` is true,
+/// atomically disables targeting (`TurnFlagOff`) and marks the rollout `rolled_back`.
+pub async fn evaluate_guarded_rollout(
+    storage: &Storage,
+    telemetry: &dyn skotos_telemetry::TelemetryStore,
+    rollout: &skotos_domain::GuardedRollout,
+    project_key: &str,
+    env_key: &str,
+) -> Result<skotos_domain::GuardedRolloutEvaluation, FanoutError> {
+    let now = Utc::now();
+    let mut checks = Vec::with_capacity(rollout.guardrails.len());
+    let mut observed_ctrl = 0i64;
+    let mut observed_treat = 0i64;
+
+    for rule in &rollout.guardrails {
+        let metric = storage
+            .get_metric(rollout.org_id, rollout.project_id, &rule.metric_key)
+            .await?;
+        let stats = telemetry
+            .query_sufficient_stats(
+                rollout.org_id,
+                rollout.env_id,
+                &rollout.flag_key,
+                &metric,
+                rollout.created_at - chrono::Duration::minutes(5),
+                now,
+            )
+            .await
+            .map_err(|e| {
+                FanoutError::Json(serde_json::Error::io(std::io::Error::other(e.to_string())))
+            })?;
+
+        let ctrl = stats
+            .iter()
+            .find(|s| s.variation_index == rollout.control_variation_index)
+            .cloned()
+            .unwrap_or_else(|| skotos_domain::VariationSufficientStats {
+                variation_index: rollout.control_variation_index,
+                ..Default::default()
+            });
+        let treat = stats
+            .iter()
+            .find(|s| s.variation_index == rollout.treatment_variation_index)
+            .cloned()
+            .unwrap_or_else(|| skotos_domain::VariationSufficientStats {
+                variation_index: rollout.treatment_variation_index,
+                ..Default::default()
+            });
+        observed_ctrl = observed_ctrl.max(ctrl.exposures);
+        observed_treat = observed_treat.max(treat.exposures);
+
+        let check = skotos_telemetry::evaluate_guardrail_metric(&metric, rule, &ctrl, &treat);
+        checks.push(check);
+    }
+
+    let treat_weight = (rollout.current_traffic_pct.clamp(1, 99) * 1_000).clamp(1_000, 99_000);
+    let ctrl_weight = 100_000 - treat_weight;
+    let srm = skotos_telemetry::check_srm(
+        &[observed_ctrl, observed_treat],
+        &[ctrl_weight, treat_weight],
+    );
+
+    let regressed_metrics: Vec<String> = checks
+        .iter()
+        .filter(|c| c.regressed)
+        .map(|c| format!("{} (+{:.1}% regression)", c.metric_key, c.regression_pct))
+        .collect();
+    let regression_detected = !regressed_metrics.is_empty();
+    let mut auto_rolled_back = false;
+
+    let (next_status, verdict) = if regression_detected {
+        if rollout.auto_rollback
+            && rollout.status == skotos_domain::GuardedRolloutStatus::Monitoring
+        {
+            let actor = AuditActor {
+                actor_id: None,
+                actor_type: "release_guardian".to_string(),
+                actor_email: None,
+            };
+            let comment = format!(
+                "Release Guardian auto-rollback triggered by regression: {}",
+                regressed_metrics.join(", ")
+            );
+            let _ = storage
+                .patch_flag(
+                    rollout.org_id,
+                    project_key,
+                    &rollout.flag_key,
+                    env_key,
+                    None,
+                    Some(&comment),
+                    &[FlagPatchInstruction::TurnFlagOff],
+                    &actor,
+                )
+                .await;
+            auto_rolled_back = true;
+            (
+                skotos_domain::GuardedRolloutStatus::RolledBack,
+                format!("Auto-rolled back: {}", regressed_metrics.join(", ")),
+            )
+        } else {
+            (
+                rollout.status,
+                format!("Regression detected: {}", regressed_metrics.join(", ")),
+            )
+        }
+    } else if srm.srm_detected {
+        (
+            rollout.status,
+            format!("SRM warning (p={:.5}); monitoring", srm.p_value),
+        )
+    } else {
+        (
+            rollout.status,
+            "Healthy — no regressions detected".to_string(),
+        )
+    };
+
+    let updated = storage
+        .update_guarded_rollout_verdict(rollout.org_id, rollout.id, next_status, &verdict)
+        .await?;
+
+    Ok(skotos_domain::GuardedRolloutEvaluation {
+        rollout: updated,
+        srm,
+        checks,
+        regression_detected,
+        auto_rolled_back,
+        evaluated_at: now,
+    })
 }

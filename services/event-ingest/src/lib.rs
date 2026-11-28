@@ -353,8 +353,13 @@ async fn process_event_payload(
         }
     }
 
-    // 4. Extract hourly summary rollups and enqueue for async flush
+    // 4. Extract hourly summary rollups, experiment exposures, custom metric events, and migration ops
     let increments = extract_rollup_increments(resolved.org_id, resolved.env_id, &events);
+    let exposures = skotos_telemetry::extract_exposures(resolved.org_id, resolved.env_id, &events);
+    let custom_events =
+        skotos_telemetry::extract_custom_events(resolved.org_id, resolved.env_id, &events);
+    let migration_ops =
+        skotos_telemetry::extract_migration_ops(resolved.org_id, resolved.env_id, &events);
     let accepted_events = events.len();
 
     // 5. Phase 3 Live Events Debugger: publish ephemeral debug events onto core NATS (zero storage cost)
@@ -377,6 +382,23 @@ async fn process_event_payload(
     if !increments.is_empty() {
         if let Err(err) = state.tx.try_send(increments) {
             warn!(error = %err, "event-ingest queue full; dropping summary batch to protect memory");
+        }
+    }
+
+    // 6. Phase 4 Analytics & Experimentation: persist exposures, custom metric events & migration ops
+    if !exposures.is_empty() {
+        if let Err(err) = state.telemetry.record_exposures(&exposures).await {
+            warn!(error = %err, "failed persisting experiment exposure batch");
+        }
+    }
+    if !custom_events.is_empty() {
+        if let Err(err) = state.telemetry.record_custom_events(&custom_events).await {
+            warn!(error = %err, "failed persisting custom metric event batch");
+        }
+    }
+    if !migration_ops.is_empty() {
+        if let Err(err) = state.telemetry.record_migration_ops(&migration_ops).await {
+            warn!(error = %err, "failed persisting migration op metrics batch");
         }
     }
 

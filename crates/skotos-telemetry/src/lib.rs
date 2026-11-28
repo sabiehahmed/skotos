@@ -5,16 +5,29 @@
 //! idempotency). Phase 4 plugs in `ClickHouseTelemetryStore` behind this exact
 //! interface with zero SDK or API breaking changes.
 
+pub mod clickhouse;
+pub mod export;
+pub mod stats;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use skotos_domain::{FlagEvalUsage, VariationUsageCount};
+use skotos_domain::{
+    FlagEvalUsage, FlagMonitoringSummary, FlagVariationMonitoring, MetricDefinition,
+    MigrationStageMetrics, MigrationTelemetrySummary, VariationSufficientStats,
+    VariationUsageCount,
+};
 use sqlx::{PgPool, Row};
 use thiserror::Error;
 use uuid::Uuid;
+
+pub use clickhouse::{ClickHouseConfig, ClickHouseTelemetryStore};
+pub use export::{dispatch_http_sink, encode_zstd_ndjson, format_sink_payload};
+pub use stats::{check_srm, evaluate_guardrail_metric, evaluate_metric_experiment, layer_bucket};
 
 pub const CRATE_NAME: &str = "skotos-telemetry";
 
@@ -24,6 +37,8 @@ pub enum TelemetryError {
     Database(#[from] sqlx::Error),
     #[error("invalid telemetry payload: {0}")]
     InvalidPayload(String),
+    #[error("telemetry backend error: {0}")]
+    Backend(String),
 }
 
 /// Wire format of an individual SDK telemetry event submitted to `services/event-ingest`.
@@ -81,6 +96,37 @@ pub enum SdkEvent {
         #[serde(default)]
         metric_value: Option<f64>,
     },
+    #[serde(rename = "migration_op", rename_all = "camelCase")]
+    MigrationOp {
+        creation_date: i64,
+        key: String,
+        #[serde(default = "default_migration_stage")]
+        stage: String,
+        #[serde(default = "default_migration_op")]
+        operation: String,
+        #[serde(default)]
+        old_invoked: bool,
+        #[serde(default)]
+        new_invoked: bool,
+        #[serde(default)]
+        old_error: bool,
+        #[serde(default)]
+        new_error: bool,
+        #[serde(default)]
+        old_latency_ms: f64,
+        #[serde(default)]
+        new_latency_ms: f64,
+        #[serde(default)]
+        consistent: Option<bool>,
+    },
+}
+
+fn default_migration_stage() -> String {
+    "off".to_string()
+}
+
+fn default_migration_op() -> String {
+    "read".to_string()
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -213,6 +259,164 @@ fn truncate_to_hour(ts: DateTime<Utc>) -> DateTime<Utc> {
         .unwrap_or(ts)
 }
 
+/// Normalized exposure event linking a context unit to a flag variation (Experimentation & Guardrails).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExposureRecord {
+    pub org_id: Uuid,
+    pub env_id: Uuid,
+    pub flag_key: String,
+    pub variation_index: i32,
+    pub context_kind: String,
+    pub context_key: String,
+    pub exposed_at: DateTime<Utc>,
+}
+
+/// Normalized custom metric event (`client.track(...)`) joined against exposures.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CustomEventRecord {
+    pub org_id: Uuid,
+    pub env_id: Uuid,
+    pub event_key: String,
+    pub context_kind: String,
+    pub context_key: String,
+    pub metric_value: f64,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Normalized 2/4/6-stage migration flag operation telemetry record.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MigrationOpRecord {
+    pub org_id: Uuid,
+    pub env_id: Uuid,
+    pub flag_key: String,
+    pub stage: String,
+    pub operation: String,
+    pub old_invoked: bool,
+    pub new_invoked: bool,
+    pub old_error: bool,
+    pub new_error: bool,
+    pub old_latency_ms: f64,
+    pub new_latency_ms: f64,
+    pub consistent: Option<bool>,
+    pub occurred_at: DateTime<Utc>,
+}
+
+/// Extracts individual flag exposure records from `SdkEvent::Feature` / `Debug` events.
+pub fn extract_exposures(org_id: Uuid, env_id: Uuid, events: &[SdkEvent]) -> Vec<ExposureRecord> {
+    let mut out = Vec::new();
+    for ev in events {
+        if let SdkEvent::Feature {
+            creation_date,
+            key,
+            variation,
+            context_keys,
+            ..
+        } = ev
+        {
+            let Some(var_idx) = variation else {
+                continue;
+            };
+            let exposed_at =
+                DateTime::from_timestamp_millis(*creation_date).unwrap_or_else(Utc::now);
+            for (kind, ctx_key) in context_keys {
+                if !ctx_key.is_empty() {
+                    out.push(ExposureRecord {
+                        org_id,
+                        env_id,
+                        flag_key: key.clone(),
+                        variation_index: *var_idx,
+                        context_kind: kind.clone(),
+                        context_key: ctx_key.clone(),
+                        exposed_at,
+                    });
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Extracts custom metric events (`SdkEvent::Custom`) for experimentation and guardrails.
+pub fn extract_custom_events(
+    org_id: Uuid,
+    env_id: Uuid,
+    events: &[SdkEvent],
+) -> Vec<CustomEventRecord> {
+    let mut out = Vec::new();
+    for ev in events {
+        if let SdkEvent::Custom {
+            creation_date,
+            key,
+            context_keys,
+            metric_value,
+            ..
+        } = ev
+        {
+            let occurred_at =
+                DateTime::from_timestamp_millis(*creation_date).unwrap_or_else(Utc::now);
+            let val = metric_value.unwrap_or(1.0);
+            for (kind, ctx_key) in context_keys {
+                if !ctx_key.is_empty() {
+                    out.push(CustomEventRecord {
+                        org_id,
+                        env_id,
+                        event_key: key.clone(),
+                        context_kind: kind.clone(),
+                        context_key: ctx_key.clone(),
+                        metric_value: val,
+                        occurred_at,
+                    });
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Extracts migration operation telemetry events (`SdkEvent::MigrationOp`).
+pub fn extract_migration_ops(
+    org_id: Uuid,
+    env_id: Uuid,
+    events: &[SdkEvent],
+) -> Vec<MigrationOpRecord> {
+    let mut out = Vec::new();
+    for ev in events {
+        if let SdkEvent::MigrationOp {
+            creation_date,
+            key,
+            stage,
+            operation,
+            old_invoked,
+            new_invoked,
+            old_error,
+            new_error,
+            old_latency_ms,
+            new_latency_ms,
+            consistent,
+        } = ev
+        {
+            let occurred_at =
+                DateTime::from_timestamp_millis(*creation_date).unwrap_or_else(Utc::now);
+            out.push(MigrationOpRecord {
+                org_id,
+                env_id,
+                flag_key: key.clone(),
+                stage: stage.clone(),
+                operation: operation.clone(),
+                old_invoked: *old_invoked,
+                new_invoked: *new_invoked,
+                old_error: *old_error,
+                new_error: *new_error,
+                old_latency_ms: *old_latency_ms,
+                new_latency_ms: *new_latency_ms,
+                consistent: *consistent,
+                occurred_at,
+            });
+        }
+    }
+    out
+}
+
 /// Backend-agnostic telemetry storage trait (ADR-0005).
 #[async_trait]
 pub trait TelemetryStore: Send + Sync {
@@ -246,9 +450,68 @@ pub trait TelemetryStore: Send + Sync {
         env_id: Uuid,
         lookback_days: i64,
     ) -> Result<Vec<FlagEvalUsage>, TelemetryError>;
+
+    /// Persists individual flag exposure records for Experimentation & Guarded Rollouts.
+    async fn record_exposures(&self, exposures: &[ExposureRecord]) -> Result<(), TelemetryError>;
+
+    /// Persists custom metric events (`client.track`).
+    async fn record_custom_events(
+        &self,
+        events: &[CustomEventRecord],
+    ) -> Result<(), TelemetryError>;
+
+    /// Persists 2/4/6-stage migration operation metrics.
+    async fn record_migration_ops(&self, ops: &[MigrationOpRecord]) -> Result<(), TelemetryError>;
+
+    /// Computes sufficient statistics (`exposures`, `conversions`, `sum`, `sum_sq`) per variation.
+    async fn query_sufficient_stats(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        flag_key: &str,
+        metric: &MetricDefinition,
+        since: DateTime<Utc>,
+        until: DateTime<Utc>,
+    ) -> Result<Vec<VariationSufficientStats>, TelemetryError>;
+
+    /// Returns per-variation Feature Monitoring telemetry (exposures, error rate, p95 latency, conversions).
+    async fn query_flag_monitoring(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        flag_key: &str,
+        lookback_hours: i64,
+    ) -> Result<FlagMonitoringSummary, TelemetryError>;
+
+    /// Returns per-stage migration consistency, invocation, error, and latency metrics.
+    async fn query_migration_telemetry(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        flag_key: &str,
+        lookback_days: i64,
+    ) -> Result<MigrationTelemetrySummary, TelemetryError>;
 }
 
-/// Phase 2 PostgreSQL `TelemetryStore` writing compact hourly counters to `flag_eval_rollups`.
+/// Instantiates the configured `TelemetryStore` backend per ADR-0005:
+/// uses [`ClickHouseTelemetryStore`] when `CLICKHOUSE_URL` is set, otherwise [`PostgresTelemetryStore`].
+pub async fn create_telemetry_store(pool: PgPool) -> Arc<dyn TelemetryStore> {
+    if let Some(cfg) = ClickHouseConfig::from_env() {
+        let store = ClickHouseTelemetryStore::new(cfg.clone());
+        match store.ensure_schema().await {
+            Ok(()) => {
+                tracing::info!(url = %cfg.url, db = %cfg.database, "initialized ClickHouseTelemetryStore");
+                return Arc::new(store);
+            }
+            Err(err) => {
+                tracing::warn!(error = %err, url = %cfg.url, "ClickHouse unavailable; falling back to PostgresTelemetryStore");
+            }
+        }
+    }
+    Arc::new(PostgresTelemetryStore::new(pool))
+}
+
+/// Phase 2–4 PostgreSQL `TelemetryStore` for lightweight/self-hosted deployments.
 #[derive(Debug, Clone)]
 pub struct PostgresTelemetryStore {
     pool: PgPool,
@@ -464,6 +727,282 @@ impl TelemetryStore for PostgresTelemetryStore {
                 },
             )
             .collect())
+    }
+
+    async fn record_exposures(&self, exposures: &[ExposureRecord]) -> Result<(), TelemetryError> {
+        if exposures.is_empty() {
+            return Ok(());
+        }
+        let mut tx = self.pool.begin().await?;
+        for e in exposures {
+            sqlx::query(
+                "INSERT INTO experiment_exposures (
+                    id, org_id, env_id, flag_key, variation_index, context_kind, context_key, exposed_at
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+            )
+            .bind(Uuid::now_v7())
+            .bind(e.org_id)
+            .bind(e.env_id)
+            .bind(&e.flag_key)
+            .bind(e.variation_index)
+            .bind(&e.context_kind)
+            .bind(&e.context_key)
+            .bind(e.exposed_at)
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    async fn record_custom_events(
+        &self,
+        events: &[CustomEventRecord],
+    ) -> Result<(), TelemetryError> {
+        if events.is_empty() {
+            return Ok(());
+        }
+        let mut tx = self.pool.begin().await?;
+        for e in events {
+            sqlx::query(
+                "INSERT INTO custom_metric_events (
+                    id, org_id, env_id, event_key, context_kind, context_key, metric_value, occurred_at
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
+            )
+            .bind(Uuid::now_v7())
+            .bind(e.org_id)
+            .bind(e.env_id)
+            .bind(&e.event_key)
+            .bind(&e.context_kind)
+            .bind(&e.context_key)
+            .bind(e.metric_value)
+            .bind(e.occurred_at)
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    async fn record_migration_ops(&self, ops: &[MigrationOpRecord]) -> Result<(), TelemetryError> {
+        if ops.is_empty() {
+            return Ok(());
+        }
+        let mut tx = self.pool.begin().await?;
+        for o in ops {
+            sqlx::query(
+                "INSERT INTO migration_op_metrics (
+                    id, org_id, env_id, flag_key, stage, operation,
+                    old_invoked, new_invoked, old_error, new_error,
+                    old_latency_ms, new_latency_ms, consistent, occurred_at
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)",
+            )
+            .bind(Uuid::now_v7())
+            .bind(o.org_id)
+            .bind(o.env_id)
+            .bind(&o.flag_key)
+            .bind(&o.stage)
+            .bind(&o.operation)
+            .bind(o.old_invoked)
+            .bind(o.new_invoked)
+            .bind(o.old_error)
+            .bind(o.new_error)
+            .bind(o.old_latency_ms)
+            .bind(o.new_latency_ms)
+            .bind(o.consistent)
+            .bind(o.occurred_at)
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    async fn query_sufficient_stats(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        flag_key: &str,
+        metric: &MetricDefinition,
+        since: DateTime<Utc>,
+        until: DateTime<Utc>,
+    ) -> Result<Vec<VariationSufficientStats>, TelemetryError> {
+        let rows = sqlx::query(
+            "WITH first_exp AS (
+                SELECT DISTINCT ON (context_key)
+                    context_key, variation_index, exposed_at
+                FROM experiment_exposures
+                WHERE org_id = $1 AND env_id = $2 AND flag_key = $3
+                  AND context_kind = $4 AND exposed_at >= $5 AND exposed_at <= $6
+                ORDER BY context_key, exposed_at ASC
+            ),
+            unit_metrics AS (
+                SELECT e.variation_index,
+                       e.context_key,
+                       COUNT(m.id)::BIGINT AS evt_cnt,
+                       COALESCE(SUM(m.metric_value), 0.0)::DOUBLE PRECISION AS unit_val
+                FROM first_exp e
+                LEFT JOIN custom_metric_events m
+                  ON m.org_id = $1 AND m.env_id = $2 AND m.event_key = $7
+                 AND m.context_kind = $4 AND m.context_key = e.context_key
+                 AND m.occurred_at >= e.exposed_at AND m.occurred_at <= $6
+                GROUP BY e.variation_index, e.context_key
+            )
+            SELECT variation_index,
+                   COUNT(*)::BIGINT AS exposures,
+                   COUNT(*) FILTER (WHERE evt_cnt > 0)::BIGINT AS conversions,
+                   COALESCE(SUM(unit_val), 0.0)::DOUBLE PRECISION AS sum_val,
+                   COALESCE(SUM(unit_val * unit_val), 0.0)::DOUBLE PRECISION AS sum_sq
+            FROM unit_metrics
+            GROUP BY variation_index
+            ORDER BY variation_index ASC",
+        )
+        .bind(org_id)
+        .bind(env_id)
+        .bind(flag_key)
+        .bind(&metric.randomization_unit)
+        .bind(since)
+        .bind(until)
+        .bind(&metric.event_key)
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|r| VariationSufficientStats {
+                variation_index: r.get("variation_index"),
+                exposures: r.get("exposures"),
+                conversions: r.get("conversions"),
+                sum: r.get("sum_val"),
+                sum_sq: r.get("sum_sq"),
+            })
+            .collect())
+    }
+
+    async fn query_flag_monitoring(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        flag_key: &str,
+        lookback_hours: i64,
+    ) -> Result<FlagMonitoringSummary, TelemetryError> {
+        let since = Utc::now() - Duration::hours(lookback_hours.clamp(1, 720));
+        let rows = sqlx::query(
+            "WITH exp AS (
+                SELECT DISTINCT ON (context_key)
+                    context_key, variation_index, exposed_at
+                FROM experiment_exposures
+                WHERE org_id = $1 AND env_id = $2 AND flag_key = $3 AND exposed_at >= $4
+                ORDER BY context_key, exposed_at ASC
+            )
+            SELECT e.variation_index,
+                   COUNT(DISTINCT e.context_key)::BIGINT AS exposures,
+                   COUNT(m.id) FILTER (WHERE m.event_key IN ('error', 'flag.error'))::BIGINT AS error_count,
+                   COALESCE(AVG(m.metric_value) FILTER (WHERE m.event_key IN ('latency_ms', 'latency')), 0.0)::DOUBLE PRECISION AS avg_latency_ms,
+                   COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY m.metric_value) FILTER (WHERE m.event_key IN ('latency_ms', 'latency')), 0.0)::DOUBLE PRECISION AS p95_latency_ms,
+                   COUNT(DISTINCT e.context_key) FILTER (WHERE m.event_key IN ('conversion', 'checkout.completed'))::BIGINT AS conversion_count
+            FROM exp e
+            LEFT JOIN custom_metric_events m
+              ON m.org_id = $1 AND m.env_id = $2 AND m.context_key = e.context_key
+             AND m.occurred_at >= e.exposed_at
+            GROUP BY e.variation_index
+            ORDER BY e.variation_index ASC",
+        )
+        .bind(org_id)
+        .bind(env_id)
+        .bind(flag_key)
+        .bind(since)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let variations = rows
+            .into_iter()
+            .map(|r| {
+                let exposures: i64 = r.get("exposures");
+                let error_count: i64 = r.get("error_count");
+                let conversion_count: i64 = r.get("conversion_count");
+                let denom = exposures.max(1) as f64;
+                FlagVariationMonitoring {
+                    variation_index: r.get("variation_index"),
+                    exposures,
+                    error_count,
+                    error_rate: error_count as f64 / denom,
+                    avg_latency_ms: r.get("avg_latency_ms"),
+                    p95_latency_ms: r.get("p95_latency_ms"),
+                    conversion_count,
+                    conversion_rate: conversion_count as f64 / denom,
+                }
+            })
+            .collect();
+
+        Ok(FlagMonitoringSummary {
+            flag_key: flag_key.to_string(),
+            lookback_hours,
+            variations,
+            generated_at: Utc::now(),
+        })
+    }
+
+    async fn query_migration_telemetry(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        flag_key: &str,
+        lookback_days: i64,
+    ) -> Result<MigrationTelemetrySummary, TelemetryError> {
+        let since = Utc::now() - Duration::days(lookback_days.clamp(1, 90));
+        let rows = sqlx::query(
+            "SELECT stage,
+                    COUNT(*) FILTER (WHERE old_invoked)::BIGINT AS old_invocations,
+                    COUNT(*) FILTER (WHERE new_invoked)::BIGINT AS new_invocations,
+                    COUNT(*) FILTER (WHERE old_error)::BIGINT AS old_errors,
+                    COUNT(*) FILTER (WHERE new_error)::BIGINT AS new_errors,
+                    COALESCE(AVG(old_latency_ms) FILTER (WHERE old_invoked), 0.0)::DOUBLE PRECISION AS old_avg_latency_ms,
+                    COALESCE(AVG(new_latency_ms) FILTER (WHERE new_invoked), 0.0)::DOUBLE PRECISION AS new_avg_latency_ms,
+                    COUNT(*) FILTER (WHERE consistent = true)::BIGINT AS consistency_matches,
+                    COUNT(*) FILTER (WHERE consistent = false)::BIGINT AS consistency_mismatches
+             FROM migration_op_metrics
+             WHERE org_id = $1 AND env_id = $2 AND flag_key = $3 AND occurred_at >= $4
+             GROUP BY stage
+             ORDER BY stage ASC",
+        )
+        .bind(org_id)
+        .bind(env_id)
+        .bind(flag_key)
+        .bind(since)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let stages = rows
+            .into_iter()
+            .map(|r| {
+                let matches: i64 = r.get("consistency_matches");
+                let mismatches: i64 = r.get("consistency_mismatches");
+                let total = matches + mismatches;
+                MigrationStageMetrics {
+                    stage: r.get("stage"),
+                    old_invocations: r.get("old_invocations"),
+                    new_invocations: r.get("new_invocations"),
+                    old_errors: r.get("old_errors"),
+                    new_errors: r.get("new_errors"),
+                    old_avg_latency_ms: r.get("old_avg_latency_ms"),
+                    new_avg_latency_ms: r.get("new_avg_latency_ms"),
+                    consistency_matches: matches,
+                    consistency_mismatches: mismatches,
+                    consistency_rate_pct: if total > 0 {
+                        (matches as f64 / total as f64) * 100.0
+                    } else {
+                        100.0
+                    },
+                }
+            })
+            .collect();
+
+        Ok(MigrationTelemetrySummary {
+            flag_key: flag_key.to_string(),
+            stages,
+            generated_at: Utc::now(),
+        })
     }
 }
 

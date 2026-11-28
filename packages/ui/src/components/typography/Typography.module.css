@@ -132,7 +132,7 @@
 
 .badgeAccent {
   background: var(--sk-color-accent-subtle);
-  color: var(--sk-color-accent);
+  color: var(--sk-color-accent-hover);
 }
 
 .badgeSuccess {

@@ -290,6 +290,23 @@ impl SnapshotStore {
             .await?;
         Ok((key, len, sha))
     }
+
+    /// Writes a Zstd-compressed Data Export event batch (`exports/{org_id}/{sink_id}/{batch_id}.ndjson.zst`).
+    pub async fn put_data_export_batch(
+        &self,
+        org_id: Uuid,
+        sink_id: Uuid,
+        batch_id: Uuid,
+        compressed_bytes: Vec<u8>,
+    ) -> Result<(String, i64), FanoutError> {
+        let key = format!("exports/{org_id}/{sink_id}/{batch_id}.ndjson.zst");
+        let path = ObjPath::from(key.clone());
+        let len = compressed_bytes.len() as i64;
+        self.inner
+            .put(&path, PutPayload::from(Bytes::from(compressed_bytes)))
+            .await?;
+        Ok((key, len))
+    }
 }
 
 fn hmac_sha256(key: &[u8], data: &[u8]) -> Vec<u8> {

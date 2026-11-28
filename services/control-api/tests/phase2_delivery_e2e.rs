@@ -512,35 +512,50 @@ async fn phase2_full_delivery_pipeline_sdk_telemetry_automation_and_outage_isola
     // 11. Flush SDK summary rollups -> event-ingest -> PostgreSQL flag_eval_rollups -> Usage API
     let flushed = sdk.flush().await;
     assert!(flushed > 0, "SDK flushed summary batch");
-    tokio::time::sleep(Duration::from_millis(250)).await;
-
-    let usage: Value = http
-        .get(format!(
-            "{cp_base}/api/v1/projects/default/flags/live-streaming-flag/environments/development/usage"
-        ))
-        .header("cookie", &cookie)
-        .send()
-        .await
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
-    assert!(
-        usage["totalEvaluations"].as_i64().unwrap_or(0) >= 3,
-        "expected >= 3 recorded evaluations, got {usage}"
-    );
+    let usage_deadline = Instant::now() + Duration::from_secs(5);
+    let usage: Value = loop {
+        let candidate: Value = http
+            .get(format!(
+                "{cp_base}/api/v1/projects/default/flags/live-streaming-flag/environments/development/usage"
+            ))
+            .header("cookie", &cookie)
+            .send()
+            .await
+            .unwrap()
+            .json()
+            .await
+            .unwrap();
+        if candidate["totalEvaluations"].as_i64().unwrap_or(0) >= 3
+            && candidate["lastEvaluatedAt"].is_string()
+        {
+            break candidate;
+        }
+        assert!(
+            Instant::now() < usage_deadline,
+            "expected >= 3 recorded evaluations within 5s, got {candidate}"
+        );
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    };
+    assert!(usage["totalEvaluations"].as_i64().unwrap_or(0) >= 3);
     assert!(usage["lastEvaluatedAt"].is_string());
 
     // 12. Verify Signed Outbound Webhook received valid HMAC-SHA256 signature
-    tokio::time::sleep(Duration::from_millis(150)).await;
-    {
-        let hooks = received_webhooks.lock().unwrap();
-        assert!(
+    let webhook_deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let delivered = {
+            let hooks = received_webhooks.lock().unwrap();
             hooks.iter().any(|(ev, sig, body)| {
                 ev == "flag.updated" && verify_webhook_signature(wh_secret, body, sig)
-            }),
-            "expected valid HMAC-SHA256 signed flag.updated webhook delivery"
+            })
+        };
+        if delivered {
+            break;
+        }
+        assert!(
+            Instant::now() < webhook_deadline,
+            "expected valid HMAC-SHA256 signed flag.updated webhook delivery within 5s"
         );
+        tokio::time::sleep(Duration::from_millis(25)).await;
     }
 
     // 13. Verify Flag Trigger (instant APM rollback -> turns flag OFF)
@@ -604,8 +619,34 @@ async fn phase2_full_delivery_pipeline_sdk_telemetry_automation_and_outage_isola
     let copied: Value = copy_resp.json().await.unwrap();
     assert_eq!(copied["on"], json!(true));
 
-    // Wait briefly so outbox pushes latest snapshot
-    tokio::time::sleep(Duration::from_millis(150)).await;
+    // Wait deterministically until the scheduled re-enable snapshot reaches delivery-edge and SDK
+    // before shutting down the control plane and outbox worker for the outage survivability check.
+    let reenable_deadline = Instant::now() + Duration::from_secs(5);
+    loop {
+        let evalx_ready = http
+            .get(format!(
+                "{edge_base}/sdk/v1/evalx/{client_side_id}/contexts/{encoded_beta}"
+            ))
+            .send()
+            .await
+            .ok();
+        let evalx_is_true = match evalx_ready {
+            Some(resp) if resp.status().is_success() => resp
+                .json::<Value>()
+                .await
+                .ok()
+                .is_some_and(|v| v["live-streaming-flag"]["value"] == json!(true)),
+            _ => false,
+        };
+        if evalx_is_true && sdk.bool_variation("live-streaming-flag", &beta_ctx, false) {
+            break;
+        }
+        assert!(
+            Instant::now() < reenable_deadline,
+            "scheduled re-enable snapshot did not reach delivery-edge and SDK within 5s"
+        );
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    }
 
     // 16. Verify 100% Control Plane / DB Outage Survivability!
     // Shut down control-api AND outbox worker completely; delivery-edge + SDK must remain 100% live!

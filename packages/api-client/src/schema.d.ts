@@ -212,6 +212,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/data-export/sinks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_data_export_sinks"];
+        put?: never;
+        post: operations["create_data_export_sink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-export/sinks/{sinkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_data_export_sink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/data-export/sinks/{sinkId}/flush": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["flush_data_export_sink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/members": {
         parameters: {
             query?: never;
@@ -356,6 +404,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_experiments"];
+        put?: never;
+        post: operations["create_experiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_experiment"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_experiment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_experiment_results"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_experiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stop_experiment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/environments/{envKey}/flags/bulk-patch": {
         parameters: {
             query?: never;
@@ -366,6 +494,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["bulk_patch_flags"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/guarded-rollouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_guarded_rollouts"];
+        put?: never;
+        post: operations["create_guarded_rollout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/guarded-rollouts/{rolloutId}/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["evaluate_guarded_rollout_handler"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/guarded-rollouts/{rolloutId}/rollback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rollback_guarded_rollout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -484,6 +660,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/synced-segments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_synced_segments"];
+        put?: never;
+        post: operations["create_synced_segment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/environments/{envKey}/usage": {
         parameters: {
             query?: never;
@@ -574,6 +766,54 @@ export interface paths {
         get: operations["list_flag_approvals"];
         put?: never;
         post: operations["create_flag_approval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_migration_config"];
+        put: operations["upsert_migration_config"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration/telemetry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_migration_telemetry"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/monitoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_flag_monitoring"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -788,6 +1028,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_engineering_insights"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/layers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_layers"];
+        put?: never;
+        post: operations["create_layer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/layers/{layerKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_layer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/metric-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_metric_groups"];
+        put?: never;
+        post: operations["create_metric_group"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/metric-groups/{groupKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_metric_group"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_metrics"];
+        put?: never;
+        post: operations["create_metric"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/metrics/{metricKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_metric"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/release-pipelines": {
         parameters: {
             query?: never;
@@ -879,6 +1231,43 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["delete_sso_provider"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/synced-segments/ingest/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * High-throughput unauthenticated CDP / Reverse-ETL sync endpoint (`POST /api/v1/synced-segments/ingest/{token}`).
+         *     Authenticates via one-time hashed sync token (`sk_sync_...`), mutates Big Segment membership,
+         *     and triggers OutboxWorker Zstd hash-block sync to R2/S3 & NATS!
+         */
+        post: operations["ingest_synced_segment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/synced-segments/{integrationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_synced_segment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1361,12 +1750,40 @@ export interface components {
             name: string;
             statements?: components["schemas"]["PolicyStatement"][];
         };
+        CreateDataExportSinkRequest: {
+            config?: unknown;
+            destination: string;
+            /** Format: uuid */
+            envId?: string | null;
+            kind: components["schemas"]["DataExportSinkKind"];
+            name: string;
+        };
         CreateEnvironmentRequest: {
             color?: string;
             confirmChanges?: boolean;
             key: string;
             name: string;
             requireComments?: boolean;
+        };
+        CreateExperimentRequest: {
+            allocations?: components["schemas"]["ExperimentVariationWeight"][];
+            /** Format: double */
+            alpha?: number;
+            /** Format: int32 */
+            controlVariationIndex?: number;
+            engine?: components["schemas"]["StatisticalEngine"];
+            flagKey: string;
+            hypothesis?: string;
+            key: string;
+            layerKey?: string | null;
+            /** Format: int32 */
+            layerReservationBuckets?: number | null;
+            metricGroupKey?: string | null;
+            mode?: components["schemas"]["ExperimentMode"];
+            name: string;
+            primaryMetricKey: string;
+            randomizationUnit?: string;
+            secondaryMetricKeys?: string[];
         };
         CreateFlagRequest: {
             clientSideAvailability?: null | components["schemas"]["ClientSideAvailability"];
@@ -1391,11 +1808,46 @@ export interface components {
             trigger: components["schemas"]["FlagTrigger"];
             triggerPath: string;
         };
+        CreateGuardedRolloutRequest: {
+            autoRollback?: boolean;
+            /** Format: int32 */
+            controlVariationIndex?: number;
+            /** Format: int32 */
+            currentTrafficPct?: number;
+            flagKey: string;
+            guardrails: components["schemas"]["GuardrailMetricRule"][];
+            name: string;
+            /** Format: int32 */
+            treatmentVariationIndex?: number;
+        };
+        CreateLayerRequest: {
+            description?: string;
+            key: string;
+            name: string;
+        };
         CreateMemberRequest: {
             displayName: string;
             email: string;
             password?: string | null;
             role: components["schemas"]["BuiltInRole"];
+        };
+        CreateMetricGroupRequest: {
+            description?: string;
+            key: string;
+            kind: components["schemas"]["MetricGroupKind"];
+            metricKeys: string[];
+            name: string;
+        };
+        CreateMetricRequest: {
+            aggregation?: components["schemas"]["MetricAggregation"];
+            description?: string;
+            eventKey: string;
+            key: string;
+            kind: components["schemas"]["MetricKind"];
+            name: string;
+            randomizationUnit?: string;
+            successDirection: components["schemas"]["MetricSuccessDirection"];
+            unit?: string;
         };
         CreateProjectRequest: {
             defaultClientSideAvailability?: components["schemas"]["ClientSideAvailability"];
@@ -1444,6 +1896,17 @@ export interface components {
             samlMetadataUrl?: string | null;
             scimEnabled?: boolean;
         };
+        CreateSyncedSegmentRequest: {
+            contextKind?: string;
+            externalCohortId: string;
+            provider: components["schemas"]["SyncedSegmentProvider"];
+            segmentKey: string;
+        };
+        CreateSyncedSegmentResponse: {
+            ingestPath: string;
+            integration: components["schemas"]["SyncedSegmentIntegration"];
+            plaintextToken: string;
+        };
         CreateTeamRequest: {
             customRoleKeys?: string[];
             description?: string;
@@ -1490,6 +1953,73 @@ export interface components {
         };
         CustomRoleListResponse: {
             items: components["schemas"]["CustomRole"][];
+        };
+        DataExportFlushResult: {
+            /** Format: int64 */
+            bytesWritten: number;
+            /** Format: int64 */
+            eventsExported: number;
+            /** Format: date-time */
+            flushedAt: string;
+            location: string;
+            /** Format: uuid */
+            sinkId: string;
+        };
+        DataExportSink: {
+            config?: unknown;
+            /** Format: date-time */
+            createdAt: string;
+            destination: string;
+            enabled: boolean;
+            /** Format: uuid */
+            envId?: string | null;
+            /** Format: int64 */
+            exportedEventCount: number;
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["DataExportSinkKind"];
+            /** Format: date-time */
+            lastExportedAt?: string | null;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @enum {string} */
+        DataExportSinkKind: "s3_parquet" | "kinesis" | "pubsub" | "snowflake" | "segment" | "webhook_ndjson";
+        DataExportSinkListResponse: {
+            items: components["schemas"]["DataExportSink"][];
+        };
+        /** @description Engineering Insights: DORA velocity & stability metrics + Flag Health. */
+        EngineeringInsights: {
+            /** Format: int64 */
+            activeExperiments: number;
+            /** Format: int64 */
+            activeGuardedRollouts: number;
+            /** Format: double */
+            changeFailureRatePct: number;
+            /** Format: date-time */
+            computedAt: string;
+            /** Format: double */
+            deploymentsPerDay: number;
+            /** Format: int64 */
+            flagDeploymentsCount: number;
+            /** Format: int64 */
+            lookbackDays: number;
+            /** Format: double */
+            meanTimeToRecoveryMinutes: number;
+            projectKey: string;
+            /** Format: int64 */
+            rollbacksCount: number;
+            /** Format: int64 */
+            rolledBackGuardrails: number;
+            /** Format: int64 */
+            staleFlags: number;
+            /** Format: int64 */
+            temporaryFlags: number;
+            /** Format: int64 */
+            totalFlags: number;
         };
         Environment: {
             approvalSettings?: components["schemas"]["EnvironmentApprovalSettings"];
@@ -1580,6 +2110,73 @@ export interface components {
             /** Format: int64 */
             newVersion: number;
             on: boolean;
+        };
+        Experiment: {
+            /** @description Expected allocation weights in basis points summing to 100_000 (used for SRM). */
+            allocations: components["schemas"]["ExperimentVariationWeight"][];
+            /** Format: double */
+            alpha: number;
+            /** Format: int32 */
+            controlVariationIndex: number;
+            /** Format: date-time */
+            createdAt: string;
+            engine: components["schemas"]["StatisticalEngine"];
+            /** Format: uuid */
+            envId: string;
+            flagKey: string;
+            hypothesis?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            /** Format: int32 */
+            layerBucketEnd?: number | null;
+            /** Format: int32 */
+            layerBucketStart?: number | null;
+            layerKey?: string | null;
+            metricGroupKey?: string | null;
+            mode: components["schemas"]["ExperimentMode"];
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            primaryMetricKey: string;
+            /** Format: uuid */
+            projectId: string;
+            randomizationUnit: string;
+            secondaryMetricKeys?: string[];
+            /** Format: date-time */
+            startedAt?: string | null;
+            status: components["schemas"]["ExperimentStatus"];
+            /** Format: date-time */
+            stoppedAt?: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ExperimentListResponse: {
+            items: components["schemas"]["Experiment"][];
+        };
+        /** @enum {string} */
+        ExperimentMode: "ab_test" | "aa_test";
+        ExperimentResults: {
+            /** Format: date-time */
+            computedAt: string;
+            engine: components["schemas"]["StatisticalEngine"];
+            experimentKey: string;
+            flagKey: string;
+            mode: components["schemas"]["ExperimentMode"];
+            primary: components["schemas"]["MetricExperimentResult"];
+            secondary?: components["schemas"]["MetricExperimentResult"][];
+            srm: components["schemas"]["SrmCheckResult"];
+            status: components["schemas"]["ExperimentStatus"];
+            /** Format: int64 */
+            totalExposures: number;
+        };
+        /** @enum {string} */
+        ExperimentStatus: "draft" | "running" | "stopped" | "archived";
+        ExperimentVariationWeight: {
+            /** Format: int32 */
+            variationIndex: number;
+            /** Format: int32 */
+            weight: number;
         };
         ExportAuditArchiveRequest: {
             /** Format: date-time */
@@ -1676,6 +2273,14 @@ export interface components {
         FlagKind: "boolean" | "string" | "number" | "json";
         FlagListResponse: {
             items: components["schemas"]["FlagResponse"][];
+        };
+        FlagMonitoringSummary: {
+            flagKey: string;
+            /** Format: date-time */
+            generatedAt: string;
+            /** Format: int64 */
+            lookbackHours: number;
+            variations: components["schemas"]["FlagVariationMonitoring"][];
         };
         /** @description Canonical 23-variant semantic instruction patch enum for feature flag mutations. */
         FlagPatchInstruction: {
@@ -1852,6 +2457,25 @@ export interface components {
         FlagTriggerListResponse: {
             items: components["schemas"]["FlagTrigger"][];
         };
+        /** @description Per-variation health metrics displayed directly on Flag Detail pages (Feature Monitoring). */
+        FlagVariationMonitoring: {
+            /** Format: double */
+            avgLatencyMs: number;
+            /** Format: int64 */
+            conversionCount: number;
+            /** Format: double */
+            conversionRate: number;
+            /** Format: int64 */
+            errorCount: number;
+            /** Format: double */
+            errorRate: number;
+            /** Format: int64 */
+            exposures: number;
+            /** Format: double */
+            p95LatencyMs: number;
+            /** Format: int32 */
+            variationIndex: number;
+        };
         FlagWorkflow: {
             /** Format: date-time */
             createdAt: string;
@@ -1875,10 +2499,81 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        GuardedRollout: {
+            autoRollback: boolean;
+            /** Format: int32 */
+            controlVariationIndex: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            currentTrafficPct: number;
+            /** Format: uuid */
+            envId: string;
+            flagKey: string;
+            guardrails: components["schemas"]["GuardrailMetricRule"][];
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            lastEvaluatedAt?: string | null;
+            lastVerdict?: string | null;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: uuid */
+            projectId: string;
+            status: components["schemas"]["GuardedRolloutStatus"];
+            /** Format: int32 */
+            treatmentVariationIndex: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        GuardedRolloutEvaluation: {
+            autoRolledBack: boolean;
+            checks: components["schemas"]["GuardrailMetricCheck"][];
+            /** Format: date-time */
+            evaluatedAt: string;
+            regressionDetected: boolean;
+            rollout: components["schemas"]["GuardedRollout"];
+            srm: components["schemas"]["SrmCheckResult"];
+        };
+        GuardedRolloutListResponse: {
+            items: components["schemas"]["GuardedRollout"][];
+        };
+        /** @enum {string} */
+        GuardedRolloutStatus: "monitoring" | "completed" | "rolled_back" | "paused";
+        GuardrailMetricCheck: {
+            /** Format: double */
+            controlMean: number;
+            /** Format: int64 */
+            controlSamples: number;
+            metricKey: string;
+            /** Format: double */
+            pValue?: number | null;
+            regressed: boolean;
+            /** Format: double */
+            regressionPct: number;
+            /** Format: double */
+            treatmentMean: number;
+            /** Format: int64 */
+            treatmentSamples: number;
+        };
+        GuardrailMetricRule: {
+            /**
+             * Format: double
+             * @description Relative degradation percentage threshold (e.g. `10.0` = 10% worse than control triggers alert/rollback).
+             */
+            maxRegressionPct: number;
+            metricKey: string;
+            /** Format: int64 */
+            minSampleSize?: number;
+        };
         HealthResponse: {
             service: string;
             status: string;
             version: string;
+        };
+        LayerListResponse: {
+            items: components["schemas"]["MutualExclusionLayer"][];
         };
         /** @description Ephemeral event published onto `skotos.debug.{env_id}` for the Live Events Debugger. */
         LiveEvalDebugEvent: {
@@ -1913,6 +2608,139 @@ export interface components {
         };
         MemberListResponse: {
             items: components["schemas"]["Member"][];
+        };
+        /** @enum {string} */
+        MetricAggregation: "average" | "sum" | "count" | "p95";
+        MetricDefinition: {
+            aggregation: components["schemas"]["MetricAggregation"];
+            /** Format: date-time */
+            createdAt: string;
+            description?: string;
+            /** @description SDK custom event key tracked via `client.track(event_key, ctx, data, value)`. */
+            eventKey: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            kind: components["schemas"]["MetricKind"];
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: uuid */
+            projectId: string;
+            randomizationUnit: string;
+            successDirection: components["schemas"]["MetricSuccessDirection"];
+            unit?: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        MetricExperimentResult: {
+            kind: components["schemas"]["MetricKind"];
+            metricKey: string;
+            metricName: string;
+            successDirection: components["schemas"]["MetricSuccessDirection"];
+            variations: components["schemas"]["VariationResult"][];
+        };
+        MetricGroup: {
+            /** Format: date-time */
+            createdAt: string;
+            description?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            kind: components["schemas"]["MetricGroupKind"];
+            /** @description Ordered metric keys (step order matters for `funnel` groups). */
+            metricKeys: string[];
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: uuid */
+            projectId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @enum {string} */
+        MetricGroupKind: "funnel" | "collection";
+        MetricGroupListResponse: {
+            items: components["schemas"]["MetricGroup"][];
+        };
+        /** @enum {string} */
+        MetricKind: "conversion" | "numeric" | "latency" | "error_rate";
+        MetricListResponse: {
+            items: components["schemas"]["MetricDefinition"][];
+        };
+        /** @enum {string} */
+        MetricSuccessDirection: "higher_is_better" | "lower_is_better";
+        MigrationFlagConfig: {
+            /**
+             * Format: int32
+             * @description Consistency check sampling ratio (`1` = every call, `10` = 1 in 10, `0` = disabled).
+             */
+            checkRatio: number;
+            currentStage: components["schemas"]["MigrationStage"];
+            /** Format: uuid */
+            envId: string;
+            flagKey: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orgId: string;
+            /** @description Read execution order: `"parallel"`, `"serial"`, or `"random"`. */
+            readExecutionOrder: string;
+            template: components["schemas"]["MigrationTemplate"];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @enum {string} */
+        MigrationStage: "off" | "dualwrite" | "shadow" | "live" | "rampdown" | "complete";
+        MigrationStageMetrics: {
+            /** Format: int64 */
+            consistencyMatches: number;
+            /** Format: int64 */
+            consistencyMismatches: number;
+            /** Format: double */
+            consistencyRatePct: number;
+            /** Format: double */
+            newAvgLatencyMs: number;
+            /** Format: int64 */
+            newErrors: number;
+            /** Format: int64 */
+            newInvocations: number;
+            /** Format: double */
+            oldAvgLatencyMs: number;
+            /** Format: int64 */
+            oldErrors: number;
+            /** Format: int64 */
+            oldInvocations: number;
+            stage: string;
+        };
+        MigrationTelemetrySummary: {
+            flagKey: string;
+            /** Format: date-time */
+            generatedAt: string;
+            stages: components["schemas"]["MigrationStageMetrics"][];
+        };
+        /** @enum {string} */
+        MigrationTemplate: "two_stage" | "four_stage" | "six_stage";
+        /** @description Non-overlapping traffic space (`0..100_000` basis points) isolating concurrent experiments. */
+        MutualExclusionLayer: {
+            /** Format: int32 */
+            allocatedBuckets: number;
+            /** Format: date-time */
+            createdAt: string;
+            description?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: uuid */
+            projectId: string;
+            salt: string;
+            /** Format: int32 */
+            totalBuckets: number;
+            /** Format: date-time */
+            updatedAt: string;
         };
         Organization: {
             /** Format: date-time */
@@ -2204,6 +3032,15 @@ export interface components {
             variationIndex?: number | null;
             variationName?: string | null;
         };
+        SrmCheckResult: {
+            /** Format: double */
+            chiSquare: number;
+            expectedCounts: number[];
+            observedCounts: number[];
+            /** Format: double */
+            pValue: number;
+            srmDetected: boolean;
+        };
         /** @enum {string} */
         SsoProtocol: "oidc" | "saml";
         SsoProviderConfig: {
@@ -2227,6 +3064,44 @@ export interface components {
         SsoProviderListResponse: {
             items: components["schemas"]["SsoProviderConfig"][];
         };
+        /** @enum {string} */
+        StatisticalEngine: "frequentist" | "bayesian";
+        SyncedSegmentIngestRequest: {
+            addKeys?: string[];
+            removeKeys?: string[];
+        };
+        SyncedSegmentIngestResponse: {
+            /** Format: int64 */
+            generation: number;
+            /** Format: int64 */
+            includedCount: number;
+            segmentKey: string;
+        };
+        SyncedSegmentIntegration: {
+            contextKind: string;
+            /** Format: date-time */
+            createdAt: string;
+            enabled: boolean;
+            /** Format: uuid */
+            envId: string;
+            externalCohortId: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            lastSyncedAt?: string | null;
+            /** Format: uuid */
+            orgId: string;
+            provider: components["schemas"]["SyncedSegmentProvider"];
+            segmentKey: string;
+            /** Format: int64 */
+            syncedMemberCount: number;
+            tokenPrefix: string;
+        };
+        SyncedSegmentListResponse: {
+            items: components["schemas"]["SyncedSegmentIntegration"][];
+        };
+        /** @enum {string} */
+        SyncedSegmentProvider: "amplitude" | "hightouch" | "fivetran" | "census" | "rudderstack" | "segment" | "webhook";
         Target: {
             contextKind?: string;
             values?: string[];
@@ -2295,6 +3170,13 @@ export interface components {
             hunks?: components["schemas"]["CodeRefHunk"][];
             repoName: string;
         };
+        UpsertMigrationConfigRequest: {
+            /** Format: int32 */
+            checkRatio?: number;
+            currentStage: components["schemas"]["MigrationStage"];
+            readExecutionOrder?: string;
+            template: components["schemas"]["MigrationTemplate"];
+        };
         Variation: {
             description?: string | null;
             /** Format: uuid */
@@ -2306,6 +3188,47 @@ export interface components {
             rollout?: null | components["schemas"]["Rollout"];
             /** Format: uuid */
             variationId?: string | null;
+        };
+        VariationResult: {
+            /** Format: double */
+            ciLower?: number | null;
+            /** Format: double */
+            ciUpper?: number | null;
+            /** Format: int64 */
+            conversions: number;
+            /** Format: int64 */
+            exposures: number;
+            isControl: boolean;
+            /** Format: double */
+            mean: number;
+            /** Format: double */
+            pValue?: number | null;
+            /** Format: double */
+            probabilityToBeatControl?: number | null;
+            /** Format: double */
+            relativeLift?: number | null;
+            statisticallySignificant: boolean;
+            /** Format: double */
+            stdErr: number;
+            /** Format: int32 */
+            variationIndex: number;
+            winner: boolean;
+        };
+        /**
+         * @description Compact sufficient statistics per variation (`n`, `conversions`, `sum`, `sum_sq`),
+         *     allowing Frequentist & Bayesian inference in O(1) without pulling raw rows from OLAP.
+         */
+        VariationSufficientStats: {
+            /** Format: int64 */
+            conversions: number;
+            /** Format: int64 */
+            exposures: number;
+            /** Format: double */
+            sum: number;
+            /** Format: double */
+            sumSq: number;
+            /** Format: int32 */
+            variationIndex: number;
         };
         VariationUsageCount: {
             /** Format: int64 */
@@ -2768,6 +3691,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_data_export_sinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportSinkListResponse"];
+                };
+            };
+        };
+    };
+    create_data_export_sink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDataExportSinkRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportSink"];
+                };
+            };
+        };
+    };
+    delete_data_export_sink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Data export sink ID */
+                sinkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    flush_data_export_sink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Data export sink ID */
+                sinkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataExportFlushResult"];
                 };
             };
         };
@@ -3390,6 +4397,186 @@ export interface operations {
             };
         };
     };
+    list_experiments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentListResponse"];
+                };
+            };
+        };
+    };
+    create_experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExperimentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+        };
+    };
+    get_experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Experiment key */
+                expKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+        };
+    };
+    delete_experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Experiment key */
+                expKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_experiment_results: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Experiment key */
+                expKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExperimentResults"];
+                };
+            };
+        };
+    };
+    start_experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Experiment key */
+                expKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+        };
+    };
+    stop_experiment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Experiment key */
+                expKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Experiment"];
+                };
+            };
+        };
+    };
     bulk_patch_flags: {
         parameters: {
             query?: never;
@@ -3414,6 +4601,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkPatchFlagsResponse"];
+                };
+            };
+        };
+    };
+    list_guarded_rollouts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardedRolloutListResponse"];
+                };
+            };
+        };
+    };
+    create_guarded_rollout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGuardedRolloutRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardedRollout"];
+                };
+            };
+        };
+    };
+    evaluate_guarded_rollout_handler: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Guarded rollout ID */
+                rolloutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardedRolloutEvaluation"];
+                };
+            };
+        };
+    };
+    rollback_guarded_rollout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Guarded rollout ID */
+                rolloutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuardedRollout"];
                 };
             };
         };
@@ -3768,6 +5059,58 @@ export interface operations {
             };
         };
     };
+    list_synced_segments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncedSegmentListResponse"];
+                };
+            };
+        };
+    };
+    create_synced_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSyncedSegmentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateSyncedSegmentResponse"];
+                };
+            };
+        };
+    };
     get_environment_usage: {
         parameters: {
             query?: {
@@ -4112,6 +5455,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApprovalRequest"];
+                };
+            };
+        };
+    };
+    get_migration_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": null | components["schemas"]["MigrationFlagConfig"];
+                };
+            };
+        };
+    };
+    upsert_migration_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertMigrationConfigRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MigrationFlagConfig"];
+                };
+            };
+        };
+    };
+    get_migration_telemetry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MigrationTelemetrySummary"];
+                };
+            };
+        };
+    };
+    get_flag_monitoring: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagMonitoringSummary"];
                 };
             };
         };
@@ -4644,6 +6095,238 @@ export interface operations {
             };
         };
     };
+    get_engineering_insights: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EngineeringInsights"];
+                };
+            };
+        };
+    };
+    list_layers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayerListResponse"];
+                };
+            };
+        };
+    };
+    create_layer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLayerRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MutualExclusionLayer"];
+                };
+            };
+        };
+    };
+    delete_layer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Mutual exclusion layer key */
+                layerKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_metric_groups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricGroupListResponse"];
+                };
+            };
+        };
+    };
+    create_metric_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMetricGroupRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricGroup"];
+                };
+            };
+        };
+    };
+    delete_metric_group: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Metric group key */
+                groupKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_metrics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricListResponse"];
+                };
+            };
+        };
+    };
+    create_metric: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateMetricRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricDefinition"];
+                };
+            };
+        };
+    };
+    delete_metric: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Metric key */
+                metricKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_release_pipelines: {
         parameters: {
             query?: never;
@@ -4881,6 +6564,52 @@ export interface operations {
             path: {
                 /** @description SSO provider UUID */
                 providerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ingest_synced_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Secret synced segment push token */
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncedSegmentIngestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncedSegmentIngestResponse"];
+                };
+            };
+        };
+    };
+    delete_synced_segment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Synced segment integration ID */
+                integrationId: string;
             };
             cookie?: never;
         };

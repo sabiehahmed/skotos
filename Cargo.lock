@@ -2523,6 +2523,7 @@ dependencies = [
  "sha2",
  "skotos-domain",
  "skotos-storage",
+ "skotos-telemetry",
  "subtle",
  "thiserror 2.0.21",
  "tokio",
@@ -2584,12 +2585,16 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "chrono",
+ "reqwest",
  "serde",
  "serde_json",
+ "sha1",
  "skotos-domain",
  "sqlx",
  "thiserror 2.0.21",
+ "tracing",
  "uuid",
+ "zstd",
 ]
 
 [[package]]

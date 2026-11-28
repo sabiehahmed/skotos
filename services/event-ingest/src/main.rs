@@ -1,11 +1,10 @@
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::time::Duration;
 
 use event_ingest::{build_router, spawn_rollup_flusher, IngestAuthCache, IngestState};
 use skotos_fanout::{S3Config, SnapshotStore};
 use skotos_storage::{run_migrations, Storage};
-use skotos_telemetry::{PostgresTelemetryStore, TelemetryStore};
+use skotos_telemetry::create_telemetry_store;
 use sqlx::postgres::PgPoolOptions;
 use tokio::net::TcpListener;
 use tokio::sync::watch;
@@ -32,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     run_migrations(&pool).await?;
 
     let storage = Storage::new(pool.clone());
-    let telemetry: Arc<dyn TelemetryStore> = Arc::new(PostgresTelemetryStore::new(pool));
+    let telemetry = create_telemetry_store(pool).await;
     let snapshots = match SnapshotStore::from_s3_config(&S3Config::from_env()) {
         Ok(s) => Some(s),
         Err(err) => {

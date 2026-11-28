@@ -7,7 +7,7 @@ export CARGO_BUILD_JOBS
 
 COMPOSE ?= docker compose
 
-.PHONY: help dev-infra dev-infra-down migrate test-rust test-go test-ui test-web gen-openapi lint-all check
+.PHONY: help dev-infra dev-infra-down migrate test-rust test-go test-python test-java test-ui test-web gen-openapi lint-all check
 
 help: ## Show available Skotos development targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -27,6 +27,15 @@ test-rust: ## Run all Rust workspace tests
 test-go: ## Run Go Server SDK (124 golden vectors) and Terraform provider tests with race detector
 	go -C sdks/go-server test -race ./...
 	go -C integrations/terraform-provider-skotos test -race ./...
+
+test-python: ## Run Python Server SDK tests (124 golden vectors + OpenFeature + MigrationHelper)
+	python3 -m unittest discover -s sdks/python-server/tests -v
+
+test-java: ## Compile & run Java 21 Server SDK tests (124 golden vectors + OpenFeature)
+	rm -rf sdks/java-server/build && mkdir -p sdks/java-server/build
+	javac -Xlint:all -Werror -d sdks/java-server/build sdks/java-server/src/main/java/dev/skotos/sdk/*.java sdks/java-server/src/test/java/dev/skotos/sdk/GoldenSuiteTest.java
+	java -cp sdks/java-server/build dev.skotos.sdk.GoldenSuiteTest
+	rm -rf sdks/java-server/build
 
 test-ui: ## Run @skotos/ui test suite
 	pnpm --filter @skotos/ui test
@@ -49,7 +58,7 @@ lint-all: ## Run Rust fmt/clippy, zero-DB guards, ESLint boundaries, zero-Tailwi
 	pnpm run lint:md
 	pnpm run format:check
 
-check: lint-all test-rust test-go ## Run full lint, typecheck, test, and build verification
+check: lint-all test-rust test-go test-python test-java ## Run full lint, typecheck, test, and build verification
 	pnpm typecheck
 	pnpm test
 	pnpm build

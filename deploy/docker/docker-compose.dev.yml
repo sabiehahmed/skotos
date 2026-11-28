@@ -74,7 +74,30 @@ services:
       retries: 12
       start_period: 10s
 
+  clickhouse:
+    # Optional Phase 4 high-scale columnar analytics profile:
+    # docker compose --profile analytics up -d
+    profiles: ["analytics"]
+    image: mirror.gcr.io/clickhouse/clickhouse-server:24.8-alpine
+    restart: unless-stopped
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DATABASE:-skotos}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
 volumes:
   postgres_data:
   nats_data:
   minio_data:
+  clickhouse_data:

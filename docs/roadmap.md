@@ -32,14 +32,14 @@ All Phase 0 architectural decisions are finalized in [`architecture/adrs/`](../a
 - [x] High-Scale Big Segments (Zstd sorted 64-bit FNV-1a hash-block snapshots in R2/S3 + O(log N) lookup), Scheduled Segment Changes, open-source DB-free `services/relay-proxy` (Proxy + Offline File modes), pure Web-Standard `@skotos/edge-sdk` (124/124 golden vectors), and zero-storage Live Events Debugger (ephemeral core NATS)
 - [x] `tools/skotos-cli`, `tools/skotos-code-refs` (+ GitHub Action & extinction check), `tools/skotos-mcp` (JSON-RPC 2.0 stdio + HTTP `/mcp`), `integrations/terraform-provider-skotos` (Go), and Slack/Teams/Datadog/PagerDuty/Jira/Linear webhook formatters
 
-## Phase 4 — ClickHouse Telemetry, Guarded Rollouts & Experimentation Core (Next)
+## Phase 4 — ClickHouse Telemetry, Guarded Rollouts & Experimentation Core (Complete)
 
-- [ ] ClickHouse `TelemetryStore` backend + Real-Time Data Export sinks
-- [ ] Guarded Rollouts (Release Guardian + auto-rollback + SRM checks), Adaptive Triggers, Engineering Insights
-- [ ] A/B/n Experimentation (Frequentist & Bayesian, Funnel/Metric Groups, Mutual Exclusion)
-- [ ] Flag-scoped Feature Monitoring, 2/4/6-Stage Migration Flags, Synced Segments, Python/Java/Mobile SDKs
+- [x] ClickHouse `TelemetryStore` HTTP backend (`CODEC(ZSTD(3))` DDL + TTL tiering, Postgres fallback when `CLICKHOUSE_URL` is unset) + Real-Time Data Export sinks (S3/R2 Zstd NDJSON, Kinesis, Pub/Sub, Snowflake, Segment, webhook)
+- [x] Guarded Rollouts (Release Guardian automated regression evaluation in `SchedulerWorker`, instant `TurnFlagOff` auto-rollback, Pearson Chi-Square SRM checks) & Engineering Insights (DORA deployment frequency, change failure rate, MTTR, flag health)
+- [x] A/B/n & A/A Experimentation (pure-Rust Frequentist Welch's t / 2-proportion z & Bayesian `P(Treatment > Control)` + credible intervals over sufficient statistics, Metric Groups/Funnels, SHA-1 60-bit Mutual Exclusion Layers)
+- [x] Flag-scoped Feature Monitoring, 2/4/6-Stage Migration Flags + `migration_op` consistency/latency telemetry, Synced Segments (reverse-ETL CDP push -> Big Segments), Python & Java Server SDKs (124/124 golden vectors), `@skotos/mobile-sdk`, and `@skotos/vscode-extension`
 
-## Phase 5 — Warehouse-Native, Full OTel Observability & AgentControl
+## Phase 5 — Warehouse-Native, Full OTel Observability & AgentControl (Next)
 
 - [ ] Warehouse-Native Experimentation (Snowflake/BigQuery/Redshift/Databricks/Postgres), CUPED, Sequential Testing, Multi-Armed Bandits, Global Holdouts
 - [ ] Full OTel Logs, Distributed Traces, Error Monitoring, Ingestion Sampling Rules, Dashboards & Alerts

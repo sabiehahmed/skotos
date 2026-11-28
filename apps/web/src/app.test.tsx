@@ -340,6 +340,189 @@ const server = setupServer(
   ),
   http.get("*/api/v1/sso/providers", () => HttpResponse.json({ items: [] })),
   http.get("*/api/v1/audit-log/archives", () => HttpResponse.json({ items: [] })),
+  http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/monitoring", () =>
+    HttpResponse.json({
+      flagKey: "express-checkout",
+      lookbackHours: 24,
+      generatedAt: "2026-11-27T00:00:00Z",
+      variations: [
+        {
+          variationIndex: 0,
+          exposures: 500,
+          errorCount: 2,
+          errorRate: 0.004,
+          avgLatencyMs: 38.2,
+          p95LatencyMs: 65.0,
+          conversionCount: 120,
+          conversionRate: 0.24,
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/migration", () =>
+    HttpResponse.json({
+      id: "99999999-9999-9999-9999-999999999996",
+      orgId: mockOrg.id,
+      envId: "33333333-3333-3333-3333-333333333333",
+      flagKey: "express-checkout",
+      template: "six_stage",
+      currentStage: "shadow",
+      checkRatio: 1,
+      readExecutionOrder: "parallel",
+      updatedAt: "2026-11-27T00:00:00Z",
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/flags/:flagKey/environments/:envKey/migration/telemetry", () =>
+    HttpResponse.json({
+      flagKey: "express-checkout",
+      generatedAt: "2026-11-27T00:00:00Z",
+      stages: [
+        {
+          stage: "shadow",
+          oldInvocations: 400,
+          newInvocations: 400,
+          consistencyMatches: 398,
+          consistencyMismatches: 2,
+          consistencyRatePct: 99.5,
+          oldErrors: 0,
+          newErrors: 0,
+          oldAvgLatencyMs: 12.4,
+          newAvgLatencyMs: 9.8,
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/metrics", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "99999999-9999-9999-9999-999999999997",
+          orgId: mockOrg.id,
+          projectId: "22222222-2222-2222-2222-222222222222",
+          key: "checkout-conversion",
+          name: "Checkout Conversion",
+          description: "Binary checkout completed metric",
+          kind: "conversion",
+          eventKey: "checkout_completed",
+          successDirection: "higher_is_better",
+          aggregation: "average",
+          unit: "%",
+          randomizationUnit: "user",
+          createdAt: "2026-11-27T00:00:00Z",
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/metric-groups", () => HttpResponse.json({ items: [] })),
+  http.get("*/api/v1/projects/:projectKey/layers", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "99999999-9999-9999-9999-999999999998",
+          orgId: mockOrg.id,
+          projectId: "22222222-2222-2222-2222-222222222222",
+          key: "checkout-layer",
+          name: "Checkout Surface Layer",
+          description: "Mutually exclusive checkout experiments",
+          totalBuckets: 100000,
+          allocatedBuckets: 20000,
+          createdAt: "2026-11-27T00:00:00Z",
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/environments/:envKey/experiments", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "99999999-9999-9999-9999-999999999999",
+          orgId: mockOrg.id,
+          projectId: "22222222-2222-2222-2222-222222222222",
+          envId: "33333333-3333-3333-3333-333333333333",
+          key: "exp-express-checkout",
+          name: "Express Checkout Conversion Lift",
+          hypothesis: "One-click increases checkout",
+          flagKey: "express-checkout",
+          mode: "ab_test",
+          engine: "bayesian",
+          status: "running",
+          randomizationUnit: "user",
+          controlVariationIndex: 0,
+          primaryMetricKey: "checkout-conversion",
+          secondaryMetricKeys: [],
+          allocations: [
+            { variationIndex: 0, weight: 50000 },
+            { variationIndex: 1, weight: 50000 },
+          ],
+          alpha: 0.05,
+          createdAt: "2026-11-27T00:00:00Z",
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/environments/:envKey/guarded-rollouts", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "99999999-9999-9999-9999-99999999999a",
+          orgId: mockOrg.id,
+          projectId: "22222222-2222-2222-2222-222222222222",
+          envId: "33333333-3333-3333-3333-333333333333",
+          flagKey: "express-checkout",
+          name: "Canary Guarded 20%",
+          status: "monitoring",
+          controlVariationIndex: 1,
+          treatmentVariationIndex: 0,
+          currentTrafficPct: 20,
+          autoRollback: true,
+          guardrails: [{ metricKey: "checkout-conversion", maxRegressionPct: 5, minSampleSize: 20, alpha: 0.05 }],
+          createdAt: "2026-11-27T00:00:00Z",
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/insights", () =>
+    HttpResponse.json({
+      projectKey: "default",
+      lookbackDays: 30,
+      flagDeploymentsCount: 42,
+      deploymentsPerDay: 1.4,
+      rollbacksCount: 2,
+      changeFailureRatePct: 4.8,
+      meanTimeToRecoveryMinutes: 11.5,
+      totalFlags: 12,
+      staleFlags: 1,
+      temporaryFlags: 8,
+      activeExperiments: 1,
+      activeGuardedRollouts: 1,
+      rolledBackGuardrails: 0,
+      computedAt: "2026-11-27T00:00:00Z",
+    }),
+  ),
+  http.get("*/api/v1/data-export/sinks", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: "99999999-9999-9999-9999-99999999999b",
+          orgId: mockOrg.id,
+          name: "Prod R2 Export",
+          kind: "s3_parquet",
+          destination: "s3://skotos-exports/prod",
+          enabled: true,
+          exportedEventCount: 14500,
+          createdAt: "2026-11-27T00:00:00Z",
+          updatedAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
+  http.get("*/api/v1/projects/:projectKey/environments/:envKey/synced-segments", () =>
+    HttpResponse.json({ items: [] }),
+  ),
 );
 
 beforeAll(() => server.listen());
@@ -365,7 +548,7 @@ describe("@skotos/web management dashboard", () => {
     expect(await screen.findByText("Express Checkout")).toBeInTheDocument();
   });
 
-  it("renders flags list, environment banner, simulator, and Phase 2/3 Usage & Automation tab", async () => {
+  it("renders flags list, environment banner, simulator, and Phase 2/3/4 Usage & Automation tab", async () => {
     const user = userEvent.setup();
     render(<App initialEntries={["/projects/default/flags"]} />);
 
@@ -385,9 +568,12 @@ describe("@skotos/web management dashboard", () => {
     expect(await screen.findByText(/1,240 evaluations/i)).toBeInTheDocument();
     expect(screen.getByText("Flag Triggers (APM Kill-Switch URLs)")).toBeInTheDocument();
     expect(await screen.findByText("src/checkout.ts:42")).toBeInTheDocument();
+    expect(await screen.findByText("Feature Monitoring (Last 24h)")).toBeInTheDocument();
+    expect(await screen.findByText("2 / 4 / 6-Stage Migration Flag")).toBeInTheDocument();
+    expect(await screen.findByText(/99.5%/i)).toBeInTheDocument();
   });
 
-  it("navigates to Phase 2 & Phase 3 Segments, Webhooks, Pipelines, Approvals, Roles, and Teams views", async () => {
+  it("navigates to Phase 2, 3, and 4 views including Experiments, Guarded Rollouts, and Insights", async () => {
     const user = userEvent.setup();
     render(<App initialEntries={["/projects/default/flags"]} />);
     expect(await screen.findByText("Express Checkout")).toBeInTheDocument();
@@ -398,6 +584,15 @@ describe("@skotos/web management dashboard", () => {
     await user.click(screen.getByRole("button", { name: "Release Pipelines" }));
     expect(await screen.findByText("Standard Progressive Rollout")).toBeInTheDocument();
     expect(await screen.findByText("Web Storefront")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Experiments" }));
+    expect(await screen.findByText("Express Checkout Conversion Lift")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Guarded Rollouts" }));
+    expect(await screen.findByText("Canary Guarded 20%")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Insights & Export/i }));
+    expect(await screen.findByText(/1.40 \/ day/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Approvals" }));
     expect(await screen.findByText("Enable express checkout for Q4")).toBeInTheDocument();

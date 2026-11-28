@@ -28,6 +28,6 @@ pub use protocol::{
 pub use webhooks::dispatch_webhooks_for_event;
 pub use webhooks::{sign_webhook_payload, verify_webhook_signature};
 #[cfg(feature = "workers")]
-pub use worker::{OutboxWorker, OutboxWorkerConfig, SchedulerWorker};
+pub use worker::{evaluate_guarded_rollout, OutboxWorker, OutboxWorkerConfig, SchedulerWorker};
 
 pub const CRATE_NAME: &str = "skotos-fanout";

@@ -7,6 +7,7 @@ pub mod error;
 pub mod eval_model;
 pub mod patch;
 pub mod phase3;
+pub mod phase4;
 pub mod segment_patch;
 
 pub use context::{validate_context_kind, AttributeRef, Context, ContextMeta, SingleContext};
@@ -39,6 +40,17 @@ pub use phase3::{
     PolicyStatement, ReleasePhase, ReleasePipeline, ScheduledSegmentChange, SsoProtocol,
     SsoProviderConfig, Team, WebhookIntegrationKind, WorkflowStage, WorkflowStageStatus,
     WorkflowStatus,
+};
+pub use phase4::{
+    DataExportFlushResult, DataExportSink, DataExportSinkKind, EngineeringInsights, Experiment,
+    ExperimentMode, ExperimentResults, ExperimentStatus, ExperimentVariationWeight,
+    FlagMonitoringSummary, FlagVariationMonitoring, GuardedRollout, GuardedRolloutEvaluation,
+    GuardedRolloutStatus, GuardrailMetricCheck, GuardrailMetricRule, MetricAggregation,
+    MetricDefinition, MetricExperimentResult, MetricGroup, MetricGroupKind, MetricKind,
+    MetricSuccessDirection, MigrationFlagConfig, MigrationStage, MigrationStageMetrics,
+    MigrationTelemetrySummary, MigrationTemplate, MutualExclusionLayer, SrmCheckResult,
+    StatisticalEngine, SyncedSegmentIntegration, SyncedSegmentProvider, VariationResult,
+    VariationSufficientStats,
 };
 pub use segment_patch::{
     apply_segment_patch, validate_segment, SegmentPatchInstruction, SegmentPatchResult,

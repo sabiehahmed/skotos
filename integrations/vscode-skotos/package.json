@@ -1,0 +1,57 @@
+{
+  "name": "@skotos/vscode-extension",
+  "displayName": "Skotos Feature Flags",
+  "description": "Inline feature flag hover status, CodeLens toggle actions, and code-reference navigation for VS Code and Cursor",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "skotos",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages", "Other"],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "contributes": {
+    "configuration": {
+      "title": "Skotos",
+      "properties": {
+        "skotos.apiBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:8080",
+          "description": "Skotos Control Plane API base URL"
+        },
+        "skotos.projectKey": {
+          "type": "string",
+          "default": "default",
+          "description": "Default Skotos project key"
+        },
+        "skotos.envKey": {
+          "type": "string",
+          "default": "production",
+          "description": "Default Skotos environment key for inline status"
+        },
+        "skotos.apiToken": {
+          "type": "string",
+          "default": "",
+          "description": "Skotos API access token (`sk_...`)"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "skotos.refreshFlags",
+        "title": "Skotos: Refresh Feature Flags"
+      },
+      {
+        "command": "skotos.openFlagInDashboard",
+        "title": "Skotos: Open Flag in Dashboard"
+      }
+    ]
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --maxWorkers=2",
+    "build": "tsc -p tsconfig.build.json"
+  }
+}

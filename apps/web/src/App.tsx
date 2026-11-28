@@ -38,9 +38,12 @@ import { skotosApi, unwrapApiResult, type AuthMe } from "./lib/api";
 import { useAuthMe, useLogoutMutation } from "./lib/auth";
 import { ApprovalsPage } from "./pages/ApprovalsPage";
 import { AuditLogPage } from "./pages/AuditLogPage";
+import { ExperimentsPage } from "./pages/ExperimentsPage";
 import { FlagDetailPage } from "./pages/FlagDetailPage";
 import { FlagsListPage } from "./pages/FlagsListPage";
 import { RolesSettingsPage, TeamsSsoSettingsPage } from "./pages/GovernanceSettingsPage";
+import { GuardedRolloutsPage } from "./pages/GuardedRolloutsPage";
+import { InsightsPage } from "./pages/InsightsPage";
 import { LiveDebuggerPage } from "./pages/LiveDebuggerPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PipelinesPage } from "./pages/PipelinesPage";
@@ -209,6 +212,48 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             >
               <Icons.GitBranch size={15} />
               Release Pipelines
+            </Button>
+            <Button
+              variant={location.pathname.includes("/experiments") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/experiments",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.SlidersHorizontal size={15} />
+              Experiments
+            </Button>
+            <Button
+              variant={location.pathname.includes("/rollouts") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/rollouts",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.Shield size={15} />
+              Guarded Rollouts
+            </Button>
+            <Button
+              variant={location.pathname.includes("/insights") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/insights",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.ArrowUp size={15} />
+              Insights &amp; Export
             </Button>
             <Button
               variant={isPath("/approvals") ? "secondary" : "ghost"}
@@ -387,6 +432,39 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             onSelect: () =>
               void navigate({
                 to: "/projects/$projectKey/pipelines",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
+            id: "experiments",
+            label: "Go to Experiments & Metrics",
+            hint: activeProjectKey,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/experiments",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
+            id: "rollouts",
+            label: "Go to Guarded Rollouts",
+            hint: activeEnv?.key,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/rollouts",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
+            id: "insights",
+            label: "Go to Engineering Insights & Data Export",
+            hint: activeProjectKey,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/insights",
                 params: { projectKey: activeProjectKey },
                 search: activeEnv ? { env: activeEnv.key } : {},
               }),
@@ -632,6 +710,81 @@ function DebuggerRouteView() {
   return <LiveDebuggerPage projectKey={projectKey} activeEnv={activeEnv} />;
 }
 
+function ExperimentsRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const search = useSearch({ strict: false }) as EnvSearch;
+  const meQuery = useAuthMe();
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  const environments = envsQuery.data?.items ?? [];
+  const activeEnv = environments.find((e) => e.key === search.env) ?? environments[0];
+  if (!meQuery.data) return null;
+  return (
+    <ExperimentsPage
+      projectKey={projectKey}
+      activeEnv={activeEnv}
+      userRole={meQuery.data.role}
+    />
+  );
+}
+
+function RolloutsRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const search = useSearch({ strict: false }) as EnvSearch;
+  const meQuery = useAuthMe();
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  const environments = envsQuery.data?.items ?? [];
+  const activeEnv = environments.find((e) => e.key === search.env) ?? environments[0];
+  if (!meQuery.data) return null;
+  return (
+    <GuardedRolloutsPage
+      projectKey={projectKey}
+      activeEnv={activeEnv}
+      userRole={meQuery.data.role}
+    />
+  );
+}
+
+function InsightsRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const search = useSearch({ strict: false }) as EnvSearch;
+  const meQuery = useAuthMe();
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  const environments = envsQuery.data?.items ?? [];
+  const activeEnv = environments.find((e) => e.key === search.env) ?? environments[0];
+  if (!meQuery.data) return null;
+  return (
+    <InsightsPage
+      projectKey={projectKey}
+      activeEnv={activeEnv}
+      userRole={meQuery.data.role}
+    />
+  );
+}
+
 function ApprovalsRouteView() {
   const meQuery = useAuthMe();
   if (!meQuery.data) return null;
@@ -742,6 +895,33 @@ function buildAppRouter(initialEntries?: string[]) {
     component: PipelinesRouteView,
   });
 
+  const experimentsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/experiments",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: ExperimentsRouteView,
+  });
+
+  const rolloutsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/rollouts",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: RolloutsRouteView,
+  });
+
+  const insightsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/insights",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: InsightsRouteView,
+  });
+
   const debuggerRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/projects/$projectKey/debugger",
@@ -813,6 +993,9 @@ function buildAppRouter(initialEntries?: string[]) {
     flagDetailRoute,
     segmentsRoute,
     pipelinesRoute,
+    experimentsRoute,
+    rolloutsRoute,
+    insightsRoute,
     debuggerRoute,
     approvalsRoute,
     auditLogRoute,
