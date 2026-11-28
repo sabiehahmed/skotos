@@ -33,7 +33,8 @@ export function LoginPage({ onLoggedIn }: LoginPageProps) {
         alignItems: "center",
         justifyContent: "center",
         padding: "var(--sk-space-6)",
-        background: "var(--sk-color-bg)",
+        background:
+          "radial-gradient(var(--sk-canvas-dot) 1px, transparent 1.2px) 0 0 / 22px 22px, var(--sk-color-bg)",
       }}
     >
       <div style={{ width: "100%", maxWidth: 420 }}>
@@ -41,7 +42,7 @@ export function LoginPage({ onLoggedIn }: LoginPageProps) {
           <Stack gap={5}>
             <Stack gap={2}>
               <Stack direction="horizontal" align="center" gap={2}>
-                <Icons.Flag size={22} />
+                <Icons.Flag size={22} weight="fill" aria-hidden="true" />
                 <Heading level={1}>Skotos</Heading>
               </Stack>
               <Text tone="muted" size="sm">

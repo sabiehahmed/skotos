@@ -3,8 +3,9 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: var(--sk-z-modal);
 }
 
@@ -16,11 +17,11 @@
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-  background: var(--sk-color-surface-elevated);
-  border: 1px solid var(--sk-color-border-strong);
+  background: var(--sk-card-fill);
+  border: none;
   border-radius: var(--sk-radius-lg);
   box-shadow: var(--sk-shadow-lg);
-  padding: var(--sk-space-5);
+  padding: var(--sk-space-6);
   z-index: var(--sk-z-modal);
   display: flex;
   flex-direction: column;
@@ -41,7 +42,8 @@
 .dialogTitle {
   margin: 0;
   font-size: var(--sk-text-lg);
-  font-weight: 650;
+  font-weight: 500;
+  letter-spacing: -0.015em;
   color: var(--sk-color-text);
 }
 
@@ -55,8 +57,8 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--sk-space-2);
-  padding-top: var(--sk-space-2);
-  border-top: 1px solid var(--sk-color-border);
+  padding-top: var(--sk-space-4);
+  border-top: 1px solid var(--sk-card-divider);
 }
 
 .drawerContent {
@@ -65,8 +67,8 @@
   right: 0;
   bottom: 0;
   width: min(480px, 100vw);
-  background: var(--sk-color-surface-elevated);
-  border-left: 1px solid var(--sk-color-border-strong);
+  background: var(--sk-card-fill);
+  border-left: none;
   box-shadow: var(--sk-shadow-lg);
   padding: var(--sk-space-5);
   z-index: var(--sk-z-modal);
@@ -78,9 +80,9 @@
 
 .popoverContent,
 .menuContent {
-  background: var(--sk-color-surface-elevated);
-  border: 1px solid var(--sk-color-border-strong);
-  border-radius: var(--sk-radius-md);
+  background: var(--sk-card-fill);
+  border: none;
+  border-radius: var(--sk-radius-lg);
   box-shadow: var(--sk-shadow-md);
   z-index: var(--sk-z-popover);
 }
@@ -109,7 +111,7 @@
 
 .menuItem[data-highlighted] {
   background: var(--sk-color-accent-subtle);
-  color: var(--sk-color-accent);
+  color: var(--sk-color-text);
 }
 
 .menuItemDanger {
@@ -122,12 +124,13 @@
 }
 
 .tooltipContent {
-  background: var(--sk-color-text);
-  color: var(--sk-color-text-inverse);
-  font-size: var(--sk-text-xs);
+  background: var(--sk-card-fill);
+  color: var(--sk-color-text);
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
   padding: 5px 9px;
   border-radius: var(--sk-radius-sm);
-  box-shadow: var(--sk-shadow-sm);
+  box-shadow: var(--sk-shadow-md);
   z-index: var(--sk-z-tooltip);
   max-width: 260px;
 }
@@ -138,19 +141,21 @@
   align-items: center;
   gap: var(--sk-space-1);
   border-bottom: 1px solid var(--sk-color-border);
-  margin-bottom: var(--sk-space-5);
+  margin-bottom: var(--sk-space-6);
 }
 
 .tabsTrigger {
+  position: relative;
   border: none;
   background: transparent;
-  padding: var(--sk-space-2) var(--sk-space-4);
+  padding: var(--sk-space-3) var(--sk-space-3);
   font-size: var(--sk-text-sm);
-  font-weight: 550;
+  font-weight: 450;
   color: var(--sk-color-text-muted);
-  border-bottom: 2px solid transparent;
+  border-bottom: 1px solid transparent;
   margin-bottom: -1px;
   cursor: pointer;
+  transition: color var(--sk-duration-fast) var(--sk-ease-out);
 }
 
 .tabsTrigger:hover {
@@ -158,8 +163,9 @@
 }
 
 .tabsTrigger[data-state="active"] {
-  color: var(--sk-color-accent);
-  border-bottom-color: var(--sk-color-accent);
+  color: var(--sk-color-text);
+  border-bottom-color: var(--sk-color-text);
+  box-shadow: 0 6px 12px -8px rgba(255, 255, 255, 0.35);
 }
 
 /* Breadcrumb */
@@ -170,8 +176,28 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--sk-text-xs);
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
+  letter-spacing: var(--sk-label-tracking);
+  text-transform: uppercase;
   color: var(--sk-color-text-muted);
+}
+
+.breadcrumbList :is(button, a) {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  height: auto;
+  padding: 2px 4px;
+  color: var(--sk-color-text-muted);
+}
+
+.breadcrumbList :is(button, a):hover {
+  color: var(--sk-color-text);
+}
+
+.breadcrumbList [aria-current="page"] {
+  color: var(--sk-color-text);
 }
 
 .breadcrumbSep {
@@ -230,7 +256,7 @@
 
 .commandItem:hover {
   background: var(--sk-color-accent-subtle);
-  color: var(--sk-color-accent);
+  color: var(--sk-color-text);
 }
 
 /* Toast */
@@ -250,9 +276,9 @@
 }
 
 .toastRoot {
-  background: var(--sk-color-surface-elevated);
-  border: 1px solid var(--sk-color-border-strong);
-  border-radius: var(--sk-radius-md);
+  background: var(--sk-card-fill);
+  border: none;
+  border-radius: var(--sk-radius-lg);
   box-shadow: var(--sk-shadow-md);
   padding: var(--sk-space-3) var(--sk-space-4);
   display: flex;
@@ -262,16 +288,16 @@
 }
 
 .toastSuccess {
-  border-left: 4px solid var(--sk-color-success);
+  box-shadow: inset 2px 0 0 var(--sk-color-success), var(--sk-shadow-md);
 }
 
 .toastDanger {
-  border-left: 4px solid var(--sk-color-danger);
+  box-shadow: inset 2px 0 0 var(--sk-color-danger), var(--sk-shadow-md);
 }
 
 .toastTitle {
   font-size: var(--sk-text-sm);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--sk-color-text);
 }
 

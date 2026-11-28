@@ -142,7 +142,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
           <Sidebar
             header={
               <Stack direction="horizontal" align="center" gap={2}>
-                <Icons.Flag size={18} />
+                <Icons.Flag size={18} weight="fill" aria-hidden="true" />
                 <Heading level={4}>Skotos</Heading>
                 <Badge tone="neutral">{me.organization.slug}</Badge>
               </Stack>
@@ -165,7 +165,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                       void navigate({ to: "/login" });
                     }}
                   >
-                    <Icons.LogOut size={15} />
+                    <Icons.LogOut size={16} />
                   </IconButton>
                 </Stack>
               </Stack>
@@ -182,7 +182,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.Flag size={15} />
+              <Icons.Flag size={16} />
               Feature Flags
             </Button>
             <Button
@@ -196,7 +196,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.Filter size={15} />
+              <Icons.Filter size={16} />
               Segments
             </Button>
             <Button
@@ -210,7 +210,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.GitBranch size={15} />
+              <Icons.GitBranch size={16} />
               Release Pipelines
             </Button>
             <Button
@@ -224,7 +224,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.SlidersHorizontal size={15} />
+              <Icons.Flask size={16} />
               Experiments
             </Button>
             <Button
@@ -238,7 +238,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.Shield size={15} />
+              <Icons.ShieldCheck size={16} />
               Guarded Rollouts
             </Button>
             <Button
@@ -252,7 +252,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.ArrowUp size={15} />
+              <Icons.ChartLineUp size={16} />
               Insights &amp; Export
             </Button>
             <Button
@@ -260,7 +260,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/approvals" })}
             >
-              <Icons.CheckCircle2 size={15} />
+              <Icons.SealCheck size={16} />
               Approvals
             </Button>
             <Button
@@ -274,7 +274,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.Terminal size={15} />
+              <Icons.Terminal size={16} />
               Live Debugger
             </Button>
             <Button
@@ -282,11 +282,16 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/audit-log" })}
             >
-              <Icons.History size={15} />
+              <Icons.History size={16} />
               Audit Log
             </Button>
             <Separator />
-            <Text size="xs" tone="muted" bold style={{ padding: "4px 10px" }}>
+            <Text
+              size="xs"
+              tone="muted"
+              mono
+              style={{ padding: "4px 12px", letterSpacing: "var(--sk-label-tracking)" }}
+            >
               SETTINGS
             </Text>
             <Button
@@ -294,7 +299,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/projects" })}
             >
-              <Icons.FolderKanban size={15} />
+              <Icons.FolderKanban size={16} />
               Projects
             </Button>
             <Button
@@ -307,7 +312,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
                 })
               }
             >
-              <Icons.Layers size={15} />
+              <Icons.Layers size={16} />
               Environments &amp; Keys
             </Button>
             <Button
@@ -315,7 +320,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/webhooks" })}
             >
-              <Icons.Code2 size={15} />
+              <Icons.WebhooksLogo size={16} />
               Webhooks
             </Button>
             <Button
@@ -323,7 +328,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/tokens" })}
             >
-              <Icons.KeyRound size={15} />
+              <Icons.KeyRound size={16} />
               API Tokens
             </Button>
             <Button
@@ -331,7 +336,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/roles" })}
             >
-              <Icons.Shield size={15} />
+              <Icons.Shield size={16} />
               Custom Roles
             </Button>
             <Button
@@ -339,7 +344,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/teams" })}
             >
-              <Icons.SlidersHorizontal size={15} />
+              <Icons.UsersThree size={16} />
               Teams &amp; SSO
             </Button>
             <Button
@@ -347,7 +352,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/members" })}
             >
-              <Icons.Users size={15} />
+              <Icons.Users size={16} />
               Team Members
             </Button>
           </Sidebar>

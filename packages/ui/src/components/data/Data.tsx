@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Trash2 } from "../../icons";
 import type { ReactNode } from "react";
 import {
   Button,
@@ -675,6 +675,35 @@ export function AuditTimeline({
           )}
         </article>
       ))}
+    </div>
+  );
+}
+
+export interface DotMeterProps {
+  /** Filled fraction, 0..1. Values outside the range are clamped. */
+  value: number;
+  /** Accessible name for the meter. */
+  label: string;
+  className?: string;
+}
+
+/**
+ * Dot meter: a row of small squares, filled squares in the meter tone and the
+ * empty track in black. Read-only data viz for ratios and percentages.
+ */
+export function DotMeter({ value, label, className }: DotMeterProps) {
+  const clamped = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
+  const pct = Math.round(clamped * 1000) / 10;
+  return (
+    <div
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={pct}
+      className={clsx(styles.dotMeter, className)}
+    >
+      <span className={styles.dotMeterFill} style={{ width: `${pct}%` }} />
     </div>
   );
 }

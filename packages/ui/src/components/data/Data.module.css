@@ -3,33 +3,48 @@
 .tableWrap {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--sk-color-border);
+  border: none;
   border-radius: var(--sk-radius-lg);
-  background: var(--sk-color-surface);
+  background: var(--sk-card-fill);
+  box-shadow: var(--sk-card-shadow);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--sk-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Column labels are mono key labels, like the reference's "LAST NIGHT". */
+.table th:first-child,
+.table td:first-child {
+  padding-left: var(--sk-space-5);
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: var(--sk-space-5);
 }
 
 .table th {
   text-align: left;
   padding: var(--sk-space-3) var(--sk-space-4);
-  font-size: var(--sk-text-xs);
-  font-weight: 600;
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--sk-label-tracking);
   color: var(--sk-color-text-muted);
-  background: var(--sk-color-surface-subtle);
-  border-bottom: 1px solid var(--sk-color-border);
+  background: transparent;
+  border-bottom: 1px solid var(--sk-card-divider);
 }
 
 .table td {
   padding: var(--sk-space-3) var(--sk-space-4);
-  border-bottom: 1px solid var(--sk-color-border);
+  border-bottom: 1px solid var(--sk-card-divider);
   vertical-align: middle;
+  color: var(--sk-color-text);
 }
 
 .table tr:last-child td {
@@ -40,8 +55,16 @@
   cursor: pointer;
 }
 
+.table tbody tr {
+  transition: background var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.table tbody tr:hover td {
+  background: var(--sk-row-hover);
+}
+
 .tableRowClickable:hover td {
-  background: var(--sk-color-surface-hover);
+  background: var(--sk-color-accent-subtle);
 }
 
 /* JsonEditor */
@@ -52,7 +75,8 @@
 }
 
 .jsonStatus {
-  font-size: var(--sk-text-xs);
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -79,8 +103,9 @@
   gap: var(--sk-space-2);
   padding: var(--sk-space-2) var(--sk-space-3);
   border-radius: var(--sk-radius-md);
-  border: 1px solid var(--sk-color-border);
-  background: var(--sk-color-surface-subtle);
+  border: none;
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow);
   font-size: var(--sk-text-sm);
 }
 
@@ -97,22 +122,35 @@
 }
 
 /* RolloutAllocator */
+/* Recessed config panel */
 .rolloutWrap {
   display: flex;
   flex-direction: column;
   gap: var(--sk-space-3);
-  padding: var(--sk-space-3);
-  border: 1px solid var(--sk-color-border);
+  padding: var(--sk-space-4);
+  border: none;
   border-radius: var(--sk-radius-md);
-  background: var(--sk-color-surface-subtle);
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow);
 }
 
+/* Dot meter: 2.56px squares on a 3.93px pitch; the empty track is what
+   makes it read. Segment colours come through the square mask. */
 .rolloutBar {
   display: flex;
-  height: 10px;
-  border-radius: var(--sk-radius-full);
+  height: 6.5px;
+  border-radius: 0;
   overflow: hidden;
-  background: var(--sk-color-border);
+  background: var(--sk-meter-off);
+  box-shadow: inset 0 0 0 0.5px var(--sk-control-stroke);
+  -webkit-mask-image:
+    repeating-linear-gradient(90deg, #000 0 2.56px, transparent 2.56px 3.93px),
+    repeating-linear-gradient(180deg, #000 0 2.56px, transparent 2.56px 3.93px);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    repeating-linear-gradient(90deg, #000 0 2.56px, transparent 2.56px 3.93px),
+    repeating-linear-gradient(180deg, #000 0 2.56px, transparent 2.56px 3.93px);
+  mask-composite: intersect;
 }
 
 .rolloutRow {
@@ -123,14 +161,18 @@
 }
 
 .rolloutSwatch {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--sk-radius-full);
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
 }
 
 .rolloutTotal {
-  font-size: var(--sk-text-xs);
-  font-weight: 600;
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
+  letter-spacing: var(--sk-label-tracking);
+  text-transform: uppercase;
+  color: var(--sk-color-text-muted);
+  font-weight: 400;
   display: flex;
   justify-content: space-between;
 }
@@ -143,9 +185,10 @@
 }
 
 .ruleCard {
-  border: 1px solid var(--sk-color-border-strong);
+  border: none;
   border-radius: var(--sk-radius-md);
-  background: var(--sk-color-surface);
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow), inset 0 0 0 0.5px var(--sk-control-stroke);
   overflow: hidden;
 }
 
@@ -155,8 +198,10 @@
   justify-content: space-between;
   gap: var(--sk-space-2);
   padding: var(--sk-space-2) var(--sk-space-3);
-  background: var(--sk-color-surface-subtle);
-  border-bottom: 1px solid var(--sk-color-border);
+  background: transparent;
+  border-bottom: 1px solid var(--sk-card-divider);
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
 }
 
 .ruleBody {
@@ -185,7 +230,7 @@
   gap: var(--sk-space-3);
   flex-wrap: wrap;
   padding-top: var(--sk-space-2);
-  border-top: 1px dashed var(--sk-color-border);
+  border-top: 1px dashed var(--sk-card-divider);
 }
 
 /* AuditTimeline */
@@ -196,9 +241,10 @@
 }
 
 .timelineItem {
-  border: 1px solid var(--sk-color-border);
-  border-radius: var(--sk-radius-md);
-  background: var(--sk-color-surface);
+  border: none;
+  border-radius: var(--sk-radius-lg);
+  background: var(--sk-card-fill);
+  box-shadow: var(--sk-card-shadow);
   padding: var(--sk-space-4);
   display: flex;
   flex-direction: column;
@@ -211,4 +257,23 @@
   justify-content: space-between;
   gap: var(--sk-space-2);
   flex-wrap: wrap;
+}
+
+/* DotMeter — square cells on a ~1.5x pitch (reference: 2.56px on 3.93px),
+   filled in the meter tone, empty track black. */
+.dotMeter {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  margin: 6px 0 4px;
+  background: var(--sk-meter-off);
+  -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 4.6px);
+  mask-image: repeating-linear-gradient(90deg, #000 0 3px, transparent 3px 4.6px);
+}
+
+.dotMeterFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--sk-meter-on);
+  transition: width var(--sk-duration-base) var(--sk-ease-out);
 }

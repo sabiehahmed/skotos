@@ -6,6 +6,7 @@ import {
   CodeBlock,
   DataTable,
   Dialog,
+  DotMeter,
   EmptyState,
   FormField,
   Grid,
@@ -210,29 +211,41 @@ export function InsightsPage({ projectKey, activeEnv, userRole }: InsightsPagePr
       <Grid columns={4} gap={4}>
         <Card padded>
           <Stack gap={1}>
-            <Text size="xs" tone="muted" bold>DEPLOYMENT FREQUENCY (30D)</Text>
+            <Text size="xs" tone="muted" mono>DEPLOYMENT FREQUENCY (30D)</Text>
             <Heading level={2}>{insights.deploymentsPerDay.toFixed(2)} / day</Heading>
             <Text size="xs" tone="muted">{insights.flagDeploymentsCount} flag releases</Text>
           </Stack>
         </Card>
         <Card padded>
           <Stack gap={1}>
-            <Text size="xs" tone="muted" bold>CHANGE FAILURE RATE</Text>
+            <Text size="xs" tone="muted" mono>CHANGE FAILURE RATE</Text>
             <Heading level={2}>{insights.changeFailureRatePct.toFixed(1)}%</Heading>
+            <DotMeter
+              label="Change failure rate"
+              value={insights.changeFailureRatePct / 100}
+            />
             <Text size="xs" tone="muted">{insights.rollbacksCount} rollbacks / reverts</Text>
           </Stack>
         </Card>
         <Card padded>
           <Stack gap={1}>
-            <Text size="xs" tone="muted" bold>MEAN TIME TO RECOVERY</Text>
+            <Text size="xs" tone="muted" mono>MEAN TIME TO RECOVERY</Text>
             <Heading level={2}>{insights.meanTimeToRecoveryMinutes.toFixed(1)}m</Heading>
             <Text size="xs" tone="muted">Median incident rollback speed</Text>
           </Stack>
         </Card>
         <Card padded>
           <Stack gap={1}>
-            <Text size="xs" tone="muted" bold>FLAG HEALTH</Text>
+            <Text size="xs" tone="muted" mono>FLAG HEALTH</Text>
             <Heading level={2}>{insights.totalFlags} flags</Heading>
+            <DotMeter
+              label="Healthy flags"
+              value={
+                insights.totalFlags > 0
+                  ? (insights.totalFlags - insights.staleFlags) / insights.totalFlags
+                  : 0
+              }
+            />
             <Text size="xs" tone="muted">
               {insights.staleFlags} stale · {insights.temporaryFlags} temporary
             </Text>

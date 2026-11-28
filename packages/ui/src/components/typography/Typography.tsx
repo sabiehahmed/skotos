@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { AlertCircle, AlertTriangle, Check, CheckCircle2, Copy, Info } from "lucide-react";
+import { AlertCircle, AlertTriangle, Check, CheckCircle2, Copy, Info } from "../../icons";
 import { useState, type CSSProperties, type HTMLAttributes, type ReactNode } from "react";
 import styles from "./Typography.module.css";
 

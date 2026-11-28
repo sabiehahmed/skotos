@@ -6,7 +6,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import clsx from "clsx";
-import { ChevronRight, Search, X } from "lucide-react";
+import { ChevronRight, Search, X } from "../../icons";
 import {
   createContext,
   useCallback,

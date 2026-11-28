@@ -26,7 +26,7 @@ function getSystemTheme(): ResolvedTheme {
 }
 
 export function ThemeProvider({
-  defaultTheme = "light",
+  defaultTheme = "dark",
   storageKey = "skotos-theme",
   children,
 }: ThemeProviderProps) {
