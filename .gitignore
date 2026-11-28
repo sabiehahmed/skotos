@@ -21,8 +21,9 @@ __pycache__/
 *.pyc
 .venv/
 
-# Logs
+# Logs & local dev-stack runtime state
 *.log
+.skotos-dev/
 
 # Agent teamwork coordination state (keep .agents/environment.json tracked)
 .agents/teamwork/
