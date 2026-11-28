@@ -5,7 +5,7 @@ import {
   getContextKinds,
   numberVariation,
   stringVariation,
-} from "./evaluator";
+} from "./evaluator.js";
 import type {
   BigSegmentSnapshot,
   EnvironmentSnapshot,
@@ -14,9 +14,9 @@ import type {
   EvalStore,
   EvaluationDetail,
   SkotosContext,
-} from "./types";
+} from "./types.js";
 
-export * from "./types";
+export * from "./types.js";
 export {
   boolVariation,
   checkBigSegmentSnapshot,
@@ -29,8 +29,8 @@ export {
   redactContext,
   stringVariation,
   validateContext,
-} from "./evaluator";
-export { bigSegmentKeyHash, sha1Hex } from "./sha1";
+} from "./evaluator.js";
+export { bigSegmentKeyHash, sha1Hex } from "./sha1.js";
 
 /**
  * Minimal KV interface compatible with Cloudflare Workers KV, Vercel Edge Config / KV,

@@ -672,4 +672,60 @@ describe("@skotos/web management dashboard", () => {
       }),
     );
   });
+  it("guides SDK setup with prefilled credentials and detects the first SDK connection", async () => {
+    let usageItems: unknown[] = [];
+    server.use(
+      http.get("*/api/v1/projects/:projectKey/environments/:envKey/keys", () =>
+        HttpResponse.json({
+          clientSideId: "sk_cid_dev123",
+          keys: [
+            {
+              id: "77777777-7777-7777-7777-777777777771",
+              envId: "33333333-3333-3333-3333-333333333331",
+              kind: "sdk",
+              keyPrefix: "sdk-ab12",
+              createdAt: "2026-11-27T00:00:00Z",
+            },
+          ],
+        }),
+      ),
+      http.get("*/api/v1/projects/:projectKey/environments/:envKey/usage", () =>
+        HttpResponse.json({ items: usageItems }),
+      ),
+      http.get("*/api/v1/projects/:projectKey/environments/:envKey/context-catalog", () =>
+        HttpResponse.json({ kinds: [] }),
+      ),
+    );
+
+    const user = userEvent.setup();
+    render(<App initialEntries={["/projects/default/sdk-setup?env=development"]} />);
+
+    expect(await screen.findByRole("heading", { name: "SDK setup" })).toBeInTheDocument();
+    expect(await screen.findByText("Waiting for the first SDK event…")).toBeInTheDocument();
+
+    // Server SDK: the secret is never inlined, only referenced by env var + prefix hint.
+    expect(
+      await screen.findByText("SKOTOS_SDK_KEY=<your SDK key, starts with sdk-ab12...>"),
+    ).toBeInTheDocument();
+
+    // Client SDK: public client-side ID is filled in, and the flag's availability is checked.
+    await user.click(screen.getByRole("radio", { name: /^React\s*TSX$/ }));
+    expect(await screen.findByText(/clientSideId: "sk_cid_dev123"/)).toBeInTheDocument();
+    expect(
+      screen.getByText("express-checkout is not available to client-side SDKs"),
+    ).toBeInTheDocument();
+
+    usageItems = [
+      {
+        flagKey: "express-checkout",
+        totalEvaluations: 3,
+        lastEvaluatedAt: new Date().toISOString(),
+        contextKinds: ["user"],
+      },
+    ];
+    expect(
+      await screen.findByText("Receiving events from your SDK", {}, { timeout: 8000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("3 evaluations · 7d")).toBeInTheDocument();
+  }, 15000);
 });
