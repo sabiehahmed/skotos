@@ -22,8 +22,10 @@ path = "src/bin/export_openapi.rs"
 
 [dependencies]
 axum.workspace = true
+bytes.workspace = true
 chrono.workspace = true
 dotenvy.workspace = true
+futures.workspace = true
 http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -47,8 +49,10 @@ base64.workspace = true
 delivery-edge = { path = "../delivery-edge" }
 event-ingest = { path = "../event-ingest" }
 flate2.workspace = true
-futures.workspace = true
+relay-proxy = { path = "../relay-proxy" }
 reqwest.workspace = true
+skotos-code-refs = { path = "../../tools/skotos-code-refs" }
+skotos-mcp = { path = "../../tools/skotos-mcp" }
 skotos-server-sdk = { path = "../../sdks/rust-server" }
 zstd.workspace = true
 

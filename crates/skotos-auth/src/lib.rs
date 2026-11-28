@@ -2,6 +2,7 @@
 
 pub mod error;
 pub mod password;
+pub mod policy;
 pub mod principal;
 pub mod provider;
 
@@ -10,6 +11,7 @@ pub use password::{
     hash_password, sign_session_cookie, verify_password, verify_session_cookie, SessionPayload,
     SESSION_COOKIE_NAME,
 };
+pub use policy::{evaluate_policies, glob_match, PolicyDecision};
 pub use principal::{Action, ActorType, AuthMode, AuthenticatedPrincipal, Authorizer, ResourceRef};
 pub use provider::{
     ApiTokenVerifier, BootstrapAdminConfig, ExternalAuthAdapter, ExternalAuthConfig,

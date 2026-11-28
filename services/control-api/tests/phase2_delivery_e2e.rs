@@ -158,6 +158,7 @@ async fn phase2_full_delivery_pipeline_sdk_telemetry_automation_and_outage_isola
         auth: ingest_auth,
         telemetry: cp_state.telemetry.clone(),
         tx: ingest_tx,
+        nats: Some(nats.clone()),
     });
     let ingest_listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let ingest_addr = ingest_listener.local_addr().unwrap();

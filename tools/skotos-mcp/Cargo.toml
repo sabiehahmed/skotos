@@ -1,0 +1,21 @@
+[package]
+name = "skotos-mcp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "skotos-mcp"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+axum.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+skotos-code-refs = { path = "../skotos-code-refs" }
+tokio.workspace = true

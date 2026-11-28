@@ -54,7 +54,7 @@ export default [
 
   // Node SDK TypeScript baseline
   {
-    files: ["sdks/node-server/**/*.ts"],
+    files: ["sdks/node-server/**/*.ts", "sdks/edge/**/*.test.ts"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -67,6 +67,38 @@ export default [
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+    },
+  },
+
+  // Edge SDK TypeScript baseline — pure Web-Standard (Cloudflare Workers / Vercel Edge / Deno)
+  {
+    files: ["sdks/edge/src/**/*.ts"],
+    ignores: ["**/*.test.ts"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              regex: "^node:",
+              message:
+                "@skotos/edge-sdk must remain pure Web-Standard with zero Node.js built-in imports.",
+            },
+          ],
+        },
       ],
     },
   },

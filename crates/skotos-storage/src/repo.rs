@@ -666,7 +666,9 @@ impl Storage {
     ) -> Result<Vec<Environment>, StorageError> {
         let project = self.get_project(org_id, project_key).await?;
         let rows = sqlx::query(
-            "SELECT id, project_id, key, name, color, client_side_id, require_comments, confirm_changes, revision, created_at
+            "SELECT id, project_id, key, name, color, client_side_id, require_comments, confirm_changes,
+                    approval_required, min_approvals, allow_self_approval, external_approval_webhook_url,
+                    revision, created_at
              FROM environments WHERE org_id = $1 AND project_id = $2 ORDER BY created_at ASC, key ASC",
         )
         .bind(org_id)
@@ -684,7 +686,9 @@ impl Storage {
     ) -> Result<Environment, StorageError> {
         let project = self.get_project(org_id, project_key).await?;
         let row = sqlx::query(
-            "SELECT id, project_id, key, name, color, client_side_id, require_comments, confirm_changes, revision, created_at
+            "SELECT id, project_id, key, name, color, client_side_id, require_comments, confirm_changes,
+                    approval_required, min_approvals, allow_self_approval, external_approval_webhook_url,
+                    revision, created_at
              FROM environments WHERE org_id = $1 AND project_id = $2 AND key = $3",
         )
         .bind(org_id)
@@ -2525,6 +2529,12 @@ fn parse_project_row(row: &sqlx::postgres::PgRow) -> Result<Project, StorageErro
 pub(crate) fn parse_environment_row(
     row: &sqlx::postgres::PgRow,
 ) -> Result<Environment, StorageError> {
+    let approval_settings = skotos_domain::EnvironmentApprovalSettings {
+        required: row.try_get("approval_required").unwrap_or(false),
+        min_approvals: row.try_get("min_approvals").unwrap_or(1),
+        allow_self_approval: row.try_get("allow_self_approval").unwrap_or(false),
+        external_approval_webhook_url: row.try_get("external_approval_webhook_url").unwrap_or(None),
+    };
     Ok(Environment {
         id: row.get("id"),
         project_id: row.get("project_id"),
@@ -2534,6 +2544,7 @@ pub(crate) fn parse_environment_row(
         client_side_id: row.get("client_side_id"),
         require_comments: row.get("require_comments"),
         confirm_changes: row.get("confirm_changes"),
+        approval_settings,
         revision: row.get("revision"),
         created_at: row.get("created_at"),
     })

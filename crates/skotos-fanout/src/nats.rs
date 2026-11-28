@@ -96,4 +96,34 @@ impl NatsFanout {
             .await
             .map_err(|e| FanoutError::Nats(format!("subscribe {AUTH_KEYS_SUBJECT}: {e}")))
     }
+
+    /// Publishes an ephemeral Live Events Debugger message onto core NATS (`skotos.debug.{env_id}`)
+    /// with zero JetStream persistence cost.
+    pub async fn publish_debug_event(
+        &self,
+        env_id: Uuid,
+        event: &skotos_domain::LiveEvalDebugEvent,
+    ) -> Result<(), FanoutError> {
+        let subject = env_debug_subject(env_id);
+        let payload = Bytes::from(serde_json::to_vec(event)?);
+        self.client
+            .publish(subject.clone(), payload)
+            .await
+            .map_err(|e| FanoutError::Nats(format!("publish {subject}: {e}")))?;
+        Ok(())
+    }
+
+    /// Subscribes to ephemeral Live Events Debugger tap for a single environment.
+    pub async fn subscribe_debug_events(&self, env_id: Uuid) -> Result<Subscriber, FanoutError> {
+        let subject = env_debug_subject(env_id);
+        self.client
+            .subscribe(subject.clone())
+            .await
+            .map_err(|e| FanoutError::Nats(format!("subscribe {subject}: {e}")))
+    }
+}
+
+/// Returns the ephemeral core NATS subject used for Live Events Debugger streaming.
+pub fn env_debug_subject(env_id: Uuid) -> String {
+    format!("skotos.debug.{env_id}")
 }

@@ -156,6 +156,24 @@ impl OutboxWorker {
             let pre = precompress_snapshot(&snapshot)?;
             self.snapshots.put_snapshot(&pre).await?;
 
+            // 2b. Sync Zstd-compressed Big Segment membership snapshot when mutated
+            if ev.event_type == "big_segment.updated" {
+                if let Some(seg_key) = ev.payload.get("segmentKey").and_then(Value::as_str) {
+                    let ck = ev
+                        .payload
+                        .get("contextKind")
+                        .and_then(Value::as_str)
+                        .unwrap_or("user");
+                    if let Some(bs) = self
+                        .storage
+                        .build_big_segment_snapshot(env_id, seg_key, ck)
+                        .await?
+                    {
+                        self.snapshots.put_big_segment_snapshot(&bs).await?;
+                    }
+                }
+            }
+
             // 3. Build incremental DeliveryEvent and publish to NATS JetStream
             let delivery_event =
                 build_delivery_event(&ev.event_type, &ev.payload, &snapshot, &pre.etag)?;
@@ -352,12 +370,11 @@ impl SchedulerWorker {
     }
 
     pub async fn process_due_once(&self) -> Result<usize, FanoutError> {
-        let due = self.storage.list_due_scheduled_changes(25).await?;
-        if due.is_empty() {
-            return Ok(0);
-        }
+        let mut total = 0usize;
 
-        let count = due.len();
+        // 1. Due scheduled flag changes
+        let due = self.storage.list_due_scheduled_changes(25).await?;
+        total += due.len();
         for item in due {
             let instructions: Result<Vec<FlagPatchInstruction>, _> =
                 serde_json::from_value(item.change.instructions.clone());
@@ -420,7 +437,73 @@ impl SchedulerWorker {
                 }
             }
         }
-        Ok(count)
+
+        // 2. Due scheduled segment changes (Phase 3)
+        let due_segs = self.storage.claim_due_scheduled_segment_changes(25).await?;
+        total += due_segs.len();
+        for item in due_segs {
+            let actor = AuditActor {
+                actor_id: item.change.created_by,
+                actor_type: "scheduler".to_string(),
+                actor_email: None,
+            };
+            let comment = item
+                .change
+                .comment
+                .clone()
+                .unwrap_or_else(|| format!("Scheduled segment change {}", item.change.id));
+            match self
+                .storage
+                .patch_segment(
+                    item.change.org_id,
+                    &item.project_key,
+                    &item.env_key,
+                    &item.segment_key,
+                    None,
+                    Some(&comment),
+                    &item.change.instructions,
+                    &actor,
+                )
+                .await
+            {
+                Ok(_) => {
+                    self.storage
+                        .complete_scheduled_segment_change(
+                            item.change.id,
+                            ScheduledChangeStatus::Executed,
+                            None,
+                        )
+                        .await?;
+                }
+                Err(err) => {
+                    let msg = err.to_string();
+                    self.storage
+                        .complete_scheduled_segment_change(
+                            item.change.id,
+                            ScheduledChangeStatus::Failed,
+                            Some(&msg),
+                        )
+                        .await?;
+                }
+            }
+        }
+
+        // 3. Due multi-step flag workflows (Phase 3 progressive rollouts)
+        let due_wfs = self.storage.list_due_workflows(25).await?;
+        total += due_wfs.len();
+        for wf in due_wfs {
+            let actor = AuditActor {
+                actor_id: wf.created_by,
+                actor_type: "workflow".to_string(),
+                actor_email: None,
+            };
+            let _ = self
+                .storage
+                .advance_flag_workflow(wf.org_id, wf.id, false, &actor)
+                .await;
+        }
+
+        Ok(total)
     }
 
     pub async fn run_until_shutdown(self, mut shutdown: watch::Receiver<bool>) {

@@ -3,6 +3,7 @@
 pub mod error;
 pub mod keys;
 pub mod phase2;
+pub mod phase3;
 pub mod repo;
 
 pub use error::StorageError;
@@ -15,6 +16,7 @@ pub use phase2::{
     DueScheduledChange, EnvironmentAuthRecord, EnvironmentCompileBundle, EnvironmentKeyHashRecord,
     ExecutedTriggerOutcome, PatchSegmentOutcome, WebhookWithSecret,
 };
+pub use phase3::{DueScheduledSegmentChange, ResolvedMemberRbac};
 pub use repo::{
     run_migrations, AuditActor, AuditLogFilter, AuditLogPage, CreateFlagInput,
     CreatedApiTokenOutcome, FlagWithEnvironments, MemberWithPassword, PatchFlagOutcome,

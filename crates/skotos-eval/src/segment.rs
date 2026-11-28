@@ -21,6 +21,16 @@ pub fn evaluate_segment<S: EvalStore>(
         return Err(InternalEvalError::MalformedFlag);
     }
 
+    // 0. Unbounded Big Segment compact hash-block lookup (takes precedence over dynamic rules)
+    if segment.unbounded {
+        let kind = segment.unbounded_context_kind.as_deref().unwrap_or("user");
+        if let Some(single) = context.get_kind(kind) {
+            if let Some(decision) = store.big_segment_membership(&segment.key, kind, &single.key) {
+                return Ok(decision);
+            }
+        }
+    }
+
     // 1. Explicit inclusions take top precedence
     if matches_key_list(context, "user", &segment.included) {
         return Ok(true);

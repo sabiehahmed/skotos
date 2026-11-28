@@ -4,6 +4,7 @@ pub mod config;
 pub mod dto;
 pub mod extract;
 pub mod phase2_routes;
+pub mod phase3_routes;
 pub mod problem;
 pub mod routes;
 
@@ -112,10 +113,22 @@ pub async fn init_app(config: &AppConfig) -> Result<(AppState, Router), String> 
         }
     };
 
+    let s3_cfg = skotos_fanout::S3Config::from_env();
+    let snapshots = skotos_fanout::SnapshotStore::from_s3_config(&s3_cfg).ok();
+    let nats = if let Ok(nats_url) = std::env::var("NATS_URL") {
+        skotos_fanout::NatsFanout::connect(&nats_url).await.ok()
+    } else {
+        skotos_fanout::NatsFanout::connect("nats://127.0.0.1:4222")
+            .await
+            .ok()
+    };
+
     let state = AppState {
         api_token_verifier: ApiTokenVerifier::new(storage.clone()),
         storage,
         telemetry,
+        snapshots,
+        nats,
         identity_provider,
         authorizer: Authorizer,
         cookie_secure: config.cookie_secure,

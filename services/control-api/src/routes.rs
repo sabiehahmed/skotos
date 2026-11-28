@@ -118,6 +118,7 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
             axum::routing::patch(update_member).delete(delete_member),
         )
         .merge(crate::phase2_routes::phase2_router())
+        .merge(crate::phase3_routes::phase3_router())
         .layer(RequestBodyLimitLayer::new(2 * 1024 * 1024))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
@@ -130,7 +131,7 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
     info(
         title = "Skotos Control Plane API",
         version = "0.1.0",
-        description = "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, scheduling, triggers, webhooks, usage analytics, simulations, revisions, audit logs, API tokens, and members."
+        description = "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, Big Segments, custom RBAC roles, teams, approval workflows, release pipelines, workflows, SSO/SCIM, code references, scheduling, triggers, webhooks, usage analytics, simulations, revisions, audit logs, API tokens, and members."
     ),
     paths(
         healthz,
@@ -187,7 +188,51 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
         crate::phase2_routes::delete_webhook,
         crate::phase2_routes::list_webhook_deliveries,
         crate::phase2_routes::get_environment_usage,
-        crate::phase2_routes::get_flag_usage
+        crate::phase2_routes::get_flag_usage,
+        crate::phase3_routes::list_custom_roles,
+        crate::phase3_routes::create_custom_role,
+        crate::phase3_routes::get_custom_role,
+        crate::phase3_routes::update_custom_role,
+        crate::phase3_routes::delete_custom_role,
+        crate::phase3_routes::assign_member_roles,
+        crate::phase3_routes::list_teams,
+        crate::phase3_routes::create_team,
+        crate::phase3_routes::update_team,
+        crate::phase3_routes::delete_team,
+        crate::phase3_routes::add_team_member,
+        crate::phase3_routes::remove_team_member,
+        crate::phase3_routes::update_env_approval_settings,
+        crate::phase3_routes::list_approvals,
+        crate::phase3_routes::list_flag_approvals,
+        crate::phase3_routes::create_flag_approval,
+        crate::phase3_routes::get_approval,
+        crate::phase3_routes::review_approval,
+        crate::phase3_routes::apply_approval,
+        crate::phase3_routes::cancel_approval,
+        crate::phase3_routes::list_sso_providers,
+        crate::phase3_routes::create_sso_provider,
+        crate::phase3_routes::delete_sso_provider,
+        crate::phase3_routes::export_audit_archive,
+        crate::phase3_routes::list_audit_archives,
+        crate::phase3_routes::list_workflows,
+        crate::phase3_routes::create_workflow,
+        crate::phase3_routes::advance_workflow,
+        crate::phase3_routes::cancel_workflow,
+        crate::phase3_routes::list_release_pipelines,
+        crate::phase3_routes::create_release_pipeline,
+        crate::phase3_routes::delete_release_pipeline,
+        crate::phase3_routes::get_flag_release,
+        crate::phase3_routes::attach_flag_release,
+        crate::phase3_routes::start_flag_release_phase,
+        crate::phase3_routes::list_applications,
+        crate::phase3_routes::create_application,
+        crate::phase3_routes::add_application_version,
+        crate::phase3_routes::mutate_big_segment_members,
+        crate::phase3_routes::check_big_segment_membership,
+        crate::phase3_routes::list_scheduled_segment_changes,
+        crate::phase3_routes::create_scheduled_segment_change,
+        crate::phase3_routes::upsert_code_refs,
+        crate::phase3_routes::list_flag_code_refs
     ),
     components(schemas(
         ProblemDetails,
@@ -241,6 +286,37 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
         crate::phase2_routes::UpdateWebhookRequest,
         crate::phase2_routes::WebhookDeliveryListResponse,
         crate::phase2_routes::EnvironmentUsageResponse,
+        crate::phase3_routes::CustomRoleListResponse,
+        crate::phase3_routes::CreateCustomRoleRequest,
+        crate::phase3_routes::UpdateCustomRoleRequest,
+        crate::phase3_routes::AssignMemberRolesRequest,
+        crate::phase3_routes::AssignMemberRolesResponse,
+        crate::phase3_routes::TeamListResponse,
+        crate::phase3_routes::CreateTeamRequest,
+        crate::phase3_routes::UpdateTeamRequest,
+        crate::phase3_routes::ApprovalListResponse,
+        crate::phase3_routes::CreateApprovalRequestDto,
+        crate::phase3_routes::ReviewApprovalRequestDto,
+        crate::phase3_routes::ApplyApprovalResponse,
+        crate::phase3_routes::SsoProviderListResponse,
+        crate::phase3_routes::CreateSsoProviderRequest,
+        crate::phase3_routes::ExportAuditArchiveRequest,
+        crate::phase3_routes::AuditArchiveListResponse,
+        crate::phase3_routes::WorkflowListResponse,
+        crate::phase3_routes::CreateWorkflowRequest,
+        crate::phase3_routes::AdvanceWorkflowRequest,
+        crate::phase3_routes::ReleasePipelineListResponse,
+        crate::phase3_routes::CreateReleasePipelineRequest,
+        crate::phase3_routes::AttachReleasePipelineRequest,
+        crate::phase3_routes::ApplicationListResponse,
+        crate::phase3_routes::CreateApplicationRequest,
+        crate::phase3_routes::AddApplicationVersionRequest,
+        crate::phase3_routes::BigSegmentMembersRequest,
+        crate::phase3_routes::BigSegmentMembershipCheckResponse,
+        crate::phase3_routes::ScheduledSegmentListResponse,
+        crate::phase3_routes::CreateScheduledSegmentRequest,
+        crate::phase3_routes::UpsertCodeRefsRequest,
+        crate::phase3_routes::CodeRefListResponse,
         skotos_domain::Organization,
         skotos_domain::PlanTier,
         skotos_domain::BuiltInRole,
@@ -248,6 +324,7 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
         skotos_domain::ClientSideAvailability,
         skotos_domain::Project,
         skotos_domain::Environment,
+        skotos_domain::EnvironmentApprovalSettings,
         skotos_domain::EnvironmentKeyKind,
         skotos_domain::EnvironmentKey,
         skotos_domain::ApiToken,
@@ -278,9 +355,37 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
         skotos_domain::FlagTrigger,
         skotos_domain::TriggerAction,
         skotos_domain::Webhook,
+        skotos_domain::WebhookIntegrationKind,
         skotos_domain::WebhookDelivery,
         skotos_domain::FlagEvalUsage,
         skotos_domain::VariationUsageCount,
+        skotos_domain::PolicyEffect,
+        skotos_domain::PolicyStatement,
+        skotos_domain::CustomRole,
+        skotos_domain::Team,
+        skotos_domain::ApprovalStatus,
+        skotos_domain::ApprovalReviewKind,
+        skotos_domain::ApprovalReview,
+        skotos_domain::ApprovalRequest,
+        skotos_domain::SsoProtocol,
+        skotos_domain::SsoProviderConfig,
+        skotos_domain::AuditArchiveRecord,
+        skotos_domain::WorkflowStatus,
+        skotos_domain::WorkflowStageStatus,
+        skotos_domain::WorkflowStage,
+        skotos_domain::FlagWorkflow,
+        skotos_domain::ReleasePhase,
+        skotos_domain::ReleasePipeline,
+        skotos_domain::FlagReleasePhaseState,
+        skotos_domain::FlagRelease,
+        skotos_domain::ApplicationKind,
+        skotos_domain::ApplicationVersion,
+        skotos_domain::Application,
+        skotos_domain::BigSegmentStatus,
+        skotos_domain::ScheduledSegmentChange,
+        skotos_domain::CodeRefHunk,
+        skotos_domain::FlagCodeRefSummary,
+        skotos_domain::LiveEvalDebugEvent,
         skotos_domain::Context,
         skotos_domain::ContextMeta,
         skotos_domain::EvaluationDetail,
@@ -294,11 +399,15 @@ pub fn build_router(state: AppState, cors_origins: &[String]) -> Router {
         (name = "projects", description = "Project management"),
         (name = "environments", description = "Environment and SDK key management"),
         (name = "flags", description = "Feature flag management, semantic patching, simulation, and version restore"),
-        (name = "segments", description = "Rule-based and list-based user/context segments"),
-        (name = "automation", description = "Scheduled flag changes and APM rollback triggers"),
-        (name = "webhooks", description = "HMAC-SHA256 signed outbound webhooks"),
+        (name = "segments", description = "Rule-based, list-based, and high-scale Big Segments"),
+        (name = "automation", description = "Scheduled flag changes, multi-step workflows, and APM rollback triggers"),
+        (name = "governance", description = "Custom RBAC roles, teams, and enterprise SSO/SCIM"),
+        (name = "approvals", description = "Mandatory approval workflows and change review queue"),
+        (name = "releases", description = "Release pipelines, flag releases, and application version tracking"),
+        (name = "devtools", description = "Code references tracking and developer tooling APIs"),
+        (name = "webhooks", description = "HMAC-SHA256 signed outbound webhooks and integrations"),
         (name = "usage", description = "Flag evaluation summary counters and stale detection"),
-        (name = "audit-log", description = "Immutable audit trail"),
+        (name = "audit-log", description = "Immutable audit trail and R2/S3 Zstd archival"),
         (name = "tokens", description = "API access tokens"),
         (name = "members", description = "Organization members and RBAC roles")
     )
@@ -965,8 +1074,36 @@ async fn patch_flag(
     state.authorizer.authorize(
         &principal,
         Action::PatchFlag,
-        &ResourceRef::flag(&project_key, &flag_key),
+        &ResourceRef::flag_in_env(&project_key, &req.environment_key, &flag_key),
     )?;
+
+    // Phase 3 Mandatory Approval Workflow guard for protected environments
+    let target_env = state
+        .storage
+        .get_environment(principal.org_id, &project_key, &req.environment_key)
+        .await?;
+    if target_env.approval_settings.required {
+        let owner_bypass = principal.role == skotos_domain::BuiltInRole::Owner
+            && headers
+                .get("x-skotos-bypass-approval")
+                .and_then(|v| v.to_str().ok())
+                == Some("true");
+        if !owner_bypass {
+            return Err(ApiError::new(
+                StatusCode::CONFLICT,
+                "approval_required",
+                "Approval Workflow Required",
+                format!(
+                    "Environment '{}' requires {} reviewer approval(s); submit an approval request via POST /api/v1/projects/{}/flags/{}/environments/{}/approvals",
+                    req.environment_key,
+                    target_env.approval_settings.min_approvals,
+                    project_key,
+                    flag_key,
+                    req.environment_key
+                ),
+            ));
+        }
+    }
 
     let if_match_version = parse_if_match_version(&headers)?;
     let expected_version = match (req.expected_version, if_match_version) {

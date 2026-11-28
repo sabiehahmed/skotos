@@ -4,6 +4,102 @@
  */
 
 export interface paths {
+    "/api/v1/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_applications"];
+        put?: never;
+        post: operations["create_application"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/applications/{appKey}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["add_application_version"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_approvals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{approvalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_approval"];
+        put?: never;
+        post?: never;
+        delete: operations["cancel_approval"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{approvalId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["apply_approval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/approvals/{approvalId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["review_approval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit-log": {
         parameters: {
             query?: never;
@@ -14,6 +110,38 @@ export interface paths {
         get: operations["list_audit_log"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-log/archives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_audit_archives"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-log/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["export_audit_archive"];
         delete?: never;
         options?: never;
         head?: never;
@@ -116,6 +244,22 @@ export interface paths {
         patch: operations["update_member"];
         trace?: never;
     };
+    "/api/v1/members/{memberId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["assign_member_roles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -148,6 +292,22 @@ export interface paths {
         patch: operations["update_project"];
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/code-refs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["upsert_code_refs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/environments": {
         parameters: {
             query?: never;
@@ -178,6 +338,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["update_environment"];
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/approval-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update_env_approval_settings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/projects/{projectKey}/environments/{envKey}/flags/bulk-patch": {
@@ -260,6 +436,54 @@ export interface paths {
         patch: operations["patch_segment"];
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mutate_big_segment_members"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}/membership/{contextKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["check_big_segment_membership"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_scheduled_segment_changes"];
+        put?: never;
+        post: operations["create_scheduled_segment_change"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/environments/{envKey}/usage": {
         parameters: {
             query?: never;
@@ -308,6 +532,22 @@ export interface paths {
         patch: operations["patch_flag"];
         trace?: never;
     };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/code-refs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_flag_code_refs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectKey}/flags/{flagKey}/copy": {
         parameters: {
             query?: never;
@@ -318,6 +558,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["copy_flag_env"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_flag_approvals"];
+        put?: never;
+        post: operations["create_flag_approval"];
         delete?: never;
         options?: never;
         head?: never;
@@ -447,6 +703,230 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_workflows"];
+        put?: never;
+        post: operations["create_workflow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows/{workflowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["cancel_workflow"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows/{workflowId}/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["advance_workflow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_flag_release"];
+        put?: never;
+        post: operations["attach_flag_release"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/release/phases/{phaseIndex}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["start_flag_release_phase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/release-pipelines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_release_pipelines"];
+        put?: never;
+        post: operations["create_release_pipeline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectKey}/release-pipelines/{pipelineKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_release_pipeline"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_custom_roles"];
+        put?: never;
+        post: operations["create_custom_role"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/roles/{roleKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_custom_role"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_custom_role"];
+        options?: never;
+        head?: never;
+        patch: operations["update_custom_role"];
+        trace?: never;
+    };
+    "/api/v1/sso/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_sso_providers"];
+        put?: never;
+        post: operations["create_sso_provider"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sso/providers/{providerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_sso_provider"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_teams"];
+        put?: never;
+        post: operations["create_team"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/teams/{teamKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete_team"];
+        options?: never;
+        head?: never;
+        patch: operations["update_team"];
+        trace?: never;
+    };
+    "/api/v1/teams/{teamKey}/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["add_team_member"];
+        delete: operations["remove_team_member"];
         options?: never;
         head?: never;
         patch?: never;
@@ -584,6 +1064,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddApplicationVersionRequest: {
+            name: string;
+            supported?: boolean;
+            versionKey: string;
+        };
+        AdvanceWorkflowRequest: {
+            approveGate?: boolean;
+        };
         ApiToken: {
             /** Format: date-time */
             createdAt: string;
@@ -603,6 +1091,123 @@ export interface components {
         };
         ApiTokenListResponse: {
             items: components["schemas"]["ApiToken"][];
+        };
+        Application: {
+            /** Format: date-time */
+            createdAt: string;
+            description?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            kind: components["schemas"]["ApplicationKind"];
+            /** Format: uuid */
+            maintainerTeamId?: string | null;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: date-time */
+            updatedAt: string;
+            versions?: components["schemas"]["ApplicationVersion"][];
+        };
+        /** @enum {string} */
+        ApplicationKind: "browser" | "mobile" | "server";
+        ApplicationListResponse: {
+            items: components["schemas"]["Application"][];
+        };
+        ApplicationVersion: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            supported: boolean;
+            versionKey: string;
+        };
+        ApplyApprovalResponse: {
+            approval: components["schemas"]["ApprovalRequest"];
+            patch: components["schemas"]["PatchFlagResponse"];
+        };
+        ApprovalListResponse: {
+            items: components["schemas"]["ApprovalRequest"][];
+        };
+        ApprovalRequest: {
+            /** Format: date-time */
+            appliedAt?: string | null;
+            /** Format: int64 */
+            appliedVersion?: number | null;
+            /** Format: int32 */
+            approvalCount: number;
+            comment?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            description: string;
+            envKey: string;
+            flagKey: string;
+            /** Format: uuid */
+            id: string;
+            instructions: components["schemas"]["FlagPatchInstruction"][];
+            /** Format: int32 */
+            minApprovals: number;
+            /** Format: uuid */
+            orgId: string;
+            projectKey: string;
+            /** Format: uuid */
+            requestedBy?: string | null;
+            requestedByEmail?: string | null;
+            reviews?: components["schemas"]["ApprovalReview"][];
+            status: components["schemas"]["ApprovalStatus"];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ApprovalReview: {
+            /** Format: uuid */
+            approvalId: string;
+            comment?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["ApprovalReviewKind"];
+            reviewerEmail?: string | null;
+            /** Format: uuid */
+            reviewerId: string;
+        };
+        /** @enum {string} */
+        ApprovalReviewKind: "approve" | "decline";
+        /** @enum {string} */
+        ApprovalStatus: "pending" | "approved" | "rejected" | "applied" | "canceled";
+        AssignMemberRolesRequest: {
+            roleKeys: string[];
+        };
+        AssignMemberRolesResponse: {
+            /** Format: uuid */
+            memberId: string;
+            roleKeys: string[];
+        };
+        AttachReleasePipelineRequest: {
+            pipelineKey: string;
+        };
+        AuditArchiveListResponse: {
+            items: components["schemas"]["AuditArchiveRecord"][];
+        };
+        AuditArchiveRecord: {
+            /** Format: int64 */
+            compressedBytes: number;
+            /** Format: date-time */
+            createdAt: string;
+            format: string;
+            /** Format: date-time */
+            fromTimestamp: string;
+            /** Format: uuid */
+            id: string;
+            objectKey: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: int64 */
+            recordCount: number;
+            sha256: string;
+            /** Format: date-time */
+            toTimestamp: string;
         };
         AuditLogEntry: {
             action: string;
@@ -649,6 +1254,29 @@ export interface components {
             organization: components["schemas"]["Organization"];
             role: components["schemas"]["BuiltInRole"];
         };
+        BigSegmentMembersRequest: {
+            addExcluded?: string[];
+            addIncluded?: string[];
+            contextKind?: string;
+            removeExcluded?: string[];
+            removeIncluded?: string[];
+        };
+        BigSegmentMembershipCheckResponse: {
+            contextKey: string;
+            contextKind: string;
+            membership?: boolean | null;
+            segmentKey: string;
+        };
+        BigSegmentStatus: {
+            /** Format: int64 */
+            excludedCount: number;
+            /** Format: int64 */
+            generation: number;
+            /** Format: int64 */
+            includedCount: number;
+            segmentKey: string;
+            syncedToObjectStore: boolean;
+        };
         /** @enum {string} */
         BuiltInRole: "reader" | "writer" | "admin" | "owner";
         BulkPatchFlagsRequest: {
@@ -674,6 +1302,17 @@ export interface components {
         ClientSideAvailability: {
             usingEnvironmentId?: boolean;
             usingMobileKey?: boolean;
+        };
+        CodeRefHunk: {
+            aliases?: string[];
+            filePath: string;
+            flagKey: string;
+            /** Format: int32 */
+            lineNumber: number;
+            linePreview: string;
+        };
+        CodeRefListResponse: {
+            items: components["schemas"]["FlagCodeRefSummary"][];
         };
         /** @description Evaluation context: either a single context ({"kind":"user","key":"...",...}) or a multi-context ({"kind":"multi","user":{...},"organization":{...}}) */
         Context: {
@@ -702,6 +1341,25 @@ export interface components {
         CreateApiTokenResponse: {
             plaintextToken: string;
             token: components["schemas"]["ApiToken"];
+        };
+        CreateApplicationRequest: {
+            description?: string;
+            key: string;
+            kind: components["schemas"]["ApplicationKind"];
+            /** Format: uuid */
+            maintainerTeamId?: string | null;
+            name: string;
+        };
+        CreateApprovalRequestDto: {
+            comment?: string | null;
+            description?: string;
+            instructions: components["schemas"]["FlagPatchInstruction"][];
+        };
+        CreateCustomRoleRequest: {
+            description?: string;
+            key: string;
+            name: string;
+            statements?: components["schemas"]["PolicyStatement"][];
         };
         CreateEnvironmentRequest: {
             color?: string;
@@ -749,11 +1407,23 @@ export interface components {
             environments: components["schemas"]["Environment"][];
             project: components["schemas"]["Project"];
         };
+        CreateReleasePipelineRequest: {
+            description?: string;
+            key: string;
+            name: string;
+            phases: components["schemas"]["ReleasePhase"][];
+        };
         CreateScheduledChangeRequest: {
             comment?: string | null;
             /** Format: date-time */
             executeAt: string;
             instructions: components["schemas"]["FlagPatchInstruction"][];
+        };
+        CreateScheduledSegmentRequest: {
+            comment?: string | null;
+            /** Format: date-time */
+            executeAt: string;
+            instructions: components["schemas"]["SegmentPatchInstruction"][];
         };
         CreateSegmentRequest: {
             excluded?: string[];
@@ -765,6 +1435,21 @@ export interface components {
             name: string;
             rules?: components["schemas"]["SegmentRule"][];
         };
+        CreateSsoProviderRequest: {
+            clientId?: string | null;
+            issuerUrl: string;
+            jwksUrl?: string | null;
+            name: string;
+            protocol: components["schemas"]["SsoProtocol"];
+            samlMetadataUrl?: string | null;
+            scimEnabled?: boolean;
+        };
+        CreateTeamRequest: {
+            customRoleKeys?: string[];
+            description?: string;
+            key: string;
+            name: string;
+        };
         CreateVariationInput: {
             description?: string | null;
             /** Format: uuid */
@@ -775,6 +1460,7 @@ export interface components {
         CreateWebhookRequest: {
             envFilter?: string[];
             events?: string[];
+            integrationKind?: components["schemas"]["WebhookIntegrationKind"];
             name: string;
             secret?: string | null;
             url: string;
@@ -783,7 +1469,30 @@ export interface components {
             secret: string;
             webhook: components["schemas"]["Webhook"];
         };
+        CreateWorkflowRequest: {
+            description?: string;
+            name: string;
+            stages: components["schemas"]["WorkflowStage"][];
+        };
+        CustomRole: {
+            /** Format: date-time */
+            createdAt: string;
+            description?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            statements?: components["schemas"]["PolicyStatement"][];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CustomRoleListResponse: {
+            items: components["schemas"]["CustomRole"][];
+        };
         Environment: {
+            approvalSettings?: components["schemas"]["EnvironmentApprovalSettings"];
             clientSideId: string;
             color: string;
             confirmChanges: boolean;
@@ -798,6 +1507,13 @@ export interface components {
             requireComments: boolean;
             /** Format: int64 */
             revision: number;
+        };
+        EnvironmentApprovalSettings: {
+            allowSelfApproval?: boolean;
+            externalApprovalWebhookUrl?: string | null;
+            /** Format: int32 */
+            minApprovals?: number;
+            required?: boolean;
         };
         EnvironmentKey: {
             /** Format: date-time */
@@ -865,6 +1581,12 @@ export interface components {
             newVersion: number;
             on: boolean;
         };
+        ExportAuditArchiveRequest: {
+            /** Format: date-time */
+            from?: string | null;
+            /** Format: date-time */
+            to?: string | null;
+        };
         FeatureFlag: {
             archived: boolean;
             clientSideAvailability: components["schemas"]["ClientSideAvailability"];
@@ -885,6 +1607,18 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
             variations: components["schemas"]["Variation"][];
+        };
+        FlagCodeRefSummary: {
+            branch: string;
+            commitSha: string;
+            extinct: boolean;
+            flagKey: string;
+            hunks: components["schemas"]["CodeRefHunk"][];
+            /** Format: int64 */
+            referenceCount: number;
+            repoName: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         FlagEnvConfig: {
             config: components["schemas"]["FlagEnvConfigBody"];
@@ -1060,6 +1794,33 @@ export interface components {
             kind: "updateTemporary";
             temporary: boolean;
         };
+        FlagRelease: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            currentPhaseIndex: number;
+            flagKey: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orgId: string;
+            phases: components["schemas"]["FlagReleasePhaseState"][];
+            pipelineKey: string;
+            pipelineName: string;
+            projectKey: string;
+            status: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        FlagReleasePhaseState: {
+            /** Format: date-time */
+            completedAt?: string | null;
+            environmentKey: string;
+            name: string;
+            /** Format: int32 */
+            phaseIndex: number;
+            status: string;
+        };
         FlagResponse: components["schemas"]["FeatureFlag"] & {
             environments: {
                 [key: string]: components["schemas"]["FlagEnvConfig"];
@@ -1091,10 +1852,48 @@ export interface components {
         FlagTriggerListResponse: {
             items: components["schemas"]["FlagTrigger"][];
         };
+        FlagWorkflow: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdBy?: string | null;
+            /** Format: int32 */
+            currentStageIndex: number;
+            description?: string;
+            envKey: string;
+            flagKey: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: date-time */
+            nextRunAt: string;
+            /** Format: uuid */
+            orgId: string;
+            projectKey: string;
+            stages: components["schemas"]["WorkflowStage"][];
+            status: components["schemas"]["WorkflowStatus"];
+            /** Format: date-time */
+            updatedAt: string;
+        };
         HealthResponse: {
             service: string;
             status: string;
             version: string;
+        };
+        /** @description Ephemeral event published onto `skotos.debug.{env_id}` for the Live Events Debugger. */
+        LiveEvalDebugEvent: {
+            contextKinds?: string[];
+            /** Format: int64 */
+            count?: number;
+            /** Format: uuid */
+            envId: string;
+            flagKey?: string | null;
+            kind: string;
+            /** Format: date-time */
+            timestamp: string;
+            value?: unknown;
+            /** Format: int32 */
+            variationIndex?: number | null;
         };
         LoginRequest: {
             email: string;
@@ -1154,6 +1953,22 @@ export interface components {
         };
         /** @enum {string} */
         PlanTier: "free" | "pro" | "team" | "enterprise";
+        /** @enum {string} */
+        PolicyEffect: "allow" | "deny";
+        /**
+         * @description Declarative resource-path RBAC statement (LaunchDarkly-compatible grammar).
+         *
+         *     Resource paths follow `proj/{project}:env/{env}:flag/{flag}`,
+         *     `proj/{project}:env/{env}:segment/{segment}`, `team/{team}`, `role/{role}`,
+         *     `webhook/{webhook}`, `member/*`, or `*`.
+         */
+        PolicyStatement: {
+            actions?: string[];
+            effect: components["schemas"]["PolicyEffect"];
+            notActions?: string[];
+            notResources?: string[];
+            resources?: string[];
+        };
         Prerequisite: {
             flagKey: string;
             /** Format: uuid */
@@ -1186,8 +2001,38 @@ export interface components {
         ProjectListResponse: {
             items: components["schemas"]["Project"][];
         };
+        ReleasePhase: {
+            copyFromPreviousEnv?: boolean;
+            environmentKey: string;
+            instructions?: components["schemas"]["FlagPatchInstruction"][];
+            name: string;
+            requireApproval?: boolean;
+        };
+        ReleasePipeline: {
+            /** Format: date-time */
+            createdAt: string;
+            description?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            phases: components["schemas"]["ReleasePhase"][];
+            /** Format: uuid */
+            projectId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ReleasePipelineListResponse: {
+            items: components["schemas"]["ReleasePipeline"][];
+        };
         RestoreRevisionRequest: {
             comment?: string | null;
+        };
+        ReviewApprovalRequestDto: {
+            comment?: string | null;
+            kind: components["schemas"]["ApprovalReviewKind"];
         };
         Rollout: {
             bucketBy?: string | null;
@@ -1235,6 +2080,31 @@ export interface components {
         };
         /** @enum {string} */
         ScheduledChangeStatus: "pending" | "executed" | "failed" | "canceled";
+        ScheduledSegmentChange: {
+            comment?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdBy?: string | null;
+            /** Format: uuid */
+            envId: string;
+            errorMessage?: string | null;
+            /** Format: date-time */
+            executeAt: string;
+            /** Format: date-time */
+            executedAt?: string | null;
+            /** Format: uuid */
+            id: string;
+            instructions: components["schemas"]["SegmentPatchInstruction"][];
+            /** Format: uuid */
+            orgId: string;
+            /** Format: uuid */
+            segmentId: string;
+            status: components["schemas"]["ScheduledChangeStatus"];
+        };
+        ScheduledSegmentListResponse: {
+            items: components["schemas"]["ScheduledSegmentChange"][];
+        };
         Segment: {
             /** Format: uuid */
             envId: string;
@@ -1334,6 +2204,29 @@ export interface components {
             variationIndex?: number | null;
             variationName?: string | null;
         };
+        /** @enum {string} */
+        SsoProtocol: "oidc" | "saml";
+        SsoProviderConfig: {
+            clientId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            enabled: boolean;
+            /** Format: uuid */
+            id: string;
+            issuerUrl: string;
+            jwksUrl?: string | null;
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            protocol: components["schemas"]["SsoProtocol"];
+            samlMetadataUrl?: string | null;
+            scimEnabled: boolean;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        SsoProviderListResponse: {
+            items: components["schemas"]["SsoProviderConfig"][];
+        };
         Target: {
             contextKind?: string;
             values?: string[];
@@ -1346,8 +2239,31 @@ export interface components {
             id: string;
             trackEvents?: boolean;
         };
+        Team: {
+            /** Format: date-time */
+            createdAt: string;
+            customRoleKeys?: string[];
+            description?: string;
+            /** Format: uuid */
+            id: string;
+            key: string;
+            memberIds?: string[];
+            name: string;
+            /** Format: uuid */
+            orgId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TeamListResponse: {
+            items: components["schemas"]["Team"][];
+        };
         /** @enum {string} */
         TriggerAction: "turnFlagOn" | "turnFlagOff";
+        UpdateCustomRoleRequest: {
+            description?: string | null;
+            name?: string | null;
+            statements?: components["schemas"]["PolicyStatement"][] | null;
+        };
         UpdateEnvironmentRequest: {
             color?: string | null;
             confirmChanges?: boolean | null;
@@ -1361,12 +2277,23 @@ export interface components {
             defaultClientSideAvailability?: null | components["schemas"]["ClientSideAvailability"];
             name?: string | null;
         };
+        UpdateTeamRequest: {
+            customRoleKeys?: string[] | null;
+            description?: string | null;
+            name?: string | null;
+        };
         UpdateWebhookRequest: {
             enabled?: boolean | null;
             envFilter?: string[] | null;
             events?: string[] | null;
             name?: string | null;
             url?: string | null;
+        };
+        UpsertCodeRefsRequest: {
+            branch: string;
+            commitSha?: string;
+            hunks?: components["schemas"]["CodeRefHunk"][];
+            repoName: string;
         };
         Variation: {
             description?: string | null;
@@ -1396,6 +2323,7 @@ export interface components {
             events?: string[];
             /** Format: uuid */
             id: string;
+            integrationKind?: components["schemas"]["WebhookIntegrationKind"];
             name: string;
             /** Format: uuid */
             orgId: string;
@@ -1421,6 +2349,8 @@ export interface components {
         WebhookDeliveryListResponse: {
             items: components["schemas"]["WebhookDelivery"][];
         };
+        /** @enum {string} */
+        WebhookIntegrationKind: "generic" | "slack" | "teams" | "datadog" | "pagerduty" | "jira" | "linear";
         WebhookListResponse: {
             items: components["schemas"]["Webhook"][];
         };
@@ -1434,6 +2364,24 @@ export interface components {
              */
             weight: number;
         };
+        WorkflowListResponse: {
+            items: components["schemas"]["FlagWorkflow"][];
+        };
+        WorkflowStage: {
+            errorMessage?: string | null;
+            /** Format: date-time */
+            executedAt?: string | null;
+            instructions: components["schemas"]["FlagPatchInstruction"][];
+            name: string;
+            requireApproval?: boolean;
+            status?: components["schemas"]["WorkflowStageStatus"];
+            /** Format: int64 */
+            waitSeconds?: number;
+        };
+        /** @enum {string} */
+        WorkflowStageStatus: "pending" | "waitingapproval" | "executed" | "failed" | "skipped";
+        /** @enum {string} */
+        WorkflowStatus: "active" | "waitingapproval" | "completed" | "failed" | "canceled";
     };
     responses: never;
     parameters: never;
@@ -1443,6 +2391,201 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_applications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationListResponse"];
+                };
+            };
+        };
+    };
+    create_application: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateApplicationRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Application"];
+                };
+            };
+        };
+    };
+    add_application_version: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Application key */
+                appKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddApplicationVersionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationVersion"];
+                };
+            };
+        };
+    };
+    list_approvals: {
+        parameters: {
+            query?: {
+                status?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalListResponse"];
+                };
+            };
+        };
+    };
+    get_approval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval request UUID */
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalRequest"];
+                };
+            };
+        };
+    };
+    cancel_approval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval request UUID */
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    apply_approval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval request UUID */
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyApprovalResponse"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    review_approval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Approval request UUID */
+                approvalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewApprovalRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalRequest"];
+                };
+            };
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     list_audit_log: {
         parameters: {
             query?: {
@@ -1474,6 +2617,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_audit_archives: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditArchiveListResponse"];
+                };
+            };
+        };
+    };
+    export_audit_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportAuditArchiveRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditArchiveRecord"];
                 };
             };
         };
@@ -1755,6 +2940,32 @@ export interface operations {
             };
         };
     };
+    assign_member_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Member UUID */
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignMemberRolesRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignMemberRolesResponse"];
+                };
+            };
+        };
+    };
     list_projects: {
         parameters: {
             query?: never;
@@ -1933,6 +3144,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    upsert_code_refs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpsertCodeRefsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeRefListResponse"];
                 };
             };
         };
@@ -2121,6 +3358,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    update_env_approval_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnvironmentApprovalSettings"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Environment"];
                 };
             };
         };
@@ -2389,6 +3654,120 @@ export interface operations {
             };
         };
     };
+    mutate_big_segment_members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BigSegmentMembersRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BigSegmentStatus"];
+                };
+            };
+        };
+    };
+    check_big_segment_membership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+                /** @description Context key */
+                contextKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BigSegmentMembershipCheckResponse"];
+                };
+            };
+        };
+    };
+    list_scheduled_segment_changes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledSegmentListResponse"];
+                };
+            };
+        };
+    };
+    create_scheduled_segment_change: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Segment key */
+                segmentKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateScheduledSegmentRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduledSegmentChange"];
+                };
+            };
+        };
+    };
     get_environment_usage: {
         parameters: {
             query?: {
@@ -2621,6 +4000,30 @@ export interface operations {
             };
         };
     };
+    list_flag_code_refs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeRefListResponse"];
+                };
+            };
+        };
+    };
     copy_flag_env: {
         parameters: {
             query?: never;
@@ -2653,6 +4056,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    list_flag_approvals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalListResponse"];
+                };
+            };
+        };
+    };
+    create_flag_approval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateApprovalRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApprovalRequest"];
                 };
             };
         };
@@ -2990,6 +4449,580 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["FlagEvalUsage"];
                 };
+            };
+        };
+    };
+    list_workflows: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowListResponse"];
+                };
+            };
+        };
+    };
+    create_workflow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkflowRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagWorkflow"];
+                };
+            };
+        };
+    };
+    cancel_workflow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Workflow UUID */
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    advance_workflow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Environment key */
+                envKey: string;
+                /** @description Workflow UUID */
+                workflowId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdvanceWorkflowRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagWorkflow"];
+                };
+            };
+        };
+    };
+    get_flag_release: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": null | components["schemas"]["FlagRelease"];
+                };
+            };
+        };
+    };
+    attach_flag_release: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttachReleasePipelineRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagRelease"];
+                };
+            };
+        };
+    };
+    start_flag_release_phase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Flag key */
+                flagKey: string;
+                /** @description Zero-based phase index */
+                phaseIndex: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlagRelease"];
+                };
+            };
+        };
+    };
+    list_release_pipelines: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleasePipelineListResponse"];
+                };
+            };
+        };
+    };
+    create_release_pipeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReleasePipelineRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReleasePipeline"];
+                };
+            };
+        };
+    };
+    delete_release_pipeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Project key */
+                projectKey: string;
+                /** @description Pipeline key */
+                pipelineKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_custom_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomRoleListResponse"];
+                };
+            };
+        };
+    };
+    create_custom_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCustomRoleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomRole"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    get_custom_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Custom role key */
+                roleKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomRole"];
+                };
+            };
+        };
+    };
+    delete_custom_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Custom role key */
+                roleKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_custom_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Custom role key */
+                roleKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCustomRoleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomRole"];
+                };
+            };
+        };
+    };
+    list_sso_providers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SsoProviderListResponse"];
+                };
+            };
+        };
+    };
+    create_sso_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSsoProviderRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SsoProviderConfig"];
+                };
+            };
+        };
+    };
+    delete_sso_provider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description SSO provider UUID */
+                providerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_teams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamListResponse"];
+                };
+            };
+        };
+    };
+    create_team: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTeamRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
+    delete_team: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Team key */
+                teamKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_team: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Team key */
+                teamKey: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTeamRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Team"];
+                };
+            };
+        };
+    };
+    add_team_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Team key */
+                teamKey: string;
+                /** @description Member UUID */
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    remove_team_member: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Team key */
+                teamKey: string;
+                /** @description Member UUID */
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

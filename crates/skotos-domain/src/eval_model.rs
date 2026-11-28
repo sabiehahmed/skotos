@@ -114,6 +114,12 @@ pub struct EvalSegment {
     pub excluded_contexts: Vec<SegmentTarget>,
     #[serde(default)]
     pub rules: Vec<SegmentRule>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub unbounded: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unbounded_context_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub generation: Option<i64>,
 }
 
 /// Detailed result returned by the evaluation engine.
@@ -297,6 +303,7 @@ pub fn compile_eval_flag_with_flags(
 
 /// Compiles a Control Plane `Segment` into an `EvalSegment`.
 pub fn compile_eval_segment(segment: &Segment) -> EvalSegment {
+    let is_big = segment.kind == crate::entities::SegmentKind::Big;
     EvalSegment {
         key: segment.key.clone(),
         version: segment.version,
@@ -306,5 +313,12 @@ pub fn compile_eval_segment(segment: &Segment) -> EvalSegment {
         included_contexts: segment.included_contexts.clone(),
         excluded_contexts: segment.excluded_contexts.clone(),
         rules: segment.rules.clone(),
+        unbounded: is_big,
+        unbounded_context_kind: if is_big {
+            Some("user".to_string())
+        } else {
+            None
+        },
+        generation: if is_big { Some(segment.version) } else { None },
     }
 }

@@ -28,8 +28,18 @@ pub struct CachedEnvData {
 
 impl CachedEnvData {
     pub fn from_snapshot(snapshot: EnvironmentSnapshot) -> Result<Self, FanoutError> {
+        Self::from_snapshot_with_big_segments(snapshot, Vec::new())
+    }
+
+    pub fn from_snapshot_with_big_segments(
+        snapshot: EnvironmentSnapshot,
+        big_segments: Vec<skotos_domain::BigSegmentSnapshot>,
+    ) -> Result<Self, FanoutError> {
         let precompressed = precompress_snapshot(&snapshot)?;
-        let eval_store = build_eval_store(&snapshot);
+        let mut eval_store = build_eval_store(&snapshot);
+        for bs in big_segments {
+            eval_store.insert_big_segment(bs);
+        }
         Ok(Self {
             snapshot,
             precompressed,
@@ -47,6 +57,26 @@ fn build_eval_store(snapshot: &EnvironmentSnapshot) -> InMemoryEvalStore {
         store.insert_segment(seg.clone());
     }
     store
+}
+
+async fn load_big_segments(
+    snapshots: &SnapshotStore,
+    env_id: Uuid,
+    snapshot: &EnvironmentSnapshot,
+) -> Vec<skotos_domain::BigSegmentSnapshot> {
+    let mut out = Vec::new();
+    for seg in snapshot.segments.values() {
+        if seg.unbounded {
+            match snapshots.get_big_segment_snapshot(env_id, &seg.key).await {
+                Ok(Some(bs)) => out.push(bs),
+                Ok(None) => {}
+                Err(err) => {
+                    warn!(%env_id, segment = %seg.key, error = %err, "failed loading big segment snapshot");
+                }
+            }
+        }
+    }
+    out
 }
 
 /// Active environment state: single NATS subscriber fanning out to all local SSE connections.
@@ -79,6 +109,10 @@ impl EnvironmentCache {
         }
     }
 
+    pub fn nats(&self) -> Option<&NatsFanout> {
+        self.nats.as_ref()
+    }
+
     /// Ensures the environment is cached in memory (loading from R2/S3/MinIO if cold)
     /// and opens exactly one NATS subscription for `skotos.env.{env_id}.events`.
     pub async fn get_or_load(&self, env_id: Uuid) -> Result<Arc<EnvChannel>, FanoutError> {
@@ -97,7 +131,11 @@ impl EnvironmentCache {
                 flags: BTreeMap::new(),
                 segments: BTreeMap::new(),
             });
-        let cached = Arc::new(CachedEnvData::from_snapshot(snapshot)?);
+        let big_segments = load_big_segments(&self.snapshots, env_id, &snapshot).await;
+        let cached = Arc::new(CachedEnvData::from_snapshot_with_big_segments(
+            snapshot,
+            big_segments,
+        )?);
         let (server_tx, _) = broadcast::channel(BROADCAST_CAPACITY);
         let (client_tx, _) = broadcast::channel(BROADCAST_CAPACITY);
 
@@ -238,7 +276,19 @@ async fn apply_delivery_event(
                 }
             }
 
-            let next_cached = Arc::new(CachedEnvData::from_snapshot(next_snap)?);
+            let existing_big: Vec<skotos_domain::BigSegmentSnapshot> = channel
+                .data
+                .read()
+                .await
+                .eval_store
+                .big_segments
+                .values()
+                .cloned()
+                .collect();
+            let next_cached = Arc::new(CachedEnvData::from_snapshot_with_big_segments(
+                next_snap,
+                existing_big,
+            )?);
             *channel.data.write().await = next_cached;
 
             let frame_json = serde_json::to_string(&json!({
@@ -279,7 +329,19 @@ async fn apply_delivery_event(
                 }
             }
 
-            let next_cached = Arc::new(CachedEnvData::from_snapshot(next_snap)?);
+            let existing_big: Vec<skotos_domain::BigSegmentSnapshot> = channel
+                .data
+                .read()
+                .await
+                .eval_store
+                .big_segments
+                .values()
+                .cloned()
+                .collect();
+            let next_cached = Arc::new(CachedEnvData::from_snapshot_with_big_segments(
+                next_snap,
+                existing_big,
+            )?);
             *channel.data.write().await = next_cached;
 
             let frame_json = serde_json::to_string(&json!({
@@ -291,7 +353,11 @@ async fn apply_delivery_event(
         }
         DeliveryEvent::Put { .. } => {
             if let Some(fresh) = snapshots.get_snapshot(env_id).await? {
-                let next_cached = Arc::new(CachedEnvData::from_snapshot(fresh)?);
+                let big_segments = load_big_segments(snapshots, env_id, &fresh).await;
+                let next_cached = Arc::new(CachedEnvData::from_snapshot_with_big_segments(
+                    fresh,
+                    big_segments,
+                )?);
                 let frame = next_cached.precompressed.sse_put_bytes.clone();
                 *channel.data.write().await = next_cached;
                 frame

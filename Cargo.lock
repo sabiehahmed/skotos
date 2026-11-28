@@ -346,6 +346,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "base64 0.22.1",
+ "bytes",
  "chrono",
  "delivery-edge",
  "dotenvy",
@@ -353,13 +354,16 @@ dependencies = [
  "flate2",
  "futures",
  "http",
+ "relay-proxy",
  "reqwest",
  "serde",
  "serde_json",
  "skotos-auth",
+ "skotos-code-refs",
  "skotos-domain",
  "skotos-eval",
  "skotos-fanout",
+ "skotos-mcp",
  "skotos-server-sdk",
  "skotos-storage",
  "skotos-telemetry",
@@ -1956,6 +1960,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d902046e6a28a1e4c3cab97258a0ce11e994903f01c2d97a9447a0b3df85f4f6"
 
 [[package]]
+name = "relay-proxy"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "bytes",
+ "chrono",
+ "dashmap",
+ "dotenvy",
+ "futures",
+ "http",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "skotos-domain",
+ "skotos-eval",
+ "skotos-fanout",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2428,6 +2457,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "skotos-cli"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "skotos-code-refs"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "serde",
+ "serde_json",
+ "skotos-domain",
+ "tokio",
+]
+
+[[package]]
 name = "skotos-domain"
 version = "0.1.0"
 dependencies = [
@@ -2479,6 +2529,18 @@ dependencies = [
  "tracing",
  "uuid",
  "zstd",
+]
+
+[[package]]
+name = "skotos-mcp"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "skotos-code-refs",
+ "tokio",
 ]
 
 [[package]]

@@ -144,6 +144,7 @@ pub struct IngestState {
     pub auth: IngestAuthCache,
     pub telemetry: Arc<dyn TelemetryStore>,
     pub tx: mpsc::Sender<Vec<SummaryRollupIncrement>>,
+    pub nats: Option<skotos_fanout::NatsFanout>,
 }
 
 /// Spawns the background batched rollup flusher and returns the bounded channel sender.
@@ -355,6 +356,24 @@ async fn process_event_payload(
     // 4. Extract hourly summary rollups and enqueue for async flush
     let increments = extract_rollup_increments(resolved.org_id, resolved.env_id, &events);
     let accepted_events = events.len();
+
+    // 5. Phase 3 Live Events Debugger: publish ephemeral debug events onto core NATS (zero storage cost)
+    if let Some(nats) = &state.nats {
+        for inc in &increments {
+            let dbg = skotos_domain::LiveEvalDebugEvent {
+                timestamp: inc.evaluated_at,
+                env_id: resolved.env_id,
+                kind: "summary".to_string(),
+                flag_key: Some(inc.flag_key.clone()),
+                variation_index: Some(inc.variation_index),
+                value: None,
+                context_kinds: inc.context_kinds.clone(),
+                count: inc.count,
+            };
+            let _ = nats.publish_debug_event(resolved.env_id, &dbg).await;
+        }
+    }
+
     if !increments.is_empty() {
         if let Err(err) = state.tx.try_send(increments) {
             warn!(error = %err, "event-ingest queue full; dropping summary batch to protect memory");

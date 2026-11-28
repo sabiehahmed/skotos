@@ -10,7 +10,11 @@ members = [
     "services/control-api",
     "services/delivery-edge",
     "services/event-ingest",
+    "services/relay-proxy",
     "sdks/rust-server",
+    "tools/skotos-cli",
+    "tools/skotos-code-refs",
+    "tools/skotos-mcp",
 ]
 
 [workspace.package]

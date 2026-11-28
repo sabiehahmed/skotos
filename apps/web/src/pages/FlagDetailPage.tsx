@@ -173,6 +173,30 @@ export function FlagDetailPage({
     enabled: Boolean(envKey),
   });
 
+  const codeRefsQuery = useQuery({
+    queryKey: ["flag-code-refs", projectKey, flagKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/flags/{flagKey}/code-refs", {
+          params: { path: { projectKey, flagKey } },
+        }),
+      ),
+  });
+
+  const workflowsQuery = useQuery({
+    queryKey: ["flag-workflows", projectKey, flagKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows",
+          { params: { path: { projectKey, flagKey, envKey } } },
+        ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const [workflowName, setWorkflowName] = useState("Progressive Rollout");
+
   // Draft targeting state
   const [draftOn, setDraftOn] = useState(false);
   const [draftOffVarId, setDraftOffVarId] = useState<string>("");
@@ -714,6 +738,91 @@ export function FlagDetailPage({
     },
     onError: (err) =>
       toast({ title: "Delete trigger failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const submitApprovalMutation = useMutation({
+    mutationFn: async (body: { instructions: FlagPatchInstruction[]; comment?: string }) =>
+      unwrapApiResult(
+        await skotosApi.POST(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/approvals",
+          {
+            params: { path: { projectKey, flagKey, envKey } },
+            body: {
+              description: body.comment || `Change request for ${flagKey} in ${envKey}`,
+              comment: body.comment || null,
+              instructions: body.instructions,
+            },
+          },
+        ),
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["approvals"] });
+      setReviewOpen(false);
+      setSaveComment("");
+      setSaveError(null);
+      toast({
+        title: "Approval request submitted",
+        description: "Reviewers can now approve and apply these changes from the Approvals queue.",
+        tone: "success",
+      });
+    },
+    onError: (err) => setSaveError(formatErrorMessage(err)),
+  });
+
+  const createWorkflowMutation = useMutation({
+    mutationFn: async () =>
+      unwrapApiResult(
+        await skotosApi.POST(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows",
+          {
+            params: { path: { projectKey, flagKey, envKey } },
+            body: {
+              name: workflowName.trim() || "Progressive Rollout",
+              description: "Multi-stage automated rollout workflow",
+              stages: [
+                {
+                  name: "Stage 1 — Enable Targeting",
+                  waitSeconds: 0,
+                  instructions: [{ kind: "turnFlagOn" }],
+                },
+                {
+                  name: "Stage 2 — Wait & Verify",
+                  waitSeconds: 3600,
+                  instructions: [{ kind: "turnFlagOn" }],
+                },
+              ],
+            },
+          },
+        ),
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["flag-workflows", projectKey, flagKey, envKey] });
+      toast({ title: "Flag workflow created", tone: "success" });
+    },
+    onError: (err) =>
+      toast({ title: "Workflow creation failed", description: formatErrorMessage(err), tone: "danger" }),
+  });
+
+  const advanceWorkflowMutation = useMutation({
+    mutationFn: async (workflowId: string) =>
+      unwrapApiResult(
+        await skotosApi.POST(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows/{workflowId}/advance",
+          {
+            params: { path: { projectKey, flagKey, envKey, workflowId } },
+            body: { approveGate: true },
+          },
+        ),
+      ),
+    onSuccess: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["flag-workflows", projectKey, flagKey, envKey] }),
+        qc.invalidateQueries({ queryKey: ["flag", projectKey, flagKey] }),
+      ]);
+      toast({ title: "Workflow stage executed", tone: "success" });
+    },
+    onError: (err) =>
+      toast({ title: "Workflow advance failed", description: formatErrorMessage(err), tone: "danger" }),
   });
 
   if (flagQuery.isPending) {
@@ -1524,6 +1633,138 @@ export function FlagDetailPage({
           )}
         </Stack>
       </Card>
+
+      {/* Phase 3: Multi-Step Flag Workflows */}
+      <Card padded>
+        <Stack gap={4}>
+          <Stack gap={1}>
+            <Heading level={3}>Multi-Step Rollout Workflows</Heading>
+            <Text size="sm" tone="muted">
+              Chain timed rollout stages and approval gates driven automatically by the Skotos
+              scheduler worker.
+            </Text>
+          </Stack>
+          {writerAllowed && (
+            <Stack direction="horizontal" gap={3} align="flex-end" style={{ flexWrap: "wrap" }}>
+              <FormField label="Workflow Name" htmlFor="wf-name">
+                <Input
+                  id="wf-name"
+                  value={workflowName}
+                  onChange={(e) => setWorkflowName(e.target.value)}
+                />
+              </FormField>
+              <Button
+                variant="secondary"
+                disabled={createWorkflowMutation.isPending}
+                onClick={() => createWorkflowMutation.mutate()}
+              >
+                <Icons.GitBranch size={14} />
+                {createWorkflowMutation.isPending ? "Creating..." : "Create Workflow"}
+              </Button>
+            </Stack>
+          )}
+          {(workflowsQuery.data?.items ?? []).length === 0 ? (
+            <Text size="sm" tone="muted">
+              No workflows configured for this flag in {envKey}.
+            </Text>
+          ) : (
+            <Stack gap={2}>
+              {(workflowsQuery.data?.items ?? []).map((wf) => (
+                <Card key={wf.id} padded>
+                  <Stack direction="horizontal" align="center" justify="space-between" gap={3}>
+                    <Stack gap={1}>
+                      <Stack direction="horizontal" align="center" gap={2}>
+                        <Text bold>{wf.name}</Text>
+                        <Badge tone={wf.status === "completed" ? "success" : "accent"}>
+                          {wf.status}
+                        </Badge>
+                        <Badge tone="neutral">
+                          Stage {Math.min(wf.currentStageIndex + 1, wf.stages.length)} /{" "}
+                          {wf.stages.length}
+                        </Badge>
+                      </Stack>
+                      <Text size="xs" tone="muted">
+                        Next run: {new Date(wf.nextRunAt).toLocaleString()}
+                      </Text>
+                    </Stack>
+                    {writerAllowed && wf.status === "active" && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={advanceWorkflowMutation.isPending}
+                        onClick={() => advanceWorkflowMutation.mutate(wf.id)}
+                      >
+                        <Icons.Play size={14} />
+                        Advance Stage
+                      </Button>
+                    )}
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Card>
+
+      {/* Phase 3: Code References & Stale Flag Extinction Tracking */}
+      <Card padded>
+        <Stack gap={3}>
+          <Stack direction="horizontal" align="center" justify="space-between">
+            <Stack gap={1}>
+              <Heading level={3}>Code References (CI Scanner)</Heading>
+              <Text size="sm" tone="muted">
+                Source-file occurrences reported by{" "}
+                <Text as="span" mono>
+                  skotos-code-refs
+                </Text>{" "}
+                in CI pipelines.
+              </Text>
+            </Stack>
+            {(codeRefsQuery.data?.items ?? []).length > 0 && (
+              <Badge
+                tone={
+                  (codeRefsQuery.data?.items ?? []).every((i) => i.extinct) ? "warning" : "success"
+                }
+              >
+                {(codeRefsQuery.data?.items ?? []).every((i) => i.extinct)
+                  ? "Extinct (Safe to Archive)"
+                  : `${(codeRefsQuery.data?.items ?? []).reduce((sum, i) => sum + i.referenceCount, 0)} active reference(s)`}
+              </Badge>
+            )}
+          </Stack>
+          {codeRefsQuery.isPending ? (
+            <Skeleton height={60} />
+          ) : (codeRefsQuery.data?.items ?? []).length === 0 ? (
+            <Text size="sm" tone="muted">
+              No code references uploaded yet. Run{" "}
+              <Text as="span" mono>
+                skotos-code-refs
+              </Text>{" "}
+              in GitHub Actions to track file:line locations.
+            </Text>
+          ) : (
+            <Stack gap={3}>
+              {(codeRefsQuery.data?.items ?? []).map((repoRef) => (
+                <Stack key={`${repoRef.repoName}-${repoRef.branch}`} gap={2}>
+                  <Text size="xs" tone="muted" mono>
+                    {repoRef.repoName} @ {repoRef.branch} ({repoRef.commitSha.slice(0, 8)})
+                  </Text>
+                  {repoRef.hunks.map((hunk, idx) => (
+                    <Card key={`${hunk.filePath}-${hunk.lineNumber}-${idx}`} padded>
+                      <Stack gap={1}>
+                        <Text size="xs" bold mono>
+                          {hunk.filePath}:{hunk.lineNumber}
+                        </Text>
+                        <CodeBlock code={hunk.linePreview} />
+                      </Stack>
+                    </Card>
+                  ))}
+                </Stack>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      </Card>
     </Stack>
   );
 
@@ -1576,6 +1817,19 @@ export function FlagDetailPage({
               Cancel
             </Button>
             <Button
+              variant="secondary"
+              disabled={submitApprovalMutation.isPending}
+              onClick={() =>
+                submitApprovalMutation.mutate({
+                  instructions: draftInstructions,
+                  comment: saveComment.trim() || undefined,
+                })
+              }
+            >
+              <Icons.CheckCircle2 size={14} />
+              {submitApprovalMutation.isPending ? "Submitting..." : "Request Approval"}
+            </Button>
+            <Button
               variant="primary"
               disabled={
                 patchMutation.isPending ||
@@ -1594,6 +1848,12 @@ export function FlagDetailPage({
         }
       >
         <Stack gap={4}>
+          {activeEnv?.approvalSettings?.required && (
+            <Alert tone="warning" title="Peer approval required in this environment">
+              This environment requires {activeEnv.approvalSettings.minApprovals ?? 1} approval(s).
+              Use Request Approval to queue changes for peer review.
+            </Alert>
+          )}
           {saveError && <Alert tone="danger">{saveError}</Alert>}
           <DiffViewer summaries={draftSummaries} />
           <FormField

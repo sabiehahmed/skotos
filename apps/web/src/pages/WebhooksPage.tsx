@@ -11,6 +11,7 @@ import {
   Icons,
   Input,
   PageHeader,
+  Select,
   Skeleton,
   Stack,
   Switch,
@@ -27,11 +28,22 @@ import {
   unwrapApiResult,
   type BuiltInRole,
   type Webhook,
+  type WebhookIntegrationKind,
 } from "../lib/api";
 
 export interface WebhooksPageProps {
   userRole: BuiltInRole;
 }
+
+const INTEGRATION_OPTIONS: Array<{ value: WebhookIntegrationKind; label: string }> = [
+  { value: "generic", label: "Generic JSON" },
+  { value: "slack", label: "Slack (Block Kit)" },
+  { value: "teams", label: "Microsoft Teams (Adaptive Card)" },
+  { value: "datadog", label: "Datadog Events" },
+  { value: "pagerduty", label: "PagerDuty Events v2" },
+  { value: "jira", label: "Jira Issue Webhook" },
+  { value: "linear", label: "Linear Issue Webhook" },
+];
 
 export function WebhooksPage({ userRole }: WebhooksPageProps) {
   const qc = useQueryClient();
@@ -41,6 +53,7 @@ export function WebhooksPage({ userRole }: WebhooksPageProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [integrationKind, setIntegrationKind] = useState<WebhookIntegrationKind>("generic");
   const [events, setEvents] = useState<string[]>(["flag.updated", "flag.deleted"]);
   const [envFilter, setEnvFilter] = useState<string[]>([]);
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
@@ -72,6 +85,7 @@ export function WebhooksPage({ userRole }: WebhooksPageProps) {
           body: {
             name: name.trim(),
             url: url.trim(),
+            integrationKind,
             events,
             envFilter,
           },
@@ -82,6 +96,7 @@ export function WebhooksPage({ userRole }: WebhooksPageProps) {
       setCreatedSecret(res.secret);
       setName("");
       setUrl("");
+      setIntegrationKind("generic");
       setFormErr(null);
       toast({ title: "Webhook created", tone: "success" });
     },
@@ -168,7 +183,10 @@ export function WebhooksPage({ userRole }: WebhooksPageProps) {
               header: "Endpoint",
               render: (w) => (
                 <Stack gap={1}>
-                  <Text bold>{w.name}</Text>
+                  <Stack direction="horizontal" align="center" gap={2}>
+                    <Text bold>{w.name}</Text>
+                    <Badge tone="neutral">{w.integrationKind ?? "generic"}</Badge>
+                  </Stack>
                   <Text size="xs" mono tone="muted">
                     {w.url}
                   </Text>
@@ -288,6 +306,15 @@ export function WebhooksPage({ userRole }: WebhooksPageProps) {
                 placeholder="https://hooks.example.com/skotos"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
+              />
+            </FormField>
+            <FormField label="Integration Payload Format" htmlFor="wh-integration-kind">
+              <Select
+                id="wh-integration-kind"
+                ariaLabel="Integration payload format"
+                value={integrationKind}
+                options={INTEGRATION_OPTIONS}
+                onValueChange={(v) => setIntegrationKind(v as WebhookIntegrationKind)}
               />
             </FormField>
             <FormField label="Event filter (leave empty for all)">

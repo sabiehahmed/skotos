@@ -147,6 +147,8 @@ pub struct Environment {
     pub client_side_id: String,
     pub require_comments: bool,
     pub confirm_changes: bool,
+    #[serde(default)]
+    pub approval_settings: crate::phase3::EnvironmentApprovalSettings,
     pub revision: i64,
     pub created_at: DateTime<Utc>,
 }
@@ -677,6 +679,8 @@ pub struct Webhook {
     pub name: String,
     pub url: String,
     pub enabled: bool,
+    #[serde(default)]
+    pub integration_kind: crate::phase3::WebhookIntegrationKind,
     #[serde(default)]
     pub events: Vec<String>,
     #[serde(default)]
