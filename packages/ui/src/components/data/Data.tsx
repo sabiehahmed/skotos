@@ -7,9 +7,11 @@ import {
   IconButton,
   Input,
   Select,
+  SuggestInput,
   TagInput,
   Textarea,
   type SelectOption,
+  type SuggestOption,
 } from "../forms/Forms";
 import { Badge, CodeBlock, EmptyState, Text } from "../typography/Typography";
 import styles from "./Data.module.css";
@@ -342,18 +344,72 @@ export interface RuleBuilderRule {
   rollout?: RolloutValue;
 }
 
+const BUILT_IN_GROUP = "Built-in";
+
+/** Context kinds offered in the rule clause dropdown before any SDK data is known. */
+export const BUILT_IN_CONTEXT_KINDS: SuggestOption[] = [
+  { value: "user", description: "default", group: BUILT_IN_GROUP },
+  { value: "organization", group: BUILT_IN_GROUP },
+  { value: "device", group: BUILT_IN_GROUP },
+];
+
+const COMMON_ATTRIBUTES: SuggestOption[] = [
+  { value: "key", description: "unique id", group: BUILT_IN_GROUP },
+  { value: "name", group: BUILT_IN_GROUP },
+  { value: "anonymous", description: "boolean", group: BUILT_IN_GROUP },
+];
+
+const KIND_ATTRIBUTES: Record<string, SuggestOption[]> = {
+  user: [
+    { value: "email", group: BUILT_IN_GROUP },
+    { value: "firstName", group: BUILT_IN_GROUP },
+    { value: "lastName", group: BUILT_IN_GROUP },
+    { value: "country", group: BUILT_IN_GROUP },
+    { value: "ip", group: BUILT_IN_GROUP },
+  ],
+  device: [
+    { value: "osName", group: BUILT_IN_GROUP },
+    { value: "osVersion", description: "semver", group: BUILT_IN_GROUP },
+    { value: "appVersion", description: "semver", group: BUILT_IN_GROUP },
+  ],
+};
+
+/** Attributes offered for a context kind before any SDK data is known. */
+export function builtInAttributeSuggestions(contextKind: string): SuggestOption[] {
+  return [...COMMON_ATTRIBUTES, ...(KIND_ATTRIBUTES[contextKind.trim()] ?? [])];
+}
+
 export interface RuleBuilderProps {
   rules: RuleBuilderRule[];
   variations: RolloutVariationOption[];
   onChange: (rules: RuleBuilderRule[]) => void;
   disabled?: boolean;
+  /** Extra context kinds (e.g. seen from SDKs), listed after the built-ins. */
+  contextKindSuggestions?: SuggestOption[];
+  /** Extra attributes per context kind (e.g. seen from SDKs), listed after the built-ins. */
+  attributeSuggestions?: Record<string, SuggestOption[]>;
+  /** Values offered in a clause's value field, e.g. segment keys or seen context keys. */
+  getValueSuggestions?: (clause: RuleBuilderClause) => SuggestOption[];
 }
 
-export function RuleBuilder({ rules, variations, onChange, disabled }: RuleBuilderProps) {
+export function RuleBuilder({
+  rules,
+  variations,
+  onChange,
+  disabled,
+  contextKindSuggestions,
+  attributeSuggestions,
+  getValueSuggestions,
+}: RuleBuilderProps) {
   const variationOptions: SelectOption[] = variations.map((v) => ({
     value: v.id,
     label: v.label,
   }));
+  const kindOptions = [...BUILT_IN_CONTEXT_KINDS, ...(contextKindSuggestions ?? [])];
+  const attributeOptionsFor = (kind: string) => [
+    ...builtInAttributeSuggestions(kind),
+    ...(attributeSuggestions?.[kind.trim()] ?? []),
+  ];
 
   const addRule = () => {
     const firstVarId = variations[0]?.id;
@@ -436,28 +492,32 @@ export function RuleBuilder({ rules, variations, onChange, disabled }: RuleBuild
             <div className={styles.ruleBody}>
               {rule.clauses.map((clause, cIdx) => (
                 <div key={cIdx} className={styles.clauseRow}>
-                  <Input
-                    aria-label={`Rule ${ruleIdx + 1} clause ${cIdx + 1} context kind`}
+                  <SuggestInput
+                    ariaLabel={`Rule ${ruleIdx + 1} clause ${cIdx + 1} context kind`}
                     value={clause.contextKind}
+                    suggestions={kindOptions}
                     placeholder="user"
-                    disabled={disabled}
+                    disabled={disabled || clause.op === "segmentMatch"}
                     mono
-                    onChange={(e) => {
+                    onChange={(next) => {
                       const nextClauses = rule.clauses.map((c, j) =>
-                        j === cIdx ? { ...c, contextKind: e.target.value } : c,
+                        j === cIdx ? { ...c, contextKind: next } : c,
                       );
                       updateRule(ruleIdx, { clauses: nextClauses });
                     }}
                   />
-                  <Input
-                    aria-label={`Rule ${ruleIdx + 1} clause ${cIdx + 1} attribute`}
-                    value={clause.attribute}
-                    placeholder="email or /address/country"
-                    disabled={disabled}
+                  <SuggestInput
+                    ariaLabel={`Rule ${ruleIdx + 1} clause ${cIdx + 1} attribute`}
+                    value={clause.op === "segmentMatch" ? "" : clause.attribute}
+                    suggestions={attributeOptionsFor(clause.contextKind)}
+                    placeholder={
+                      clause.op === "segmentMatch" ? "not used for segments" : "email or /address/country"
+                    }
+                    disabled={disabled || clause.op === "segmentMatch"}
                     mono
-                    onChange={(e) => {
+                    onChange={(next) => {
                       const nextClauses = rule.clauses.map((c, j) =>
-                        j === cIdx ? { ...c, attribute: e.target.value } : c,
+                        j === cIdx ? { ...c, attribute: next } : c,
                       );
                       updateRule(ruleIdx, { clauses: nextClauses });
                     }}
@@ -478,7 +538,8 @@ export function RuleBuilder({ rules, variations, onChange, disabled }: RuleBuild
                     ariaLabel={`Rule ${ruleIdx + 1} clause ${cIdx + 1} values`}
                     values={clause.values}
                     disabled={disabled}
-                    placeholder="Add value..."
+                    suggestions={getValueSuggestions?.(clause)}
+                    placeholder={clause.op === "segmentMatch" ? "Add segment..." : "Add value..."}
                     onChange={(vals) => {
                       const nextClauses = rule.clauses.map((c, j) =>
                         j === cIdx ? { ...c, values: vals } : c,

@@ -56,7 +56,7 @@ export {
   type TextProps,
 } from "./components/typography/Typography";
 
-// Forms & Controls (14)
+// Forms & Controls (15)
 export {
   Button,
   Checkbox,
@@ -68,6 +68,7 @@ export {
   Label,
   Select,
   Slider,
+  SuggestInput,
   Switch,
   TagInput,
   Textarea,
@@ -84,6 +85,8 @@ export {
   type SelectOption,
   type SelectProps,
   type SliderProps,
+  type SuggestInputProps,
+  type SuggestOption,
   type SwitchProps,
   type TagInputProps,
   type TextareaProps,
@@ -132,7 +135,9 @@ export {
   JsonEditor,
   DotMeter,
   RolloutAllocator,
+  BUILT_IN_CONTEXT_KINDS,
   RuleBuilder,
+  builtInAttributeSuggestions,
   type AuditTimelineEntry,
   type AuditTimelineProps,
   type DataTableColumn,

@@ -46,6 +46,7 @@ import {
   SplitPane,
   Stack,
   StatusDot,
+  SuggestInput,
   Switch,
   Tabs,
   TagInput,
@@ -222,6 +223,96 @@ describe("@skotos/ui full component library", () => {
     expect(onPairs).toHaveBeenCalledWith([
       { key: "plan", value: "pro" },
       { key: "", value: "" },
+    ]);
+  });
+
+  it("SuggestInput lists presets on focus, filters as you type, and keeps custom text", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const suggestions = [
+      { value: "key", description: "unique id", group: "Built-in" },
+      { value: "email", group: "Built-in" },
+      { value: "plan", group: "Seen from SDKs" },
+    ];
+    const { rerender } = render(
+      <SuggestInput ariaLabel="Attribute" value="" onChange={onChange} suggestions={suggestions} />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Attribute" }));
+    expect(screen.getAllByRole("option")).toHaveLength(3);
+    expect(screen.getByText("Seen from SDKs")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("option", { name: /email/ }));
+    expect(onChange).toHaveBeenLastCalledWith("email");
+
+    rerender(
+      <SuggestInput ariaLabel="Attribute" value="" onChange={onChange} suggestions={suggestions} />,
+    );
+    const input = screen.getByRole("combobox", { name: "Attribute" });
+    await user.click(input);
+    await user.type(input, "p");
+    expect(onChange).toHaveBeenLastCalledWith("p");
+
+    rerender(
+      <SuggestInput ariaLabel="Attribute" value="p" onChange={onChange} suggestions={suggestions} />,
+    );
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["plan"]);
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(onChange).toHaveBeenLastCalledWith("plan");
+  });
+
+  it("TagInput offers suggestions and skips values already added", async () => {
+    const user = userEvent.setup();
+    const onTags = vi.fn();
+    render(
+      <TagInput
+        ariaLabel="Segments"
+        values={["beta"]}
+        onChange={onTags}
+        suggestions={[{ value: "beta" }, { value: "internal" }]}
+      />,
+    );
+    await user.click(screen.getByRole("combobox", { name: "Segments" }));
+    expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual(["internal"]);
+    await user.click(screen.getByRole("option", { name: "internal" }));
+    expect(onTags).toHaveBeenCalledWith(["beta", "internal"]);
+  });
+
+  it("RuleBuilder offers built-in context kinds and per-kind attributes", async () => {
+    const user = userEvent.setup();
+    const onRules = vi.fn();
+    render(
+      <RuleBuilder
+        rules={[
+          {
+            id: "r1",
+            clauses: [{ contextKind: "device", attribute: "", op: "in", values: [], negate: false }],
+          },
+        ]}
+        variations={[{ id: "on", label: "On" }]}
+        onChange={onRules}
+        contextKindSuggestions={[{ value: "tenant", group: "Seen from SDKs" }]}
+        attributeSuggestions={{ device: [{ value: "region", group: "Seen from SDKs" }] }}
+      />,
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Rule 1 clause 1 context kind" }));
+    const kinds = screen.getAllByRole("option").map((o) => o.textContent);
+    expect(kinds.some((k) => k?.startsWith("user"))).toBe(true);
+    expect(kinds).toContain("tenant");
+
+    await user.click(screen.getByRole("combobox", { name: "Rule 1 clause 1 attribute" }));
+    const attrs = screen.getAllByRole("option").map((o) => o.textContent ?? "");
+    expect(attrs.some((a) => a.startsWith("key"))).toBe(true);
+    expect(attrs.some((a) => a.startsWith("osVersion"))).toBe(true);
+    expect(attrs).toContain("region");
+    expect(attrs.some((a) => a.startsWith("email"))).toBe(false);
+
+    await user.click(screen.getByRole("option", { name: /osVersion/ }));
+    expect(onRules).toHaveBeenLastCalledWith([
+      expect.objectContaining({
+        clauses: [expect.objectContaining({ contextKind: "device", attribute: "osVersion" })],
+      }),
     ]);
   });
 

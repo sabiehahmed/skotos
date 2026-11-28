@@ -35,7 +35,9 @@ import {
   type DiffInstructionSummary,
   type KeyValuePair,
   type RolloutValue,
+  type RuleBuilderClause,
   type RuleBuilderRule,
+  type SuggestOption,
 } from "@skotos/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -148,6 +150,17 @@ export function FlagDetailPage({
           "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/usage",
           { params: { path: { projectKey, flagKey, envKey }, query: { days: 30 } } },
         ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const segmentsQuery = useQuery({
+    queryKey: ["segments", projectKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments/{envKey}/segments", {
+          params: { path: { projectKey, envKey } },
+        }),
       ),
     enabled: Boolean(envKey),
   });
@@ -411,6 +424,30 @@ export function FlagDetailPage({
       })),
     [flagQuery.data],
   );
+
+  // Rule clause dropdown suggestions beyond the built-in presets.
+  const seenContextKindOptions = useMemo<SuggestOption[]>(
+    () =>
+      (usageQuery.data?.contextKinds ?? []).map((kind) => ({
+        value: kind,
+        description: "seen",
+        group: "Seen from SDKs",
+      })),
+    [usageQuery.data],
+  );
+
+  const segmentOptions = useMemo<SuggestOption[]>(
+    () =>
+      (segmentsQuery.data?.items ?? []).map((seg) => ({
+        value: seg.key,
+        description: seg.name && seg.name !== seg.key ? seg.name : undefined,
+        group: "Segments",
+      })),
+    [segmentsQuery.data],
+  );
+
+  const clauseValueSuggestions = (clause: RuleBuilderClause): SuggestOption[] =>
+    clause.op === "segmentMatch" ? segmentOptions : [];
 
   // Compile semantic FlagPatchInstruction[] diff from current envConfig -> draft state
   const { instructions: draftInstructions, summaries: draftSummaries } = useMemo<{
@@ -1001,6 +1038,8 @@ export function FlagDetailPage({
                   variations={variationOptions}
                   disabled={!writerAllowed || flag.archived}
                   onChange={setDraftRules}
+                  contextKindSuggestions={seenContextKindOptions}
+                  getValueSuggestions={clauseValueSuggestions}
                 />
               </Stack>
 

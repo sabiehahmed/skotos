@@ -1,5 +1,6 @@
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import * as LabelPrimitive from "@radix-ui/react-label";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { Slot } from "@radix-ui/react-slot";
@@ -10,6 +11,7 @@ import { Check, ChevronDown, Plus, Trash2, X } from "../../icons";
 import {
   forwardRef,
   useId,
+  useMemo,
   useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
@@ -320,6 +322,244 @@ export function Combobox({
   );
 }
 
+export interface SuggestOption {
+  /** The value written into the field when the option is picked. */
+  value: string;
+  /** Optional display label; defaults to `value`. */
+  label?: string;
+  /** Short muted hint shown on the right, e.g. "built-in" or "seen 2h ago". */
+  description?: string;
+  /** Options sharing a group are listed under one heading, in first-seen order. */
+  group?: string;
+}
+
+function filterSuggestions(options: SuggestOption[], query: string, exclude?: string[]) {
+  const q = query.trim().toLowerCase();
+  const seen = new Set<string>();
+  const out: SuggestOption[] = [];
+  for (const opt of options) {
+    if (seen.has(opt.value) || exclude?.includes(opt.value)) continue;
+    seen.add(opt.value);
+    if (
+      !q ||
+      opt.value.toLowerCase().includes(q) ||
+      (opt.label?.toLowerCase().includes(q) ?? false)
+    ) {
+      out.push(opt);
+    }
+  }
+  return out;
+}
+
+interface SuggestListProps {
+  id: string;
+  options: SuggestOption[];
+  activeIndex: number;
+  selectedValue?: string;
+  onPick: (value: string) => void;
+  onHover: (index: number) => void;
+}
+
+function SuggestList({ id, options, activeIndex, selectedValue, onPick, onHover }: SuggestListProps) {
+  let lastGroup: string | undefined;
+  return (
+    <div id={id} role="listbox" className={styles.suggestList}>
+      {options.map((opt, i) => {
+        const header =
+          opt.group && opt.group !== lastGroup ? (
+            <div key={`g-${opt.group}`} role="presentation" className={styles.suggestGroup}>
+              {opt.group}
+            </div>
+          ) : null;
+        lastGroup = opt.group;
+        return [
+          header,
+          <div
+            key={opt.value}
+            id={`${id}-opt-${i}`}
+            role="option"
+            aria-selected={i === activeIndex}
+            data-active={i === activeIndex || undefined}
+            className={styles.suggestOption}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onPick(opt.value);
+            }}
+            onMouseMove={() => onHover(i)}
+          >
+            <span className={styles.suggestValue}>{opt.label ?? opt.value}</span>
+            <span className={styles.suggestMeta}>
+              {opt.description && <span>{opt.description}</span>}
+              {opt.value === selectedValue && <Check size={14} aria-hidden="true" />}
+            </span>
+          </div>,
+        ];
+      })}
+    </div>
+  );
+}
+
+interface SuggestControllerArgs {
+  options: SuggestOption[];
+  query: string;
+  exclude?: string[];
+  onPick: (value: string) => void;
+}
+
+function useSuggestController({ options, query, exclude, onPick }: SuggestControllerArgs) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const filtered = useMemo(
+    () => filterSuggestions(options, query, exclude),
+    [options, query, exclude],
+  );
+  const visible = open && filtered.length > 0;
+
+  const pick = (value: string) => {
+    onPick(value);
+    setActiveIndex(-1);
+  };
+
+  /** Returns true when the key was consumed by the suggestion list. */
+  const handleKey = (e: KeyboardEvent<HTMLInputElement>): boolean => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex((i) => (filtered.length === 0 ? -1 : (i + 1) % filtered.length));
+      return true;
+    }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex((i) =>
+        filtered.length === 0 ? -1 : (i - 1 + filtered.length) % filtered.length,
+      );
+      return true;
+    }
+    if (e.key === "Enter" && visible && activeIndex >= 0 && filtered[activeIndex]) {
+      e.preventDefault();
+      pick(filtered[activeIndex].value);
+      return true;
+    }
+    if (e.key === "Escape" && visible) {
+      e.preventDefault();
+      setOpen(false);
+      setActiveIndex(-1);
+      return true;
+    }
+    return false;
+  };
+
+  return { open, setOpen, activeIndex, setActiveIndex, filtered, visible, pick, handleKey };
+}
+
+export interface SuggestInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  /** Preset and discovered values offered in the dropdown. Free text is always allowed. */
+  suggestions: SuggestOption[];
+  placeholder?: string;
+  ariaLabel?: string;
+  disabled?: boolean;
+  mono?: boolean;
+  id?: string;
+  className?: string;
+}
+
+/**
+ * Text input with a searchable suggestion dropdown. Unlike `Combobox`, any typed
+ * value is kept, so presets speed up common choices without blocking custom ones.
+ */
+export function SuggestInput({
+  value,
+  onChange,
+  suggestions,
+  placeholder,
+  ariaLabel,
+  disabled,
+  mono,
+  id,
+  className,
+}: SuggestInputProps) {
+  const listId = useId();
+  // Show every suggestion on focus; filter only once the user starts typing.
+  const [query, setQuery] = useState("");
+  const ctl = useSuggestController({
+    options: suggestions,
+    query,
+    onPick: (v) => {
+      onChange(v);
+      setQuery("");
+      ctl.setOpen(false);
+    },
+  });
+
+  return (
+    <PopoverPrimitive.Root open={ctl.visible && !disabled}>
+      <PopoverPrimitive.Anchor asChild>
+        <div className={clsx(styles.suggestWrap, className)}>
+          <Input
+            id={id}
+            role="combobox"
+            aria-label={ariaLabel}
+            aria-expanded={ctl.visible}
+            aria-controls={listId}
+            aria-autocomplete="list"
+            aria-activedescendant={
+              ctl.visible && ctl.activeIndex >= 0 ? `${listId}-opt-${ctl.activeIndex}` : undefined
+            }
+            autoComplete="off"
+            spellCheck={false}
+            value={value}
+            placeholder={placeholder}
+            disabled={disabled}
+            mono={mono}
+            className={styles.suggestInput}
+            onFocus={() => {
+              setQuery("");
+              ctl.setActiveIndex(-1);
+              ctl.setOpen(true);
+            }}
+            onBlur={() => {
+              ctl.setOpen(false);
+              ctl.setActiveIndex(-1);
+            }}
+            onChange={(e) => {
+              onChange(e.target.value);
+              setQuery(e.target.value);
+              ctl.setActiveIndex(-1);
+              ctl.setOpen(true);
+            }}
+            onKeyDown={(e) => {
+              ctl.handleKey(e);
+            }}
+          />
+          <ChevronDown size={14} aria-hidden="true" className={styles.suggestChevron} />
+        </div>
+      </PopoverPrimitive.Anchor>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          className={styles.suggestContent}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          <SuggestList
+            id={listId}
+            options={ctl.filtered}
+            activeIndex={ctl.activeIndex}
+            selectedValue={value}
+            onPick={ctl.pick}
+            onHover={ctl.setActiveIndex}
+          />
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  );
+}
+
 export interface CheckboxProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
@@ -469,6 +709,8 @@ export interface TagInputProps {
   placeholder?: string;
   ariaLabel?: string;
   disabled?: boolean;
+  /** Optional values offered in a dropdown while typing. Free text is still allowed. */
+  suggestions?: SuggestOption[];
 }
 
 export function TagInput({
@@ -477,11 +719,14 @@ export function TagInput({
   placeholder = "Type and press Enter...",
   ariaLabel = "Tag input",
   disabled,
+  suggestions,
 }: TagInputProps) {
   const [draft, setDraft] = useState("");
+  const listId = useId();
+  const hasSuggestions = Boolean(suggestions && suggestions.length > 0);
 
-  const addDraft = () => {
-    const trimmed = draft.trim();
+  const addValue = (raw: string) => {
+    const trimmed = raw.trim();
     if (!trimmed) return;
     if (!values.includes(trimmed)) {
       onChange([...values, trimmed]);
@@ -489,16 +734,24 @@ export function TagInput({
     setDraft("");
   };
 
+  const ctl = useSuggestController({
+    options: suggestions ?? [],
+    query: draft,
+    exclude: values,
+    onPick: addValue,
+  });
+
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (hasSuggestions && ctl.handleKey(e)) return;
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
-      addDraft();
+      addValue(draft);
     } else if (e.key === "Backspace" && !draft && values.length > 0) {
       onChange(values.slice(0, -1));
     }
   };
 
-  return (
+  const box = (
     <div className={styles.tagBox}>
       {values.map((val) => (
         <span key={val} className={styles.tagChip}>
@@ -521,12 +774,59 @@ export function TagInput({
         disabled={disabled}
         value={draft}
         placeholder={values.length === 0 ? placeholder : ""}
-        onChange={(e) => setDraft(e.target.value)}
+        autoComplete="off"
+        {...(hasSuggestions
+          ? {
+              role: "combobox",
+              "aria-expanded": ctl.visible,
+              "aria-controls": listId,
+              "aria-autocomplete": "list" as const,
+              "aria-activedescendant":
+                ctl.visible && ctl.activeIndex >= 0
+                  ? `${listId}-opt-${ctl.activeIndex}`
+                  : undefined,
+            }
+          : {})}
+        onFocus={() => hasSuggestions && ctl.setOpen(true)}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          ctl.setActiveIndex(-1);
+          if (hasSuggestions) ctl.setOpen(true);
+        }}
         onKeyDown={handleKeyDown}
-        onBlur={addDraft}
+        onBlur={() => {
+          ctl.setOpen(false);
+          addValue(draft);
+        }}
         className={styles.tagInputField}
       />
     </div>
+  );
+
+  if (!hasSuggestions) return box;
+
+  return (
+    <PopoverPrimitive.Root open={ctl.visible && !disabled}>
+      <PopoverPrimitive.Anchor asChild>{box}</PopoverPrimitive.Anchor>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          className={styles.suggestContent}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          <SuggestList
+            id={listId}
+            options={ctl.filtered}
+            activeIndex={ctl.activeIndex}
+            onPick={ctl.pick}
+            onHover={ctl.setActiveIndex}
+          />
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
   );
 }
 
