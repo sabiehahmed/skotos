@@ -703,20 +703,30 @@ async fn phase4_analytics_experiments_guardrails_migrations_synced_segments_and_
         .unwrap();
     assert_eq!(patch_sf.status(), 200);
 
-    // Allow OutboxWorker + NATS to sync snapshot + Big Segment to MinIO & Delivery Edge
-    tokio::time::sleep(Duration::from_millis(350)).await;
-
+    // Wait deterministically for OutboxWorker + NATS to sync snapshot + Big Segment to MinIO & Delivery Edge
     let vip_ctx_b64 = URL_SAFE_NO_PAD.encode(r#"{"kind":"user","key":"vip-synced-42"}"#);
-    let vip_eval: Value = reqwest::Client::new()
-        .get(format!(
-            "{edge_base}/sdk/v1/evalx/{client_side_id}/contexts/{vip_ctx_b64}"
-        ))
-        .send()
-        .await
-        .unwrap()
-        .json()
-        .await
-        .unwrap();
+    let sync_deadline = std::time::Instant::now() + Duration::from_secs(5);
+    let eval_client = reqwest::Client::new();
+    let vip_eval: Value = loop {
+        let candidate: Value = eval_client
+            .get(format!(
+                "{edge_base}/sdk/v1/evalx/{client_side_id}/contexts/{vip_ctx_b64}"
+            ))
+            .send()
+            .await
+            .unwrap()
+            .json()
+            .await
+            .unwrap();
+        if candidate["synced-vip-flag"]["value"] == true {
+            break candidate;
+        }
+        assert!(
+            std::time::Instant::now() < sync_deadline,
+            "synced-vip-flag Big Segment snapshot did not reach delivery-edge within 5s, last: {candidate}"
+        );
+        tokio::time::sleep(Duration::from_millis(25)).await;
+    };
     assert_eq!(vip_eval["synced-vip-flag"]["value"], true);
 
     let std_ctx_b64 = URL_SAFE_NO_PAD.encode(r#"{"kind":"user","key":"normal-user"}"#);
