@@ -7,10 +7,31 @@ export CARGO_BUILD_JOBS
 
 COMPOSE ?= docker compose
 
-.PHONY: help dev-infra dev-infra-down migrate test-rust test-go test-python test-java test-ui test-web gen-openapi lint-all check
+.PHONY: help dev-up dev-up-analytics dev-down dev-status dev-logs seed-demo smoke dev-infra dev-infra-down migrate test-rust test-go test-python test-java test-ui test-web gen-openapi lint-all check
 
 help: ## Show available Skotos development targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z0-9_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+dev-up: ## Start full local stack (infra + all 4 Rust services + @skotos/web), seed demo data, and run smoke test
+	./scripts/dev-stack.sh up --seed --smoke
+
+dev-up-analytics: ## Start full local stack with ClickHouse analytics profile, seed demo data, and run smoke test
+	./scripts/dev-stack.sh up --analytics --seed --smoke
+
+dev-down: ## Stop all local Skotos app services (add --infra or --clean via scripts/dev-stack.sh)
+	./scripts/dev-stack.sh down
+
+dev-status: ## Show health status of Docker infra and all local Skotos services
+	./scripts/dev-stack.sh status
+
+dev-logs: ## Tail logs from all local Skotos services
+	./scripts/dev-stack.sh logs
+
+seed-demo: ## Idempotently seed demo flags, segments, experiment, guarded rollout, migration & telemetry
+	./scripts/seed-demo.sh
+
+smoke: ## Run live end-to-end smoke check across control-api, delivery-edge, event-ingest, relay-proxy & web
+	./scripts/smoke-test.sh
 
 dev-infra: ## Start local Postgres, NATS JetStream, and MinIO and wait until healthy
 	$(COMPOSE) up -d --wait --wait-timeout 90

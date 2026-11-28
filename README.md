@@ -4,6 +4,36 @@
 
 > **Status:** Phase 4 Complete (ClickHouse Telemetry, Data Export, A/B & A/A Experimentation, Guarded Rollouts, Engineering Insights, 2/4/6-Stage Migrations, Synced Segments, Python/Java/Mobile SDKs & VS Code Extension) — Ready for Phase 5
 
+## Quick Start (Local Full Stack)
+
+Prerequisites: Docker (with Compose), Rust (`cargo`), Node.js 22+, `pnpm`, `curl`, `jq`, and `python3`.
+
+```bash
+# Start Postgres, NATS JetStream, MinIO + all 4 Rust services + @skotos/web,
+# seed realistic demo flags/experiments/guardrails, and verify live end-to-end health:
+make dev-up
+
+# Or include ClickHouse (:8123) as the Phase 4 columnar analytics backend:
+make dev-up-analytics
+
+# Inspect health, tail logs, re-run smoke test, or tear down:
+make dev-status
+make dev-logs
+make smoke
+make dev-down                                # stop app services (keep Docker infra)
+./scripts/dev-stack.sh down --infra          # also stop Docker containers
+./scripts/dev-stack.sh down --clean          # stop everything and wipe volumes + state
+```
+
+| Service                   | Local URL                   | Notes                                                 |
+| ------------------------- | --------------------------- | ----------------------------------------------------- |
+| Management Dashboard SPA  | `http://localhost:5173`     | Sign in: `admin@skotos.local` / `SkotosDevPass123!`   |
+| Control Plane API         | `http://localhost:8080`     | `/readyz`, `/api/v1/...` (proxied at `:5173/api/...`) |
+| Flag Delivery Edge        | `http://localhost:8081`     | DB-free SSE (`/stream/v1/all`) & `/sdk/v1/evalx/...`  |
+| Event Ingestion           | `http://localhost:8082`     | `/readyz`, `/events/v1/bulk`                          |
+| Relay Proxy               | `http://localhost:8083`     | `/status`, `/stream/v1/all`, `/sdk/v1/evalx/...`      |
+| MinIO / NATS / ClickHouse | `:9001` / `:8222` / `:8123` | Local backing infrastructure consoles & monitors      |
+
 ## Repository Structure
 
 ```text

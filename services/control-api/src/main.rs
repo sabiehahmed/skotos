@@ -63,7 +63,8 @@ async fn main() -> ExitCode {
         let scheduler = skotos_fanout::SchedulerWorker::new(
             storage_for_workers.clone(),
             std::time::Duration::from_secs(1),
-        );
+        )
+        .with_telemetry(state.telemetry.clone());
         tokio::spawn(scheduler.run_until_shutdown(rx_sched));
 
         tokio::spawn(async move {
