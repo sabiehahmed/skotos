@@ -82,7 +82,7 @@
   border: 1px solid var(--sk-color-border-strong);
   border-radius: var(--sk-radius-md);
   box-shadow: var(--sk-shadow-md);
-  z-index: var(--sk-z-dropdown);
+  z-index: var(--sk-z-popover);
 }
 
 .popoverContent {
