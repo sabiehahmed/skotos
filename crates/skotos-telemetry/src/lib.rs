@@ -17,9 +17,9 @@ use chrono::{DateTime, Duration, Timelike, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use skotos_domain::{
-    FlagEvalUsage, FlagMonitoringSummary, FlagVariationMonitoring, MetricDefinition,
-    MigrationStageMetrics, MigrationTelemetrySummary, VariationSufficientStats,
-    VariationUsageCount,
+    validate_context_kind, ContextCatalog, FlagEvalUsage, FlagMonitoringSummary,
+    FlagVariationMonitoring, MetricDefinition, MigrationStageMetrics, MigrationTelemetrySummary,
+    VariationSufficientStats, VariationUsageCount,
 };
 use sqlx::{PgPool, Row};
 use thiserror::Error;
@@ -81,6 +81,14 @@ pub enum SdkEvent {
     },
     #[serde(rename_all = "camelCase")]
     Identify {
+        creation_date: i64,
+        #[serde(default)]
+        context: Option<Value>,
+    },
+    /// Sent by server SDKs the first time a context is seen in a flush window, so the
+    /// control plane can learn which kinds and attributes exist (values are not stored).
+    #[serde(rename_all = "camelCase")]
+    Index {
         creation_date: i64,
         #[serde(default)]
         context: Option<Value>,
@@ -417,6 +425,239 @@ pub fn extract_migration_ops(
     out
 }
 
+/// Max attribute names recorded per context kind per batch.
+pub const MAX_CATALOG_ATTRIBUTES_PER_KIND: usize = 64;
+/// Max context keys recorded per context kind per batch.
+pub const MAX_CATALOG_KEYS_PER_KIND: usize = 100;
+/// Max context keys retained per context kind per environment.
+pub const MAX_RETAINED_KEYS_PER_KIND: i64 = 200;
+const MAX_CATALOG_NAME_LEN: usize = 128;
+const MAX_CATALOG_KEY_LEN: usize = 256;
+
+/// What one event batch taught us about a context kind: attribute names and keys seen.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ContextObservation {
+    pub org_id: Uuid,
+    pub env_id: Uuid,
+    pub context_kind: String,
+    pub attributes: Vec<String>,
+    pub keys: Vec<String>,
+    pub seen_at: DateTime<Utc>,
+}
+
+#[derive(Default)]
+struct KindAccumulator {
+    attributes: BTreeSet<String>,
+    keys: BTreeSet<String>,
+    seen_at: Option<DateTime<Utc>>,
+}
+
+impl KindAccumulator {
+    fn touch(&mut self, ts: DateTime<Utc>) {
+        self.seen_at = Some(self.seen_at.map_or(ts, |prev| prev.max(ts)));
+    }
+
+    fn add_key(&mut self, key: &str) {
+        if !key.is_empty()
+            && key.len() <= MAX_CATALOG_KEY_LEN
+            && self.keys.len() < MAX_CATALOG_KEYS_PER_KIND
+        {
+            self.keys.insert(key.to_string());
+        }
+    }
+}
+
+fn catalog_kind_entry<'a>(
+    acc: &'a mut BTreeMap<String, KindAccumulator>,
+    kind: &str,
+) -> Option<&'a mut KindAccumulator> {
+    if validate_context_kind(kind).is_err() {
+        return None;
+    }
+    Some(acc.entry(kind.to_string()).or_default())
+}
+
+/// Records attribute names (never values) and the key of one single-kind context object.
+fn observe_single_context(
+    acc: &mut BTreeMap<String, KindAccumulator>,
+    kind: &str,
+    obj: &serde_json::Map<String, Value>,
+    ts: DateTime<Utc>,
+) {
+    let Some(entry) = catalog_kind_entry(acc, kind) else {
+        return;
+    };
+    entry.touch(ts);
+    let anonymous = obj
+        .get("anonymous")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    if !anonymous {
+        if let Some(key) = obj.get("key").and_then(Value::as_str) {
+            entry.add_key(key);
+        }
+    }
+    for name in obj.keys() {
+        if matches!(name.as_str(), "kind" | "key" | "_meta")
+            || name.is_empty()
+            || name.len() > MAX_CATALOG_NAME_LEN
+            || entry.attributes.len() >= MAX_CATALOG_ATTRIBUTES_PER_KIND
+        {
+            continue;
+        }
+        entry.attributes.insert(name.clone());
+    }
+}
+
+fn observe_context_value(
+    acc: &mut BTreeMap<String, KindAccumulator>,
+    ctx: &Value,
+    ts: DateTime<Utc>,
+) {
+    let Some(obj) = ctx.as_object() else {
+        return;
+    };
+    match obj.get("kind").and_then(Value::as_str) {
+        Some("multi") => {
+            for (kind, inner) in obj {
+                if kind == "kind" {
+                    continue;
+                }
+                if let Some(inner_obj) = inner.as_object() {
+                    observe_single_context(acc, kind, inner_obj, ts);
+                }
+            }
+        }
+        Some(kind) => observe_single_context(acc, kind, obj, ts),
+        // Legacy contexts without a kind are users.
+        None => observe_single_context(acc, "user", obj, ts),
+    }
+}
+
+/// Collects the context kinds, attribute names and context keys an event batch reveals.
+/// Full contexts come from `index`, `identify` and `debug` events; `feature` and `custom`
+/// events add keys; summaries add kinds only.
+pub fn extract_context_observations(
+    org_id: Uuid,
+    env_id: Uuid,
+    events: &[SdkEvent],
+) -> Vec<ContextObservation> {
+    let mut acc: BTreeMap<String, KindAccumulator> = BTreeMap::new();
+    let ts_of = |millis: i64| DateTime::from_timestamp_millis(millis).unwrap_or_else(Utc::now);
+
+    for ev in events {
+        match ev {
+            SdkEvent::Index {
+                creation_date,
+                context: Some(ctx),
+            }
+            | SdkEvent::Identify {
+                creation_date,
+                context: Some(ctx),
+            }
+            | SdkEvent::Debug {
+                creation_date,
+                context: Some(ctx),
+                ..
+            } => observe_context_value(&mut acc, ctx, ts_of(*creation_date)),
+            SdkEvent::Feature {
+                creation_date,
+                context_keys,
+                ..
+            }
+            | SdkEvent::Custom {
+                creation_date,
+                context_keys,
+                ..
+            } => {
+                let ts = ts_of(*creation_date);
+                for (kind, key) in context_keys {
+                    if let Some(entry) = catalog_kind_entry(&mut acc, kind) {
+                        entry.touch(ts);
+                        entry.add_key(key);
+                    }
+                }
+            }
+            SdkEvent::Summary {
+                end_date, features, ..
+            } => {
+                let ts = ts_of(*end_date);
+                for bucket in features.values() {
+                    for kind in &bucket.context_kinds {
+                        if let Some(entry) = catalog_kind_entry(&mut acc, kind) {
+                            entry.touch(ts);
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    acc.into_iter()
+        .filter_map(|(context_kind, a)| {
+            Some(ContextObservation {
+                org_id,
+                env_id,
+                context_kind,
+                attributes: a.attributes.into_iter().collect(),
+                keys: a.keys.into_iter().collect(),
+                seen_at: a.seen_at?,
+            })
+        })
+        .collect()
+}
+
+/// Max attribute names returned per context kind by `query_context_catalog`.
+pub const MAX_RETAINED_ATTRIBUTES_PER_KIND: i64 = 500;
+/// Max recent keys returned per context kind by `query_context_catalog`.
+pub const CATALOG_RECENT_KEYS_LIMIT: usize = 50;
+
+/// Builds a [`ContextCatalog`] from flat rows. Attribute and key rows must be ordered
+/// newest first; rows for kinds absent from `kinds` are dropped.
+pub fn assemble_context_catalog(
+    kinds: Vec<(String, DateTime<Utc>)>,
+    attributes: Vec<(String, String, DateTime<Utc>)>,
+    keys: Vec<(String, String)>,
+) -> ContextCatalog {
+    let mut entries: BTreeMap<String, skotos_domain::ContextKindCatalogEntry> = kinds
+        .into_iter()
+        .map(|(kind, last_seen_at)| {
+            (
+                kind.clone(),
+                skotos_domain::ContextKindCatalogEntry {
+                    kind,
+                    last_seen_at,
+                    attributes: Vec::new(),
+                    recent_keys: Vec::new(),
+                },
+            )
+        })
+        .collect();
+    for (kind, name, last_seen_at) in attributes {
+        if let Some(e) = entries.get_mut(&kind) {
+            if e.attributes.len() < MAX_RETAINED_ATTRIBUTES_PER_KIND as usize {
+                e.attributes
+                    .push(skotos_domain::ContextAttributeCatalogEntry { name, last_seen_at });
+            }
+        }
+    }
+    for (kind, key) in keys {
+        if let Some(e) = entries.get_mut(&kind) {
+            if e.recent_keys.len() < CATALOG_RECENT_KEYS_LIMIT {
+                e.recent_keys.push(key);
+            }
+        }
+    }
+    let mut kinds: Vec<_> = entries.into_values().collect();
+    kinds.sort_by(|a, b| {
+        b.last_seen_at
+            .cmp(&a.last_seen_at)
+            .then(a.kind.cmp(&b.kind))
+    });
+    ContextCatalog { kinds }
+}
+
 /// Backend-agnostic telemetry storage trait (ADR-0005).
 #[async_trait]
 pub trait TelemetryStore: Send + Sync {
@@ -491,6 +732,20 @@ pub trait TelemetryStore: Send + Sync {
         flag_key: &str,
         lookback_days: i64,
     ) -> Result<MigrationTelemetrySummary, TelemetryError>;
+
+    /// Upserts the context kinds, attribute names and keys SDKs sent.
+    async fn record_context_observations(
+        &self,
+        observations: &[ContextObservation],
+    ) -> Result<(), TelemetryError>;
+
+    /// Returns the context kinds, attributes and recent keys seen within the lookback window.
+    async fn query_context_catalog(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        lookback_days: i64,
+    ) -> Result<ContextCatalog, TelemetryError>;
 }
 
 /// Instantiates the configured `TelemetryStore` backend per ADR-0005:
@@ -1004,11 +1259,239 @@ impl TelemetryStore for PostgresTelemetryStore {
             generated_at: Utc::now(),
         })
     }
+
+    async fn record_context_observations(
+        &self,
+        observations: &[ContextObservation],
+    ) -> Result<(), TelemetryError> {
+        if observations.is_empty() {
+            return Ok(());
+        }
+        let mut tx = self.pool.begin().await?;
+        for o in observations {
+            sqlx::query(
+                "INSERT INTO context_kind_catalog (org_id, env_id, context_kind, last_seen_at)
+                 VALUES ($1, $2, $3, $4)
+                 ON CONFLICT (env_id, context_kind) DO UPDATE
+                 SET last_seen_at = GREATEST(context_kind_catalog.last_seen_at, EXCLUDED.last_seen_at)",
+            )
+            .bind(o.org_id)
+            .bind(o.env_id)
+            .bind(&o.context_kind)
+            .bind(o.seen_at)
+            .execute(&mut *tx)
+            .await?;
+
+            if !o.attributes.is_empty() {
+                sqlx::query(
+                    "INSERT INTO context_attribute_catalog (org_id, env_id, context_kind, attribute, last_seen_at)
+                     SELECT $1, $2, $3, a, $5 FROM unnest($4::text[]) AS a
+                     ON CONFLICT (env_id, context_kind, attribute) DO UPDATE
+                     SET last_seen_at = GREATEST(context_attribute_catalog.last_seen_at, EXCLUDED.last_seen_at)",
+                )
+                .bind(o.org_id)
+                .bind(o.env_id)
+                .bind(&o.context_kind)
+                .bind(&o.attributes)
+                .bind(o.seen_at)
+                .execute(&mut *tx)
+                .await?;
+                sqlx::query(
+                    "DELETE FROM context_attribute_catalog
+                     WHERE env_id = $1 AND context_kind = $2 AND attribute IN (
+                         SELECT attribute FROM context_attribute_catalog
+                         WHERE env_id = $1 AND context_kind = $2
+                         ORDER BY last_seen_at DESC, attribute ASC
+                         OFFSET $3
+                     )",
+                )
+                .bind(o.env_id)
+                .bind(&o.context_kind)
+                .bind(MAX_RETAINED_ATTRIBUTES_PER_KIND)
+                .execute(&mut *tx)
+                .await?;
+            }
+
+            if !o.keys.is_empty() {
+                sqlx::query(
+                    "INSERT INTO context_key_samples (org_id, env_id, context_kind, context_key, last_seen_at)
+                     SELECT $1, $2, $3, k, $5 FROM unnest($4::text[]) AS k
+                     ON CONFLICT (env_id, context_kind, context_key) DO UPDATE
+                     SET last_seen_at = GREATEST(context_key_samples.last_seen_at, EXCLUDED.last_seen_at)",
+                )
+                .bind(o.org_id)
+                .bind(o.env_id)
+                .bind(&o.context_kind)
+                .bind(&o.keys)
+                .bind(o.seen_at)
+                .execute(&mut *tx)
+                .await?;
+                sqlx::query(
+                    "DELETE FROM context_key_samples
+                     WHERE env_id = $1 AND context_kind = $2 AND context_key IN (
+                         SELECT context_key FROM context_key_samples
+                         WHERE env_id = $1 AND context_kind = $2
+                         ORDER BY last_seen_at DESC, context_key ASC
+                         OFFSET $3
+                     )",
+                )
+                .bind(o.env_id)
+                .bind(&o.context_kind)
+                .bind(MAX_RETAINED_KEYS_PER_KIND)
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    async fn query_context_catalog(
+        &self,
+        org_id: Uuid,
+        env_id: Uuid,
+        lookback_days: i64,
+    ) -> Result<ContextCatalog, TelemetryError> {
+        let since = Utc::now() - Duration::days(lookback_days.clamp(1, 365));
+        let kinds = sqlx::query(
+            "SELECT context_kind, last_seen_at FROM context_kind_catalog
+             WHERE org_id = $1 AND env_id = $2 AND last_seen_at >= $3",
+        )
+        .bind(org_id)
+        .bind(env_id)
+        .bind(since)
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|r| (r.get("context_kind"), r.get("last_seen_at")))
+        .collect();
+        let attributes = sqlx::query(
+            "SELECT context_kind, attribute, last_seen_at FROM context_attribute_catalog
+             WHERE org_id = $1 AND env_id = $2 AND last_seen_at >= $3
+             ORDER BY last_seen_at DESC, attribute ASC",
+        )
+        .bind(org_id)
+        .bind(env_id)
+        .bind(since)
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|r| {
+            (
+                r.get("context_kind"),
+                r.get("attribute"),
+                r.get("last_seen_at"),
+            )
+        })
+        .collect();
+        let keys = sqlx::query(
+            "SELECT context_kind, context_key FROM context_key_samples
+             WHERE org_id = $1 AND env_id = $2 AND last_seen_at >= $3
+             ORDER BY last_seen_at DESC, context_key ASC",
+        )
+        .bind(org_id)
+        .bind(env_id)
+        .bind(since)
+        .fetch_all(&self.pool)
+        .await?
+        .into_iter()
+        .map(|r| (r.get("context_kind"), r.get("context_key")))
+        .collect();
+        Ok(assemble_context_catalog(kinds, attributes, keys))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn extracts_context_catalog_from_index_identify_feature_and_summary_events() {
+        let org = Uuid::nil();
+        let env = Uuid::nil();
+        let events: Vec<SdkEvent> = serde_json::from_value(serde_json::json!([
+            {
+                "kind": "index",
+                "creationDate": 1_700_000_000_000i64,
+                "context": {
+                    "kind": "multi",
+                    "user": { "key": "u-1", "email": "a@b.co", "plan": "pro",
+                              "_meta": { "redactedAttributes": ["ssn"] } },
+                    "organization": { "key": "org-9", "name": "Acme", "tier": 2 }
+                }
+            },
+            {
+                "kind": "identify",
+                "creationDate": 1_700_000_100_000i64,
+                "context": { "kind": "user", "key": "anon-7", "anonymous": true, "country": "PK" }
+            },
+            { "kind": "identify", "creationDate": 1_700_000_000_000i64,
+              "context": { "key": "legacy-1", "firstName": "Sam" } },
+            {
+                "kind": "feature",
+                "creationDate": 1_700_000_200_000i64,
+                "key": "f",
+                "contextKeys": { "device": "d-42", "bad kind!": "x" }
+            },
+            {
+                "kind": "summary", "startDate": 0, "endDate": 1_700_000_300_000i64,
+                "features": { "f": { "contextKinds": ["service"], "counters": [] } }
+            }
+        ]))
+        .unwrap();
+
+        let obs = extract_context_observations(org, env, &events);
+        let by_kind: BTreeMap<_, _> = obs.iter().map(|o| (o.context_kind.as_str(), o)).collect();
+        assert_eq!(
+            by_kind.keys().copied().collect::<Vec<_>>(),
+            vec!["device", "organization", "service", "user"]
+        );
+
+        let user = by_kind["user"];
+        assert_eq!(
+            user.attributes,
+            vec!["anonymous", "country", "email", "firstName", "plan"]
+        );
+        // Anonymous keys are not kept; legacy kind-less contexts count as users.
+        assert_eq!(user.keys, vec!["legacy-1", "u-1"]);
+        assert_eq!(
+            user.seen_at,
+            DateTime::from_timestamp_millis(1_700_000_100_000).unwrap()
+        );
+
+        assert_eq!(by_kind["organization"].attributes, vec!["name", "tier"]);
+        assert_eq!(by_kind["organization"].keys, vec!["org-9"]);
+        assert_eq!(by_kind["device"].keys, vec!["d-42"]);
+        assert!(by_kind["service"].attributes.is_empty());
+        assert!(by_kind["service"].keys.is_empty());
+    }
+
+    #[test]
+    fn assembles_context_catalog_newest_kind_first_and_caps_keys() {
+        let t0 = DateTime::from_timestamp_millis(1_000).unwrap();
+        let t1 = DateTime::from_timestamp_millis(2_000).unwrap();
+        let keys: Vec<(String, String)> = (0..80)
+            .map(|i| ("user".to_string(), format!("u-{i}")))
+            .chain([("ghost".to_string(), "g".to_string())])
+            .collect();
+        let catalog = assemble_context_catalog(
+            vec![("org".into(), t0), ("user".into(), t1)],
+            vec![
+                ("user".into(), "plan".into(), t1),
+                ("org".into(), "tier".into(), t0),
+            ],
+            keys,
+        );
+        let kinds: Vec<_> = catalog.kinds.iter().map(|k| k.kind.as_str()).collect();
+        assert_eq!(kinds, vec!["user", "org"]);
+        assert_eq!(catalog.kinds[0].attributes[0].name, "plan");
+        assert_eq!(
+            catalog.kinds[0].recent_keys.len(),
+            CATALOG_RECENT_KEYS_LIMIT
+        );
+        assert_eq!(catalog.kinds[0].recent_keys[0], "u-0");
+        assert!(catalog.kinds[1].recent_keys.is_empty());
+    }
 
     #[test]
     fn merges_summary_and_feature_events_into_hourly_buckets() {

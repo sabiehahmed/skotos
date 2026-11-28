@@ -13,7 +13,8 @@ pub mod segment_patch;
 pub use context::{validate_context_kind, AttributeRef, Context, ContextMeta, SingleContext};
 pub use entities::{
     default_context_kind, validate_hex_color, validate_key, ApiToken, AuditLogEntry, BuiltInRole,
-    Clause, ClauseOp, ClientSideAvailability, Environment, EnvironmentAuthRecord, EnvironmentKey,
+    Clause, ClauseOp, ClientSideAvailability, ContextAttributeCatalogEntry, ContextCatalog,
+    ContextKindCatalogEntry, Environment, EnvironmentAuthRecord, EnvironmentKey,
     EnvironmentKeyHashRecord, EnvironmentKeyKind, FeatureFlag, FlagEnvConfig, FlagEnvConfigBody,
     FlagEnvRevision, FlagEvalUsage, FlagKind, FlagTrigger, Member, Organization, OutboxEvent,
     PlanTier, Prerequisite, Project, Rollout, RolloutKind, ScheduledChange, ScheduledChangeStatus,

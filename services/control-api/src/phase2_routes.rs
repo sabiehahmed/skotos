@@ -6,9 +6,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use skotos_auth::{Action, ResourceRef};
 use skotos_domain::{
-    FlagEnvConfig, FlagEvalUsage, FlagPatchInstruction, FlagTrigger, PatchSummaryItem,
-    ScheduledChange, Segment, SegmentKind, SegmentPatchInstruction, SegmentRule, SegmentTarget,
-    TriggerAction, Webhook, WebhookDelivery,
+    ContextCatalog, FlagEnvConfig, FlagEvalUsage, FlagPatchInstruction, FlagTrigger,
+    PatchSummaryItem, ScheduledChange, Segment, SegmentKind, SegmentPatchInstruction, SegmentRule,
+    SegmentTarget, TriggerAction, Webhook, WebhookDelivery,
 };
 use skotos_storage::CreateSegmentInput;
 use utoipa::{IntoParams, ToSchema};
@@ -266,6 +266,11 @@ pub fn phase2_router() -> Router<AppState> {
         .route(
             "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/usage",
             get(get_flag_usage),
+        )
+        // Context catalog for rule clause dropdowns
+        .route(
+            "/api/v1/projects/{projectKey}/environments/{envKey}/context-catalog",
+            get(get_context_catalog),
         )
 }
 
@@ -994,4 +999,45 @@ pub async fn get_flag_usage(
             )
         })?;
     Ok(Json(usage))
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/projects/{projectKey}/environments/{envKey}/context-catalog",
+    tag = "usage",
+    params(
+        ("projectKey" = String, Path, description = "Project key"),
+        ("envKey" = String, Path, description = "Environment key"),
+        UsageQuery
+    ),
+    responses((status = 200, body = ContextCatalog))
+)]
+pub async fn get_context_catalog(
+    State(state): State<AppState>,
+    AuthPrincipal(principal): AuthPrincipal,
+    Path((project_key, env_key)): Path<(String, String)>,
+    Query(query): Query<UsageQuery>,
+) -> Result<Json<ContextCatalog>, ApiError> {
+    state.authorizer.authorize(
+        &principal,
+        Action::Read,
+        &ResourceRef::project(&project_key),
+    )?;
+    let env = state
+        .storage
+        .get_environment(principal.org_id, &project_key, &env_key)
+        .await?;
+    let catalog = state
+        .telemetry
+        .query_context_catalog(principal.org_id, env.id, query.days)
+        .await
+        .map_err(|e| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "telemetry_error",
+                "Telemetry Query Failed",
+                e.to_string(),
+            )
+        })?;
+    Ok(Json(catalog))
 }

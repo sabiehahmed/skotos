@@ -1505,6 +1505,55 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/context-catalog": {
+      "get": {
+        "tags": [
+          "usage"
+        ],
+        "operationId": "get_context_catalog",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextCatalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/environments/{envKey}/experiments": {
       "get": {
         "tags": [
@@ -6762,6 +6811,65 @@
         "type": "object",
         "description": "Evaluation context: either a single context ({\"kind\":\"user\",\"key\":\"...\",...}) or a multi-context ({\"kind\":\"multi\",\"user\":{...},\"organization\":{...}})",
         "additionalProperties": true
+      },
+      "ContextAttributeCatalogEntry": {
+        "type": "object",
+        "description": "A top-level attribute name seen on a context kind. Values are never stored.",
+        "required": [
+          "name",
+          "lastSeenAt"
+        ],
+        "properties": {
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "ContextCatalog": {
+        "type": "object",
+        "description": "Context kinds, attribute names and recent context keys that SDKs have sent for an\nenvironment. Powers the rule clause dropdowns in the management UI.",
+        "properties": {
+          "kinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContextKindCatalogEntry"
+            }
+          }
+        }
+      },
+      "ContextKindCatalogEntry": {
+        "type": "object",
+        "description": "One context kind seen from SDKs, most recently seen attributes and keys first.",
+        "required": [
+          "kind",
+          "lastSeenAt"
+        ],
+        "properties": {
+          "attributes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContextAttributeCatalogEntry"
+            }
+          },
+          "kind": {
+            "type": "string"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recentKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Recently seen non-anonymous context keys, newest first (capped)."
+          }
+        }
       },
       "ContextMeta": {
         "type": "object",

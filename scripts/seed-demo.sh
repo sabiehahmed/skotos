@@ -480,5 +480,30 @@ ingest_code="$(curl -sS -o /dev/null -w '%{http_code}' \
 [[ "${ingest_code}" == "202" ]] || die "event-ingest returned HTTP ${ingest_code}"
 ok "Demo telemetry ingested (HTTP 202; idempotent payload ID 'skotos-seed-demo-v1')"
 
+# Context catalog: SDK index events so rule clause dropdowns suggest real kinds/attributes/keys
+contexts_payload="$(jq -nc --argjson now "${now_ms}" '
+  [
+    { kind: "index", creationDate: ($now - 4000),
+      context: { kind: "multi",
+        user: { key: "user-alice", name: "Alice", email: "alice@acme.io", plan: "enterprise", country: "PK", betaOptIn: true },
+        organization: { key: "org-acme", name: "Acme Inc", tier: "enterprise", seats: 240 } } },
+    { kind: "index", creationDate: ($now - 3000),
+      context: { kind: "user", key: "user-bob", name: "Bob", email: "bob@globex.com", plan: "pro", signupDate: "2026-03-14" } },
+    { kind: "index", creationDate: ($now - 2000),
+      context: { kind: "device", key: "device-ios-7f3a", osName: "iOS", osVersion: "19.1.0", appVersion: "4.2.0", model: "iPhone17,2" } },
+    { kind: "index", creationDate: ($now - 1000),
+      context: { kind: "user", key: "anon-5c1e", anonymous: true, country: "DE" } }
+  ]
+')"
+contexts_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+  -X POST \
+  -H "Authorization: ${DEV_SDK_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "X-Skotos-Payload-ID: skotos-seed-demo-contexts-v1" \
+  -d "${contexts_payload}" \
+  "${EVENT_INGEST_URL}/events/v1/bulk")"
+[[ "${contexts_code}" == "202" ]] || die "event-ingest returned HTTP ${contexts_code} for contexts"
+ok "Demo contexts ingested (HTTP 202; context catalog for rule dropdowns)"
+
 printf '\n[seed] Demo environment ready! Sign in at http://127.0.0.1:%s with %s / %s\n' \
   "${SKOTOS_WEB_PORT:-5173}" "${ADMIN_EMAIL}" "${ADMIN_PASSWORD}"
