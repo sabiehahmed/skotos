@@ -205,7 +205,7 @@
   border-radius: var(--sk-radius-md);
   box-shadow: var(--sk-shadow-md);
   padding: 4px;
-  z-index: var(--sk-z-dropdown);
+  z-index: var(--sk-z-popover);
   min-width: var(--radix-select-trigger-width);
   max-height: 280px;
   overflow-y: auto;

@@ -81,6 +81,9 @@
   --sk-z-sticky: 20;
   --sk-z-dropdown: 40;
   --sk-z-modal: 60;
+  /* Portaled popper layers (select, popover, menu) must sit above modals so
+     they stay visible and clickable when opened from inside a dialog. */
+  --sk-z-popover: 70;
   --sk-z-toast: 80;
   --sk-z-tooltip: 90;
 
