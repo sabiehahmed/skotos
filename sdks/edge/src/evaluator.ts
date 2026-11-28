@@ -1,4 +1,4 @@
-import { bigSegmentKeyHash, sha1Hex } from "./sha1";
+import { bigSegmentKeyHash, sha1Hex } from "./sha1.js";
 import type {
   BigSegmentSnapshot,
   Clause,
@@ -14,7 +14,7 @@ import type {
   RedactionConfig,
   SingleContext,
   SkotosContext,
-} from "./types";
+} from "./types.js";
 
 const BUCKET_SCALE = 100_000n;
 const TWO_POW_60 = 1n << 60n;

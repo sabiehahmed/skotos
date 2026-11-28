@@ -47,6 +47,7 @@ import { InsightsPage } from "./pages/InsightsPage";
 import { LiveDebuggerPage } from "./pages/LiveDebuggerPage";
 import { LoginPage } from "./pages/LoginPage";
 import { PipelinesPage } from "./pages/PipelinesPage";
+import { SdkSetupPage } from "./pages/SdkSetupPage";
 import { SegmentsPage } from "./pages/SegmentsPage";
 import {
   EnvironmentsSettingsPage,
@@ -278,6 +279,20 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               Live Debugger
             </Button>
             <Button
+              variant={location.pathname.includes("/sdk-setup") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/sdk-setup",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.Plugs size={16} />
+              SDK Setup
+            </Button>
+            <Button
               variant={isPath("/audit-log") ? "secondary" : "ghost"}
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/audit-log" })}
@@ -486,6 +501,17 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             onSelect: () =>
               void navigate({
                 to: "/projects/$projectKey/debugger",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
+            id: "sdk-setup",
+            label: "Set up an SDK (install & connect an app)",
+            hint: activeEnv?.key,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/sdk-setup",
                 params: { projectKey: activeProjectKey },
                 search: activeEnv ? { env: activeEnv.key } : {},
               }),
@@ -715,6 +741,48 @@ function DebuggerRouteView() {
   return <LiveDebuggerPage projectKey={projectKey} activeEnv={activeEnv} />;
 }
 
+function SdkSetupRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const search = useSearch({ strict: false }) as EnvSearch;
+  const navigate = useNavigate();
+  const meQuery = useAuthMe();
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  const environments = envsQuery.data?.items ?? [];
+  const activeEnv = environments.find((e) => e.key === search.env) ?? environments[0];
+  if (!meQuery.data) return null;
+  return (
+    <SdkSetupPage
+      projectKey={projectKey}
+      environments={environments}
+      activeEnv={activeEnv}
+      userRole={meQuery.data.role}
+      onEnvChange={(envKey) =>
+        void navigate({
+          to: "/projects/$projectKey/sdk-setup",
+          params: { projectKey },
+          search: { env: envKey },
+          replace: true,
+        })
+      }
+      onOpenFlag={(flagKey) =>
+        void navigate({
+          to: "/projects/$projectKey/flags/$flagKey",
+          params: { projectKey, flagKey },
+          search: activeEnv ? { env: activeEnv.key } : {},
+        })
+      }
+    />
+  );
+}
+
 function ExperimentsRouteView() {
   const { projectKey } = useParams({ strict: false }) as { projectKey: string };
   const search = useSearch({ strict: false }) as EnvSearch;
@@ -936,6 +1004,15 @@ function buildAppRouter(initialEntries?: string[]) {
     component: DebuggerRouteView,
   });
 
+  const sdkSetupRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/sdk-setup",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: SdkSetupRouteView,
+  });
+
   const approvalsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/approvals",
@@ -1002,6 +1079,7 @@ function buildAppRouter(initialEntries?: string[]) {
     rolloutsRoute,
     insightsRoute,
     debuggerRoute,
+    sdkSetupRoute,
     approvalsRoute,
     auditLogRoute,
     settingsProjectsRoute,

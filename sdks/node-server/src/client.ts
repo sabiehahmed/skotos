@@ -7,7 +7,7 @@ import {
   numberVariation,
   redactContext,
   stringVariation,
-} from "./evaluator";
+} from "./evaluator.js";
 import type {
   EvalFlag,
   EvalSegment,
@@ -16,7 +16,7 @@ import type {
   RedactionConfig,
   SingleContext,
   SkotosContext,
-} from "./types";
+} from "./types.js";
 
 interface StoredEntry<T> {
   version: number;
