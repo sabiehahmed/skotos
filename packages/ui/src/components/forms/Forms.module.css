@@ -6,12 +6,16 @@
   justify-content: center;
   gap: var(--sk-space-2);
   border-radius: var(--sk-radius-md);
-  font-weight: 550;
+  font-family: var(--sk-font-sans);
+  font-weight: 500;
+  letter-spacing: -0.005em;
   border: 1px solid transparent;
   cursor: pointer;
   transition: background var(--sk-duration-fast) var(--sk-ease-out),
     border-color var(--sk-duration-fast) var(--sk-ease-out),
-    color var(--sk-duration-fast) var(--sk-ease-out);
+    box-shadow var(--sk-duration-fast) var(--sk-ease-out),
+    color var(--sk-duration-fast) var(--sk-ease-out),
+    filter var(--sk-duration-fast) var(--sk-ease-out);
   white-space: nowrap;
   text-decoration: none;
 }
@@ -44,20 +48,25 @@
   font-size: var(--sk-text-md);
 }
 
+/* Primary: the bright white key ("Start wind-down"). */
 .btnPrimary {
-  background: var(--sk-color-accent);
+  background: var(--sk-primary-fill);
   color: var(--sk-color-text-inverse);
+  border-color: transparent;
+  box-shadow: var(--sk-primary-shadow);
 }
 
 .btnPrimary:hover:not(:disabled) {
-  background: var(--sk-color-accent-hover);
+  filter: brightness(1.04);
   text-decoration: none;
 }
 
+/* Secondary: raised dark control (also the active sidebar item). */
 .btnSecondary {
-  background: var(--sk-color-surface);
+  background: var(--sk-control-fill);
   color: var(--sk-color-text);
-  border-color: var(--sk-color-border-strong);
+  border-color: transparent;
+  box-shadow: var(--sk-control-shadow);
 }
 
 .btnSecondary:hover:not(:disabled) {
@@ -67,22 +76,24 @@
 
 .btnGhost {
   background: transparent;
-  color: var(--sk-color-text-secondary);
+  color: var(--sk-color-text-muted);
 }
 
 .btnGhost:hover:not(:disabled) {
-  background: var(--sk-color-surface-hover);
+  background: var(--sk-color-accent-subtle);
   color: var(--sk-color-text);
   text-decoration: none;
 }
 
 .btnDanger {
-  background: var(--sk-color-danger);
-  color: #ffffff;
+  background: var(--sk-color-danger-subtle);
+  color: var(--sk-color-danger);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--sk-color-danger) 45%, transparent);
 }
 
 .btnDanger:hover:not(:disabled) {
-  background: var(--sk-color-danger-hover);
+  background: color-mix(in srgb, var(--sk-color-danger) 18%, transparent);
   text-decoration: none;
 }
 
@@ -102,8 +113,8 @@
   align-items: center;
   gap: 4px;
   font-size: var(--sk-text-sm);
-  font-weight: 550;
-  color: var(--sk-color-text);
+  font-weight: 450;
+  color: var(--sk-color-text-muted);
 }
 
 .requiredMark {
@@ -126,16 +137,23 @@
   color: var(--sk-color-danger);
 }
 
+/* Inputs are recessed wells: darker fill, inner shadow, hairline stroke. */
 .input,
 .textarea {
   width: 100%;
-  background: var(--sk-color-surface);
+  background: var(--sk-recessed-fill);
   color: var(--sk-color-text);
   border: 1px solid var(--sk-color-border-strong);
   border-radius: var(--sk-radius-md);
+  box-shadow: var(--sk-recessed-shadow);
   font-size: var(--sk-text-sm);
   transition: border-color var(--sk-duration-fast) var(--sk-ease-out),
     box-shadow var(--sk-duration-fast) var(--sk-ease-out);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--sk-color-text-faint);
 }
 
 .input {
@@ -153,12 +171,12 @@
 .textarea:focus {
   outline: none;
   border-color: var(--sk-color-border-focus);
-  box-shadow: var(--sk-focus-ring);
+  box-shadow: var(--sk-recessed-shadow), var(--sk-focus-ring);
 }
 
 .input:disabled,
 .textarea:disabled {
-  background: var(--sk-color-surface-subtle);
+  background: var(--sk-recessed-fill);
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -169,6 +187,7 @@
 
 .inputMono {
   font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
 }
 
 /* Radix Select */
@@ -180,18 +199,26 @@
   height: 36px;
   padding: 0 var(--sk-space-3);
   min-width: 140px;
-  background: var(--sk-color-surface);
+  background: var(--sk-control-fill);
   color: var(--sk-color-text);
-  border: 1px solid var(--sk-color-border-strong);
+  border: 1px solid transparent;
   border-radius: var(--sk-radius-md);
+  box-shadow: var(--sk-control-shadow);
   font-size: var(--sk-text-sm);
   cursor: pointer;
 }
 
+.selectTrigger:hover:not(:disabled) {
+  background: var(--sk-color-surface-hover);
+}
+
+.selectTrigger svg {
+  color: var(--sk-color-text-muted);
+}
+
 .selectTrigger:focus-visible {
   outline: none;
-  border-color: var(--sk-color-border-focus);
-  box-shadow: var(--sk-focus-ring);
+  box-shadow: var(--sk-control-shadow), var(--sk-focus-ring);
 }
 
 .selectTrigger:disabled {
@@ -200,9 +227,9 @@
 }
 
 .selectContent {
-  background: var(--sk-color-surface-elevated);
-  border: 1px solid var(--sk-color-border-strong);
-  border-radius: var(--sk-radius-md);
+  background: var(--sk-card-fill);
+  border: none;
+  border-radius: var(--sk-radius-lg);
   box-shadow: var(--sk-shadow-md);
   padding: 4px;
   z-index: var(--sk-z-popover);
@@ -226,7 +253,7 @@
 
 .selectItem[data-highlighted] {
   background: var(--sk-color-accent-subtle);
-  color: var(--sk-color-accent);
+  color: var(--sk-color-text);
 }
 
 /* Radix Checkbox */
@@ -243,7 +270,8 @@
   height: 18px;
   border-radius: var(--sk-radius-xs);
   border: 1px solid var(--sk-color-border-strong);
-  background: var(--sk-color-surface);
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -252,9 +280,9 @@
 }
 
 .checkbox[data-state="checked"] {
-  background: var(--sk-color-accent);
-  border-color: var(--sk-color-accent);
-  color: #ffffff;
+  background: var(--sk-primary-fill);
+  border-color: transparent;
+  color: var(--sk-color-text-inverse);
 }
 
 .checkbox:focus-visible {
@@ -272,8 +300,9 @@
 .switchRoot {
   width: 40px;
   height: 22px;
-  background: var(--sk-color-border-strong);
-  border-radius: var(--sk-radius-full);
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow), inset 0 0 0 0.5px var(--sk-control-stroke);
+  border-radius: var(--sk-radius-sm);
   border: none;
   position: relative;
   cursor: pointer;
@@ -283,7 +312,8 @@
 }
 
 .switchRoot[data-state="checked"] {
-  background: var(--sk-color-success);
+  background: var(--sk-primary-fill);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.12);
 }
 
 .switchRoot:disabled {
@@ -300,42 +330,50 @@
   display: block;
   width: 18px;
   height: 18px;
-  background: #ffffff;
-  border-radius: var(--sk-radius-full);
-  box-shadow: var(--sk-shadow-xs);
+  background: var(--sk-switch-thumb);
+  border-radius: 4px;
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.5);
   transform: translateX(2px);
   transition: transform var(--sk-duration-fast) var(--sk-ease-out);
 }
 
 .switchThumb[data-state="checked"] {
   transform: translateX(20px);
+  background: var(--sk-switch-thumb-on);
 }
 
 /* Radix ToggleGroup */
+/* Segmented control: recessed track, raised active segment. */
 .toggleGroup {
   display: inline-flex;
-  background: var(--sk-color-surface-subtle);
+  background: var(--sk-recessed-fill);
   padding: 3px;
   border-radius: var(--sk-radius-md);
-  border: 1px solid var(--sk-color-border);
+  border: none;
+  box-shadow: var(--sk-recessed-shadow), inset 0 0 0 0.5px var(--sk-control-stroke);
   gap: 2px;
 }
 
 .toggleGroupItem {
   border: none;
   background: transparent;
-  color: var(--sk-color-text-secondary);
+  color: var(--sk-color-text-muted);
   padding: 5px 12px;
   border-radius: var(--sk-radius-sm);
-  font-size: var(--sk-text-xs);
-  font-weight: 550;
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
+  letter-spacing: 0.02em;
   cursor: pointer;
 }
 
-.toggleGroupItem[data-state="on"] {
-  background: var(--sk-color-surface);
+.toggleGroupItem:hover {
   color: var(--sk-color-text);
-  box-shadow: var(--sk-shadow-xs);
+}
+
+.toggleGroupItem[data-state="on"] {
+  background: var(--sk-control-fill);
+  color: var(--sk-color-text);
+  box-shadow: var(--sk-control-shadow);
 }
 
 /* Radix Slider */
@@ -350,18 +388,19 @@
 }
 
 .sliderTrack {
-  background: var(--sk-color-surface-subtle);
-  border: 1px solid var(--sk-color-border);
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow), inset 0 0 0 0.5px var(--sk-control-stroke);
+  border: none;
   position: relative;
   flex-grow: 1;
-  border-radius: var(--sk-radius-full);
+  border-radius: var(--sk-radius-sm);
   height: 6px;
 }
 
 .sliderRange {
   position: absolute;
   background: var(--sk-color-accent);
-  border-radius: var(--sk-radius-full);
+  border-radius: var(--sk-radius-sm);
   height: 100%;
 }
 
@@ -369,9 +408,10 @@
   display: block;
   width: 16px;
   height: 16px;
-  background: var(--sk-color-surface);
-  border: 2px solid var(--sk-color-accent);
-  border-radius: var(--sk-radius-full);
+  background: var(--sk-primary-fill);
+  border: none;
+  border-radius: var(--sk-radius-sm);
+  box-shadow: 0 0 0 3px var(--sk-color-bg), 0 1px 4px rgba(0, 0, 0, 0.6);
   cursor: pointer;
 }
 
@@ -390,19 +430,22 @@
   padding: 4px 8px;
   border: 1px solid var(--sk-color-border-strong);
   border-radius: var(--sk-radius-md);
-  background: var(--sk-color-surface);
+  background: var(--sk-recessed-fill);
+  box-shadow: var(--sk-recessed-shadow);
 }
 
 .tagChip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: var(--sk-radius-full);
-  background: var(--sk-color-accent-subtle);
-  color: var(--sk-color-accent);
-  font-size: var(--sk-text-xs);
-  font-weight: 550;
+  padding: 2px 6px 2px 8px;
+  border-radius: var(--sk-radius-sm);
+  background: var(--sk-control-fill);
+  box-shadow: var(--sk-control-shadow);
+  color: var(--sk-color-text);
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-2xs);
+  font-weight: 400;
 }
 
 .tagRemoveBtn {
@@ -435,9 +478,9 @@
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: var(--sk-color-surface-elevated);
-  border: 1px solid var(--sk-color-border-strong);
-  border-radius: var(--sk-radius-md);
+  background: var(--sk-card-fill);
+  border: none;
+  border-radius: var(--sk-radius-lg);
   box-shadow: var(--sk-shadow-md);
   padding: 4px;
   z-index: var(--sk-z-dropdown);
@@ -462,7 +505,7 @@
 
 .comboboxOption:hover {
   background: var(--sk-color-accent-subtle);
-  color: var(--sk-color-accent);
+  color: var(--sk-color-text);
 }
 
 /* KeyValueEditor */

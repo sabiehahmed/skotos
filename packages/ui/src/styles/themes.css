@@ -1,48 +1,89 @@
-/* Dark Theme Overrides (data-theme="dark") */
+/* Theme overrides.
+ * Dark is the default palette and lives on :root in tokens.css.
+ * Light is a monochrome counterpart using the same structure. */
 
 :root[data-theme="dark"],
 [data-theme="dark"] {
   color-scheme: dark;
-
-  --sk-color-bg: #0b0f17;
-  --sk-color-surface: #111827;
-  --sk-color-surface-subtle: #182132;
-  --sk-color-surface-hover: #1f2a3e;
-  --sk-color-surface-elevated: #161f30;
-
-  --sk-color-border: #263248;
-  --sk-color-border-strong: #374763;
-  --sk-color-border-focus: #60a5fa;
-
-  --sk-color-text: #f1f5f9;
-  --sk-color-text-secondary: #cbd5e1;
-  --sk-color-text-muted: #94a3b8;
-  --sk-color-text-inverse: #0b0f17;
-
-  --sk-color-accent: #60a5fa;
-  --sk-color-accent-hover: #93c5fd;
-  --sk-color-accent-subtle: rgba(59, 130, 246, 0.16);
-
-  --sk-color-success: #34d399;
-  --sk-color-success-subtle: rgba(16, 185, 129, 0.14);
-  --sk-color-warning: #fbbf24;
-  --sk-color-warning-subtle: rgba(245, 158, 11, 0.14);
-  --sk-color-danger: #f87171;
-  --sk-color-danger-hover: #ef4444;
-  --sk-color-danger-subtle: rgba(239, 68, 68, 0.15);
-  --sk-color-info: #38bdf8;
-  --sk-color-info-subtle: rgba(14, 165, 233, 0.14);
-
-  --sk-env-accent-subtle: color-mix(in srgb, var(--sk-env-accent) 18%, var(--sk-color-surface));
-  --sk-env-accent-border: color-mix(in srgb, var(--sk-env-accent) 50%, var(--sk-color-border));
-
-  --sk-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --sk-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-  --sk-shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45);
-  --sk-shadow-lg: 0 18px 36px rgba(0, 0, 0, 0.6);
 }
 
 :root[data-theme="light"],
 [data-theme="light"] {
   color-scheme: light;
+
+  --sk-color-bg: #f5f5f5;
+  --sk-color-surface: #ffffff;
+  --sk-color-surface-subtle: #ededed;
+  --sk-color-surface-hover: #ececec;
+  --sk-color-surface-elevated: #ffffff;
+
+  --sk-color-border: #e3e3e3;
+  --sk-color-border-strong: #d0d0d0;
+  --sk-color-border-focus: #5c5c61;
+
+  --sk-color-text: #0a0a0a;
+  --sk-color-text-secondary: #2b2b2e;
+  --sk-color-text-muted: #5c5c61;
+  --sk-color-text-faint: #8e8e93;
+  --sk-color-text-inverse: #f5f5f5;
+
+  --sk-color-accent: #0a0a0a;
+  --sk-color-accent-hover: #262626;
+  --sk-color-accent-subtle: rgba(10, 10, 10, 0.06);
+
+  --sk-color-success: #15803d;
+  --sk-color-success-subtle: rgba(21, 128, 61, 0.1);
+  --sk-color-warning: #b45309;
+  --sk-color-warning-subtle: rgba(180, 83, 9, 0.1);
+  --sk-color-danger: #b91c1c;
+  --sk-color-danger-hover: #991b1b;
+  --sk-color-danger-subtle: rgba(185, 28, 28, 0.08);
+  --sk-color-info: #1d4ed8;
+  --sk-color-info-subtle: rgba(29, 78, 216, 0.08);
+
+  --sk-env-accent-subtle: color-mix(in srgb, var(--sk-env-accent) 8%, var(--sk-color-bg));
+
+  --sk-card-fill: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  --sk-card-stroke: rgba(0, 0, 0, 0.12);
+  --sk-card-shadow:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    inset 0 0.3px 0.25px rgba(255, 255, 255, 0.9),
+    0 4px 16px rgba(0, 0, 0, 0.05);
+  --sk-card-hatch: rgba(0, 0, 0, 0.08);
+  --sk-card-bloom: rgba(0, 0, 0, 0.03);
+  --sk-card-divider: rgba(0, 0, 0, 0.07);
+  --sk-row-hover: rgba(0, 0, 0, 0.025);
+  --sk-control-stroke: rgba(0, 0, 0, 0.12);
+
+  --sk-recessed-fill: #f0f0f0;
+  --sk-recessed-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.08),
+    0 0.4px 0.5px rgba(255, 255, 255, 0.9);
+
+  --sk-control-fill: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+  --sk-control-shadow:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    0 1px 2px rgba(0, 0, 0, 0.06);
+  --sk-primary-fill: linear-gradient(180deg, #262626 0%, #0a0a0a 100%);
+  --sk-primary-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+
+  --sk-switch-thumb: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+  --sk-switch-thumb-on: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
+
+  --sk-meter-on: #5c5c61;
+  --sk-meter-off: #dcdcdc;
+
+  --sk-canvas-dot: rgba(0, 0, 0, 0.06);
+
+  --sk-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --sk-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --sk-shadow-md:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    0 8px 24px rgba(0, 0, 0, 0.1);
+  --sk-shadow-lg:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    0 24px 48px rgba(0, 0, 0, 0.16);
+  --sk-focus-ring: 0 0 0 1px var(--sk-color-bg), 0 0 0 3px rgba(10, 10, 10, 0.3);
 }

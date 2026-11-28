@@ -15,6 +15,8 @@ body {
   font-family: var(--sk-font-sans);
   font-size: 16px;
   line-height: var(--sk-leading-normal);
+  font-feature-settings: "cv11", "ss01";
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -28,16 +30,29 @@ textarea {
 }
 
 a {
-  color: var(--sk-color-accent);
-  text-decoration: none;
+  color: var(--sk-color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--sk-color-border-strong);
+  text-underline-offset: 3px;
 }
 
 a:hover {
-  text-decoration: underline;
+  text-decoration-color: var(--sk-color-text-muted);
+}
+
+::selection {
+  background: rgba(245, 245, 245, 0.22);
+}
+
+/* Thin monochrome scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sk-color-border-strong) transparent;
 }
 
 code,
 pre,
 kbd {
   font-family: var(--sk-font-mono);
+  font-variant-ligatures: none;
 }

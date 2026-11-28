@@ -1,46 +1,108 @@
-/* Skotos Design Tokens — Zero Tailwind, CSS Custom Properties (ADR-0006) */
+/* Skotos Design Tokens — Zero Tailwind, CSS Custom Properties (ADR-0006)
+ *
+ * Visual language: dark, monochrome "instrument panel".
+ *   - Geist for UI copy, PP Supply Mono (falls back to Geist Mono) for data,
+ *     labels and numbers.
+ *   - #0A0A0A canvas, #1C1C1C dividers, #F5F5F5 text, #A6A6AB subtle text.
+ *   - Radii are restricted to 6px / 8px / 12px.
+ *   - Cards are built from fills and effects only: a #1C1C1C -> #161616
+ *     gradient, a 0.5px inside stroke, a soft drop shadow and a hairline
+ *     top highlight. Recessed panels sit darker (#070707) with an inner
+ *     shadow so they read as carved in.
+ *
+ * Dark is the default palette (on :root); themes.css holds the light
+ * overrides for [data-theme="light"].
+ */
 
 :root {
-  /* Light Theme Surface & Ink Palette */
-  --sk-color-bg: #f8fafc;
-  --sk-color-surface: #ffffff;
-  --sk-color-surface-subtle: #f1f5f9;
-  --sk-color-surface-hover: #eef2f6;
-  --sk-color-surface-elevated: #ffffff;
+  color-scheme: dark;
 
-  --sk-color-border: #e2e8f0;
-  --sk-color-border-strong: #cbd5e1;
-  --sk-color-border-focus: #2563eb;
+  /* Surface & Ink Palette */
+  --sk-color-bg: #0a0a0a;
+  --sk-color-surface: #121212;
+  --sk-color-surface-subtle: #070707;
+  --sk-color-surface-hover: #1a1a1a;
+  --sk-color-surface-elevated: #161616;
 
-  --sk-color-text: #0f172a;
-  --sk-color-text-secondary: #334155;
-  --sk-color-text-muted: #475569;
-  --sk-color-text-inverse: #ffffff;
+  --sk-color-border: #1c1c1c;
+  --sk-color-border-strong: #2a2a2a;
+  --sk-color-border-focus: #a6a6ab;
 
-  /* Brand & Semantic Accents */
-  --sk-color-accent: #2563eb;
-  --sk-color-accent-hover: #1d4ed8;
-  --sk-color-accent-subtle: color-mix(in srgb, var(--sk-color-accent) 12%, transparent);
+  --sk-color-text: #f5f5f5;
+  --sk-color-text-secondary: #d4d4d8;
+  --sk-color-text-muted: #a6a6ab;
+  --sk-color-text-faint: #6b6b70;
+  --sk-color-text-inverse: #0a0a0a;
 
-  --sk-color-success: #047857;
-  --sk-color-success-subtle: #ecfdf5;
-  --sk-color-warning: #b45309;
-  --sk-color-warning-subtle: #fffbeb;
-  --sk-color-danger: #b91c1c;
-  --sk-color-danger-hover: #991b1b;
-  --sk-color-danger-subtle: #fef2f2;
-  --sk-color-info: #0369a1;
-  --sk-color-info-subtle: #f0f9ff;
+  /* Brand accent is monochrome: white on black */
+  --sk-color-accent: #f5f5f5;
+  --sk-color-accent-hover: #ffffff;
+  --sk-color-accent-subtle: rgba(255, 255, 255, 0.06);
+
+  /* Semantic accents (muted so they sit inside the monochrome UI) */
+  --sk-color-success: #4ade80;
+  --sk-color-success-subtle: rgba(74, 222, 128, 0.1);
+  --sk-color-warning: #fbbf24;
+  --sk-color-warning-subtle: rgba(251, 191, 36, 0.1);
+  --sk-color-danger: #f87171;
+  --sk-color-danger-hover: #ef4444;
+  --sk-color-danger-subtle: rgba(248, 113, 113, 0.1);
+  --sk-color-info: #8ab4ff;
+  --sk-color-info-subtle: rgba(138, 180, 255, 0.1);
 
   /* Dynamic Environment Accent (overridden per active environment, e.g. #EF4444 for prod) */
-  --sk-env-accent: var(--sk-color-accent);
-  --sk-env-accent-subtle: color-mix(in srgb, var(--sk-env-accent) 12%, var(--sk-color-surface));
+  --sk-env-accent: var(--sk-color-text-muted);
+  --sk-env-accent-subtle: color-mix(in srgb, var(--sk-env-accent) 8%, var(--sk-color-bg));
   --sk-env-accent-border: color-mix(in srgb, var(--sk-env-accent) 40%, var(--sk-color-border));
 
-  /* Typography */
-  --sk-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --sk-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Card construction (see card breakdown reference) */
+  --sk-card-fill: linear-gradient(180deg, #1c1c1c 0%, #161616 100%);
+  --sk-card-stroke: rgba(61, 61, 61, 0.9);
+  --sk-card-shadow:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    inset 0 0.3px 0.25px rgba(255, 255, 255, 0.5),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+  --sk-card-hatch: rgba(74, 74, 74, 0.55);
+  --sk-card-bloom: rgba(154, 154, 154, 0.07);
+  --sk-card-divider: rgba(255, 255, 255, 0.06);
+  --sk-row-hover: rgba(255, 255, 255, 0.025);
+  --sk-control-stroke: rgba(255, 255, 255, 0.09);
 
+  /* Recessed panels (key/value config, code, tracks) */
+  --sk-recessed-fill: #070707;
+  --sk-recessed-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.25),
+    0 0.4px 0.5px rgba(84, 84, 84, 0.6);
+
+  /* Raised controls (buttons, inputs, active nav) */
+  --sk-control-fill: linear-gradient(180deg, #1a1a1a 0%, #141414 100%);
+  --sk-control-shadow:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    inset 0 0.3px 0.25px rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  --sk-primary-fill: linear-gradient(180deg, #ffffff 0%, #e6e6e6 100%);
+  --sk-primary-shadow:
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(255, 255, 255, 0.08);
+
+  --sk-switch-thumb: linear-gradient(180deg, #4a4a4a 0%, #333333 100%);
+  --sk-switch-thumb-on: linear-gradient(180deg, #1c1c1c 0%, #0a0a0a 100%);
+
+  /* Data viz: dot meter + dither */
+  --sk-meter-on: #9a9a9a;
+  --sk-meter-off: #000000;
+
+  /* Canvas dot grid */
+  --sk-canvas-dot: rgba(255, 255, 255, 0.045);
+
+  /* Typography */
+  --sk-font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  --sk-font-mono: "PP Supply Mono", "Geist Mono", ui-monospace,
+    SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --sk-text-2xs: 0.6875rem;
   --sk-text-xs: 0.75rem;
   --sk-text-sm: 0.8125rem;
   --sk-text-md: 0.875rem;
@@ -51,6 +113,8 @@
 
   --sk-leading-tight: 1.25;
   --sk-leading-normal: 1.5;
+
+  --sk-label-tracking: 0.08em;
 
   /* Spacing Scale */
   --sk-space-1: 0.25rem;
@@ -63,19 +127,26 @@
   --sk-space-10: 2.5rem;
   --sk-space-12: 3rem;
 
-  /* Radii */
-  --sk-radius-xs: 0.25rem;
-  --sk-radius-sm: 0.375rem;
-  --sk-radius-md: 0.5rem;
-  --sk-radius-lg: 0.75rem;
+  /* Radii — only 6px, 8px and 12px. `full` is kept for true circles
+     (status dots, spinners) and never used for boxes or pills. */
+  --sk-radius-xs: 6px;
+  --sk-radius-sm: 6px;
+  --sk-radius-md: 8px;
+  --sk-radius-lg: 12px;
   --sk-radius-full: 9999px;
 
   /* Elevation */
-  --sk-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --sk-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --sk-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
-  --sk-shadow-lg: 0 16px 32px rgba(15, 23, 42, 0.14), 0 4px 8px rgba(15, 23, 42, 0.06);
-  --sk-focus-ring: 0 0 0 2px var(--sk-color-surface), 0 0 0 4px var(--sk-color-border-focus);
+  --sk-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sk-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --sk-shadow-md:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    inset 0 0.3px 0.25px rgba(255, 255, 255, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+  --sk-shadow-lg:
+    inset 0 0 0 0.5px var(--sk-card-stroke),
+    inset 0 0.3px 0.25px rgba(255, 255, 255, 0.5),
+    0 24px 48px rgba(0, 0, 0, 0.6);
+  --sk-focus-ring: 0 0 0 1px var(--sk-color-bg), 0 0 0 3px rgba(245, 245, 245, 0.35);
 
   /* Z-index layers */
   --sk-z-sticky: 20;
@@ -93,6 +164,6 @@
   --sk-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Layout metrics */
-  --sk-sidebar-width: 248px;
-  --sk-topbar-height: 54px;
+  --sk-sidebar-width: 256px;
+  --sk-topbar-height: 60px;
 }

@@ -6,7 +6,7 @@ import { Slot } from "@radix-ui/react-slot";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import clsx from "clsx";
-import { Check, ChevronDown, Plus, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Plus, Trash2, X } from "../../icons";
 import {
   forwardRef,
   useId,
