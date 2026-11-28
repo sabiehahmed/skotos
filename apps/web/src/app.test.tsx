@@ -321,6 +321,30 @@ const server = setupServer(
       ],
     }),
   ),
+  http.get("*/api/v1/members", () =>
+    HttpResponse.json({
+      items: [
+        {
+          id: mockMe.memberId,
+          orgId: mockOrg.id,
+          email: "admin@skotos.local",
+          displayName: "Skotos Admin",
+          role: "owner",
+          customRoleKeys: [],
+          createdAt: "2026-11-27T00:00:00Z",
+        },
+        {
+          id: "22222222-2222-2222-2222-222222222223",
+          orgId: mockOrg.id,
+          email: "guard@skotos.local",
+          displayName: "Guarded Dev",
+          role: "reader",
+          customRoleKeys: ["prod-guard"],
+          createdAt: "2026-11-27T00:00:00Z",
+        },
+      ],
+    }),
+  ),
   http.get("*/api/v1/teams", () =>
     HttpResponse.json({
       items: [
@@ -605,5 +629,47 @@ describe("@skotos/web management dashboard", () => {
 
     await user.click(screen.getByRole("button", { name: "Teams & SSO" }));
     expect(await screen.findByText("Checkout Engineering")).toBeInTheDocument();
+  });
+
+  it("lists custom roles in member role pickers and assigns them via the API", async () => {
+    let createdBody: Record<string, unknown> | undefined;
+    server.use(
+      http.post("*/api/v1/members", async ({ request }) => {
+        createdBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          {
+            id: "22222222-2222-2222-2222-222222222224",
+            orgId: mockOrg.id,
+            email: "new@skotos.local",
+            displayName: "New Dev",
+            role: "reader",
+            customRoleKeys: ["prod-guard"],
+            createdAt: "2026-11-27T00:00:00Z",
+          },
+          { status: 201 },
+        );
+      }),
+    );
+    const user = userEvent.setup();
+    render(<App initialEntries={["/settings/members"]} />);
+
+    const memberRole = await screen.findByRole("combobox", {
+      name: "Role for guard@skotos.local",
+    });
+    await waitFor(() => expect(memberRole).toHaveTextContent("Production Guard"));
+
+    await user.type(screen.getByLabelText("Email"), "new@skotos.local");
+    await user.type(screen.getByLabelText("Display Name"), "New Dev");
+    await user.click(screen.getByLabelText("Role"));
+    await user.click(await screen.findByRole("option", { name: "Production Guard" }));
+    await user.click(screen.getByRole("button", { name: "Add member" }));
+
+    await waitFor(() =>
+      expect(createdBody).toMatchObject({
+        email: "new@skotos.local",
+        role: "reader",
+        customRoleKeys: ["prod-guard"],
+      }),
+    );
   });
 });

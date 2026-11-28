@@ -256,6 +256,21 @@
   color: var(--sk-color-text);
 }
 
+.selectGroupLabel {
+  padding: 6px var(--sk-space-3) 4px;
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sk-color-text-muted);
+}
+
+.selectSeparator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--sk-color-border);
+}
+
 /* Radix Checkbox */
 .checkboxRow {
   display: inline-flex;

@@ -190,6 +190,8 @@ export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  /** Optional group heading; consecutive options with the same group render under one label. */
+  group?: string;
 }
 
 export interface SelectProps {
@@ -201,6 +203,32 @@ export interface SelectProps {
   ariaLabel?: string;
   id?: string;
   className?: string;
+}
+
+function groupSelectOptions(options: SelectOption[]) {
+  const sections: { group?: string; options: SelectOption[] }[] = [];
+  for (const opt of options) {
+    const last = sections[sections.length - 1];
+    if (last && last.group === opt.group) last.options.push(opt);
+    else sections.push({ group: opt.group, options: [opt] });
+  }
+  return sections;
+}
+
+function renderSelectItem(opt: SelectOption) {
+  return (
+    <SelectPrimitive.Item
+      key={opt.value}
+      value={opt.value}
+      disabled={opt.disabled}
+      className={styles.selectItem}
+    >
+      <SelectPrimitive.ItemText>{opt.label}</SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator>
+        <Check size={14} aria-hidden="true" />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  );
 }
 
 export function Select({
@@ -228,19 +256,19 @@ export function Select({
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content position="popper" sideOffset={4} className={styles.selectContent}>
           <SelectPrimitive.Viewport>
-            {options.map((opt) => (
-              <SelectPrimitive.Item
-                key={opt.value}
-                value={opt.value}
-                disabled={opt.disabled}
-                className={styles.selectItem}
-              >
-                <SelectPrimitive.ItemText>{opt.label}</SelectPrimitive.ItemText>
-                <SelectPrimitive.ItemIndicator>
-                  <Check size={14} aria-hidden="true" />
-                </SelectPrimitive.ItemIndicator>
-              </SelectPrimitive.Item>
-            ))}
+            {groupSelectOptions(options).map((section, idx) =>
+              section.group ? (
+                <SelectPrimitive.Group key={`${section.group}-${idx}`}>
+                  {idx > 0 && <SelectPrimitive.Separator className={styles.selectSeparator} />}
+                  <SelectPrimitive.Label className={styles.selectGroupLabel}>
+                    {section.group}
+                  </SelectPrimitive.Label>
+                  {section.options.map(renderSelectItem)}
+                </SelectPrimitive.Group>
+              ) : (
+                section.options.map(renderSelectItem)
+              ),
+            )}
           </SelectPrimitive.Viewport>
         </SelectPrimitive.Content>
       </SelectPrimitive.Portal>

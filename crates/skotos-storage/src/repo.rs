@@ -257,7 +257,18 @@ impl Storage {
         .fetch_optional(&self.pool)
         .await?
         .ok_or_else(|| StorageError::NotFound(format!("member {member_id}")))?;
-        parse_member_row(&row)
+        let mut member = parse_member_row(&row)?;
+        member.custom_role_keys = sqlx::query_scalar(
+            "SELECT cr.key FROM member_custom_roles mcr
+             JOIN custom_roles cr ON cr.id = mcr.role_id
+             WHERE mcr.org_id = $1 AND mcr.member_id = $2
+             ORDER BY mcr.created_at ASC, cr.key ASC",
+        )
+        .bind(org_id)
+        .bind(member_id)
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(member)
     }
 
     pub async fn list_members(&self, org_id: Uuid) -> Result<Vec<Member>, StorageError> {
@@ -268,7 +279,15 @@ impl Storage {
         .bind(org_id)
         .fetch_all(&self.pool)
         .await?;
-        rows.iter().map(parse_member_row).collect()
+        let mut members = rows
+            .iter()
+            .map(parse_member_row)
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut role_keys = self.list_member_custom_role_keys(org_id).await?;
+        for m in &mut members {
+            m.custom_role_keys = role_keys.remove(&m.id).unwrap_or_default();
+        }
+        Ok(members)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2499,6 +2518,7 @@ fn parse_member_row(row: &sqlx::postgres::PgRow) -> Result<Member, StorageError>
         email: row.get("email"),
         display_name: row.get("display_name"),
         role: parse_role(row.get::<String, _>("role").as_str())?,
+        custom_role_keys: Vec::new(),
         created_at: row.get("created_at"),
     })
 }

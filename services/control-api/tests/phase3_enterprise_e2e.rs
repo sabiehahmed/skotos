@@ -339,6 +339,68 @@ async fn phase3_enterprise_governance_big_segments_relay_debugger_and_devtools_e
         "explicit deny custom role inherited from Team MUST override built-in writer role"
     );
 
+    // Custom roles assigned directly from the Team Members screen: create + update + list.
+    let bad_role_res = owner_client
+        .post(format!("{cp_base}/api/v1/members"))
+        .json(&json!({
+            "email": format!("ghost@{slug}.test"),
+            "displayName": "Ghost",
+            "role": "reader",
+            "customRoleKeys": ["does-not-exist"]
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(
+        bad_role_res.status(),
+        404,
+        "unknown custom role key must be rejected"
+    );
+
+    let custom_member_res = owner_client
+        .post(format!("{cp_base}/api/v1/members"))
+        .json(&json!({
+            "email": format!("guarded@{slug}.test"),
+            "displayName": "Guarded User",
+            "role": "reader",
+            "customRoleKeys": ["deny-prod-flags"]
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(custom_member_res.status(), 201);
+    let custom_member: Value = custom_member_res.json().await.unwrap();
+    assert_eq!(custom_member["customRoleKeys"], json!(["deny-prod-flags"]));
+    let custom_member_id = custom_member["id"].as_str().unwrap().to_string();
+
+    let members_list: Value = owner_client
+        .get(format!("{cp_base}/api/v1/members"))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    let listed = members_list["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|m| m["id"] == custom_member_id.as_str())
+        .expect("custom-role member listed");
+    assert_eq!(listed["customRoleKeys"], json!(["deny-prod-flags"]));
+
+    let back_to_builtin: Value = owner_client
+        .patch(format!("{cp_base}/api/v1/members/{custom_member_id}"))
+        .json(&json!({ "role": "writer", "customRoleKeys": [] }))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    assert_eq!(back_to_builtin["role"], "writer");
+    assert_eq!(back_to_builtin["customRoleKeys"], json!([]));
+
     // =========================================================================
     // PILLAR 2: Mandatory Approval Workflows (409 guard + peer review + apply)
     // =========================================================================

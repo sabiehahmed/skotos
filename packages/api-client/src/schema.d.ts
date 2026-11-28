@@ -1826,6 +1826,8 @@ export interface components {
             name: string;
         };
         CreateMemberRequest: {
+            /** @description Custom RBAC role keys to assign directly to the new member. */
+            customRoleKeys?: string[] | null;
             displayName: string;
             email: string;
             password?: string | null;
@@ -2597,6 +2599,8 @@ export interface components {
         Member: {
             /** Format: date-time */
             createdAt: string;
+            /** @description Keys of custom RBAC roles assigned directly to this member (not via teams). */
+            customRoleKeys?: string[];
             displayName: string;
             email: string;
             externalSubjectId?: string | null;
@@ -3146,6 +3150,8 @@ export interface components {
             requireComments?: boolean | null;
         };
         UpdateMemberRequest: {
+            /** @description When present, replaces the member's directly assigned custom RBAC roles. */
+            customRoleKeys?: string[] | null;
             role: components["schemas"]["BuiltInRole"];
         };
         UpdateProjectRequest: {

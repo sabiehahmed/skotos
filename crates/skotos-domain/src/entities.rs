@@ -100,6 +100,9 @@ pub struct Member {
     pub email: String,
     pub display_name: String,
     pub role: BuiltInRole,
+    /// Keys of custom RBAC roles assigned directly to this member (not via teams).
+    #[serde(default)]
+    pub custom_role_keys: Vec<String>,
     pub created_at: DateTime<Utc>,
 }
 

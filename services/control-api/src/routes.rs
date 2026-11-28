@@ -1570,13 +1570,23 @@ async fn create_member(
     state
         .authorizer
         .authorize(&principal, required_action, &ResourceRef::org())?;
+    let custom_role_keys = req.custom_role_keys.unwrap_or_default();
+    if !custom_role_keys.is_empty() {
+        state
+            .authorizer
+            .authorize(&principal, Action::ManageRoles, &ResourceRef::org())?;
+        state
+            .storage
+            .ensure_custom_roles_exist(principal.org_id, &custom_role_keys)
+            .await?;
+    }
 
     let password_hash = match req.password.as_deref() {
         Some(pwd) if !pwd.is_empty() => Some(hash_password(pwd)?),
         _ => None,
     };
 
-    let created = state
+    let mut created = state
         .storage
         .create_member(
             principal.org_id,
@@ -1588,6 +1598,17 @@ async fn create_member(
             &principal.to_audit_actor(),
         )
         .await?;
+    if !custom_role_keys.is_empty() {
+        created.custom_role_keys = state
+            .storage
+            .assign_member_custom_roles(
+                principal.org_id,
+                created.id,
+                &custom_role_keys,
+                &principal.to_audit_actor(),
+            )
+            .await?;
+    }
     Ok((StatusCode::CREATED, Json(created)))
 }
 
@@ -1618,8 +1639,17 @@ async fn update_member(
     state
         .authorizer
         .authorize(&principal, action, &ResourceRef::org())?;
+    if let Some(keys) = req.custom_role_keys.as_deref() {
+        state
+            .authorizer
+            .authorize(&principal, Action::ManageRoles, &ResourceRef::org())?;
+        state
+            .storage
+            .ensure_custom_roles_exist(principal.org_id, keys)
+            .await?;
+    }
 
-    let updated = state
+    let mut updated = state
         .storage
         .update_member_role(
             principal.org_id,
@@ -1628,6 +1658,20 @@ async fn update_member(
             &principal.to_audit_actor(),
         )
         .await?;
+    updated.custom_role_keys = match req.custom_role_keys.as_deref() {
+        Some(keys) => {
+            state
+                .storage
+                .assign_member_custom_roles(
+                    principal.org_id,
+                    member_id,
+                    keys,
+                    &principal.to_audit_actor(),
+                )
+                .await?
+        }
+        None => existing.custom_role_keys,
+    };
     Ok(Json(updated))
 }
 

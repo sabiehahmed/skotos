@@ -28,7 +28,9 @@ import {
   skotosApi,
   unwrapApiResult,
   type BuiltInRole,
+  type CustomRole,
   type Environment,
+  type Member,
 } from "../lib/api";
 
 // =============================================================================
@@ -601,6 +603,49 @@ export function TokensSettingsPage({ userRole }: { userRole: BuiltInRole }) {
 // Members & RBAC Page
 // =============================================================================
 
+const CUSTOM_ROLE_PREFIX = "custom:";
+
+/** Built-in role a member keeps when a custom role is picked; the custom policy grants the rest. */
+const CUSTOM_ROLE_BASE: BuiltInRole = "reader";
+
+interface RoleSelection {
+  role: BuiltInRole;
+  customRoleKeys: string[];
+}
+
+function memberRoleValue(m: Pick<Member, "role" | "customRoleKeys">): string {
+  const firstCustom = m.customRoleKeys?.[0];
+  return firstCustom ? `${CUSTOM_ROLE_PREFIX}${firstCustom}` : m.role;
+}
+
+function parseRoleValue(value: string): RoleSelection {
+  if (value.startsWith(CUSTOM_ROLE_PREFIX)) {
+    return { role: CUSTOM_ROLE_BASE, customRoleKeys: [value.slice(CUSTOM_ROLE_PREFIX.length)] };
+  }
+  return { role: value as BuiltInRole, customRoleKeys: [] };
+}
+
+function roleOptions(owner: boolean, customRoles: CustomRole[]) {
+  const builtIn = [
+    { value: "reader", label: "Reader" },
+    { value: "writer", label: "Writer" },
+    { value: "admin", label: "Admin" },
+    ...(owner ? [{ value: "owner", label: "Owner" }] : []),
+  ].map((o) => (customRoles.length ? { ...o, group: "Built-in" } : o));
+  const custom = customRoles.map((r) => ({
+    value: `${CUSTOM_ROLE_PREFIX}${r.key}`,
+    label: r.name || r.key,
+    group: "Custom",
+  }));
+  return [...builtIn, ...custom];
+}
+
+function memberRoleLabel(m: Member, customRoles: CustomRole[]): string {
+  const keys = m.customRoleKeys ?? [];
+  if (!keys.length) return m.role;
+  return keys.map((k) => customRoles.find((r) => r.key === k)?.name || k).join(", ");
+}
+
 export function MembersSettingsPage({ userRole }: { userRole: BuiltInRole }) {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -610,25 +655,36 @@ export function MembersSettingsPage({ userRole }: { userRole: BuiltInRole }) {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<BuiltInRole>("writer");
+  const [roleValue, setRoleValue] = useState<string>("writer");
 
   const membersQuery = useQuery({
     queryKey: ["members"],
     queryFn: async () => unwrapApiResult(await skotosApi.GET("/api/v1/members")),
   });
 
+  // Shares the cache key with the Custom RBAC Roles page, so new roles show up here.
+  const customRolesQuery = useQuery({
+    queryKey: ["custom-roles"],
+    queryFn: async () => unwrapApiResult(await skotosApi.GET("/api/v1/roles")),
+  });
+  const customRoles = customRolesQuery.data?.items ?? [];
+  const options = roleOptions(owner, customRoles);
+
   const createMutation = useMutation({
-    mutationFn: async () =>
-      unwrapApiResult(
+    mutationFn: async () => {
+      const { role, customRoleKeys } = parseRoleValue(roleValue);
+      return unwrapApiResult(
         await skotosApi.POST("/api/v1/members", {
           body: {
             email: email.trim(),
             displayName: displayName.trim(),
             role,
+            customRoleKeys,
             password: password || undefined,
           },
         }),
-      ),
+      );
+    },
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["members"] });
       setEmail("");
@@ -640,11 +696,11 @@ export function MembersSettingsPage({ userRole }: { userRole: BuiltInRole }) {
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: async (args: { memberId: string; role: BuiltInRole }) =>
+    mutationFn: async (args: { memberId: string } & RoleSelection) =>
       unwrapApiResult(
         await skotosApi.PATCH("/api/v1/members/{memberId}", {
           params: { path: { memberId: args.memberId } },
-          body: { role: args.role },
+          body: { role: args.role, customRoleKeys: args.customRoleKeys },
         }),
       ),
     onSuccess: async () => {
@@ -701,14 +757,9 @@ export function MembersSettingsPage({ userRole }: { userRole: BuiltInRole }) {
             <FormField label="Role" htmlFor="mem-role">
               <Select
                 id="mem-role"
-                value={role}
-                onValueChange={(v) => setRole(v as BuiltInRole)}
-                options={[
-                  { value: "reader", label: "Reader" },
-                  { value: "writer", label: "Writer" },
-                  { value: "admin", label: "Admin" },
-                  ...(owner ? [{ value: "owner", label: "Owner" }] : []),
-                ]}
+                value={roleValue}
+                onValueChange={setRoleValue}
+                options={options}
               />
             </FormField>
             <Button
@@ -747,19 +798,14 @@ export function MembersSettingsPage({ userRole }: { userRole: BuiltInRole }) {
               admin && (owner || m.role !== "owner") ? (
                 <Select
                   ariaLabel={`Role for ${m.email}`}
-                  value={m.role}
-                  onValueChange={(r) =>
-                    updateRoleMutation.mutate({ memberId: m.id, role: r as BuiltInRole })
+                  value={memberRoleValue(m)}
+                  onValueChange={(v) =>
+                    updateRoleMutation.mutate({ memberId: m.id, ...parseRoleValue(v) })
                   }
-                  options={[
-                    { value: "reader", label: "Reader" },
-                    { value: "writer", label: "Writer" },
-                    { value: "admin", label: "Admin" },
-                    ...(owner ? [{ value: "owner", label: "Owner" }] : []),
-                  ]}
+                  options={options}
                 />
               ) : (
-                <Badge tone="accent">{m.role}</Badge>
+                <Badge tone="accent">{memberRoleLabel(m, customRoles)}</Badge>
               ),
           },
           {
