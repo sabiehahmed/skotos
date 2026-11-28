@@ -2,13 +2,284 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Skotos Control Plane API",
-    "description": "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, scheduling, triggers, webhooks, usage analytics, simulations, revisions, audit logs, API tokens, and members.",
+    "description": "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, Big Segments, custom RBAC roles, teams, approval workflows, release pipelines, workflows, SSO/SCIM, code references, scheduling, triggers, webhooks, usage analytics, simulations, revisions, audit logs, API tokens, and members.",
     "license": {
       "name": ""
     },
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/applications": {
+      "get": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "list_applications",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "create_application",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApplicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{appKey}/versions": {
+      "post": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "add_application_version",
+        "parameters": [
+          {
+            "name": "appKey",
+            "in": "path",
+            "description": "Application key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddApplicationVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationVersion"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals": {
+      "get": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "list_approvals",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/{approvalId}": {
+      "get": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "get_approval",
+        "parameters": [
+          {
+            "name": "approvalId",
+            "in": "path",
+            "description": "Approval request UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "cancel_approval",
+        "parameters": [
+          {
+            "name": "approvalId",
+            "in": "path",
+            "description": "Approval request UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/{approvalId}/apply": {
+      "post": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "apply_approval",
+        "parameters": [
+          {
+            "name": "approvalId",
+            "in": "path",
+            "description": "Approval request UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyApprovalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/approvals/{approvalId}/reviews": {
+      "post": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "review_approval",
+        "parameters": [
+          {
+            "name": "approvalId",
+            "in": "path",
+            "description": "Approval request UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewApprovalRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/audit-log": {
       "get": {
         "tags": [
@@ -110,6 +381,56 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit-log/archives": {
+      "get": {
+        "tags": [
+          "audit-log"
+        ],
+        "operationId": "list_audit_archives",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditArchiveListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/audit-log/export": {
+      "post": {
+        "tags": [
+          "audit-log"
+        ],
+        "operationId": "export_audit_archive",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportAuditArchiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditArchiveRecord"
                 }
               }
             }
@@ -443,6 +764,48 @@
         }
       }
     },
+    "/api/v1/members/{memberId}/roles": {
+      "put": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "assign_member_roles",
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "path",
+            "description": "Member UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignMemberRolesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignMemberRolesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects": {
       "get": {
         "tags": [
@@ -666,6 +1029,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/code-refs": {
+      "post": {
+        "tags": [
+          "devtools"
+        ],
+        "operationId": "upsert_code_refs",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCodeRefsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeRefListResponse"
                 }
               }
             }
@@ -939,6 +1343,56 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/approval-settings": {
+      "put": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "update_env_approval_settings",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvironmentApprovalSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Environment"
                 }
               }
             }
@@ -1386,6 +1840,229 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}/members": {
+      "post": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "mutate_big_segment_members",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BigSegmentMembersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BigSegmentStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}/membership/{contextKey}": {
+      "get": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "check_big_segment_membership",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "contextKey",
+            "in": "path",
+            "description": "Context key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BigSegmentMembershipCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/segments/{segmentKey}/schedules": {
+      "get": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "list_scheduled_segment_changes",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledSegmentListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "create_scheduled_segment_change",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "segmentKey",
+            "in": "path",
+            "description": "Segment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduledSegmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduledSegmentChange"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/environments/{envKey}/usage": {
       "get": {
         "tags": [
@@ -1756,6 +2433,46 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/code-refs": {
+      "get": {
+        "tags": [
+          "devtools"
+        ],
+        "operationId": "list_flag_code_refs",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeRefListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/flags/{flagKey}/copy": {
       "post": {
         "tags": [
@@ -1809,6 +2526,112 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/approvals": {
+      "get": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "list_flag_approvals",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "approvals"
+        ],
+        "operationId": "create_flag_approval",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApprovalRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequest"
                 }
               }
             }
@@ -2452,6 +3275,881 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows": {
+      "get": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "list_workflows",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "create_workflow",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkflowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagWorkflow"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows/{workflowId}": {
+      "delete": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "cancel_workflow",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "description": "Workflow UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/workflows/{workflowId}/advance": {
+      "post": {
+        "tags": [
+          "automation"
+        ],
+        "operationId": "advance_workflow",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "workflowId",
+            "in": "path",
+            "description": "Workflow UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvanceWorkflowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagWorkflow"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/release": {
+      "get": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "get_flag_release",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/FlagRelease"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "attach_flag_release",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachReleasePipelineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagRelease"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/release/phases/{phaseIndex}/start": {
+      "post": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "start_flag_release_phase",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "phaseIndex",
+            "in": "path",
+            "description": "Zero-based phase index",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagRelease"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/release-pipelines": {
+      "get": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "list_release_pipelines",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleasePipelineListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "create_release_pipeline",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReleasePipelineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleasePipeline"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/release-pipelines/{pipelineKey}": {
+      "delete": {
+        "tags": [
+          "releases"
+        ],
+        "operationId": "delete_release_pipeline",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pipelineKey",
+            "in": "path",
+            "description": "Pipeline key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/roles": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "list_custom_roles",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomRoleListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "create_custom_role",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomRole"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/roles/{roleKey}": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "get_custom_role",
+        "parameters": [
+          {
+            "name": "roleKey",
+            "in": "path",
+            "description": "Custom role key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomRole"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "delete_custom_role",
+        "parameters": [
+          {
+            "name": "roleKey",
+            "in": "path",
+            "description": "Custom role key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "update_custom_role",
+        "parameters": [
+          {
+            "name": "roleKey",
+            "in": "path",
+            "description": "Custom role key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomRole"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sso/providers": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "list_sso_providers",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoProviderListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "create_sso_provider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSsoProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SsoProviderConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sso/providers/{providerId}": {
+      "delete": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "delete_sso_provider",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "description": "SSO provider UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/teams": {
+      "get": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "list_teams",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "create_team",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeamRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Team"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{teamKey}": {
+      "delete": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "delete_team",
+        "parameters": [
+          {
+            "name": "teamKey",
+            "in": "path",
+            "description": "Team key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "update_team",
+        "parameters": [
+          {
+            "name": "teamKey",
+            "in": "path",
+            "description": "Team key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTeamRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Team"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/teams/{teamKey}/members/{memberId}": {
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "add_team_member",
+        "parameters": [
+          {
+            "name": "teamKey",
+            "in": "path",
+            "description": "Team key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "in": "path",
+            "description": "Member UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "governance"
+        ],
+        "operationId": "remove_team_member",
+        "parameters": [
+          {
+            "name": "teamKey",
+            "in": "path",
+            "description": "Team key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "in": "path",
+            "description": "Member UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/tokens": {
       "get": {
         "tags": [
@@ -2824,6 +4522,32 @@
   },
   "components": {
     "schemas": {
+      "AddApplicationVersionRequest": {
+        "type": "object",
+        "required": [
+          "versionKey",
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "supported": {
+            "type": "boolean"
+          },
+          "versionKey": {
+            "type": "string"
+          }
+        }
+      },
+      "AdvanceWorkflowRequest": {
+        "type": "object",
+        "properties": {
+          "approveGate": {
+            "type": "boolean"
+          }
+        }
+      },
       "ApiToken": {
         "type": "object",
         "required": [
@@ -2890,6 +4614,416 @@
             "items": {
               "$ref": "#/components/schemas/ApiToken"
             }
+          }
+        }
+      },
+      "Application": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "key",
+          "name",
+          "kind",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ApplicationKind"
+          },
+          "maintainerTeamId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationVersion"
+            }
+          }
+        }
+      },
+      "ApplicationKind": {
+        "type": "string",
+        "enum": [
+          "browser",
+          "mobile",
+          "server"
+        ]
+      },
+      "ApplicationListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Application"
+            }
+          }
+        }
+      },
+      "ApplicationVersion": {
+        "type": "object",
+        "required": [
+          "id",
+          "versionKey",
+          "name",
+          "supported",
+          "createdAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "supported": {
+            "type": "boolean"
+          },
+          "versionKey": {
+            "type": "string"
+          }
+        }
+      },
+      "ApplyApprovalResponse": {
+        "type": "object",
+        "required": [
+          "approval",
+          "patch"
+        ],
+        "properties": {
+          "approval": {
+            "$ref": "#/components/schemas/ApprovalRequest"
+          },
+          "patch": {
+            "$ref": "#/components/schemas/PatchFlagResponse"
+          }
+        }
+      },
+      "ApprovalListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalRequest"
+            }
+          }
+        }
+      },
+      "ApprovalRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectKey",
+          "envKey",
+          "flagKey",
+          "description",
+          "instructions",
+          "status",
+          "minApprovals",
+          "approvalCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "appliedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "appliedVersion": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "approvalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "envKey": {
+            "type": "string"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          },
+          "minApprovals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectKey": {
+            "type": "string"
+          },
+          "requestedBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "requestedByEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalReview"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApprovalStatus"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApprovalReview": {
+        "type": "object",
+        "required": [
+          "id",
+          "approvalId",
+          "reviewerId",
+          "kind",
+          "createdAt"
+        ],
+        "properties": {
+          "approvalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ApprovalReviewKind"
+          },
+          "reviewerEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reviewerId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "ApprovalReviewKind": {
+        "type": "string",
+        "enum": [
+          "approve",
+          "decline"
+        ]
+      },
+      "ApprovalStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "applied",
+          "canceled"
+        ]
+      },
+      "AssignMemberRolesRequest": {
+        "type": "object",
+        "required": [
+          "roleKeys"
+        ],
+        "properties": {
+          "roleKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssignMemberRolesResponse": {
+        "type": "object",
+        "required": [
+          "memberId",
+          "roleKeys"
+        ],
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AttachReleasePipelineRequest": {
+        "type": "object",
+        "required": [
+          "pipelineKey"
+        ],
+        "properties": {
+          "pipelineKey": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditArchiveListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditArchiveRecord"
+            }
+          }
+        }
+      },
+      "AuditArchiveRecord": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "objectKey",
+          "format",
+          "recordCount",
+          "compressedBytes",
+          "sha256",
+          "fromTimestamp",
+          "toTimestamp",
+          "createdAt"
+        ],
+        "properties": {
+          "compressedBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "format": {
+            "type": "string"
+          },
+          "fromTimestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recordCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "toTimestamp": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -3063,6 +5197,93 @@
           }
         }
       },
+      "BigSegmentMembersRequest": {
+        "type": "object",
+        "properties": {
+          "addExcluded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addIncluded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contextKind": {
+            "type": "string"
+          },
+          "removeExcluded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeIncluded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "BigSegmentMembershipCheckResponse": {
+        "type": "object",
+        "required": [
+          "segmentKey",
+          "contextKind",
+          "contextKey"
+        ],
+        "properties": {
+          "contextKey": {
+            "type": "string"
+          },
+          "contextKind": {
+            "type": "string"
+          },
+          "membership": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "segmentKey": {
+            "type": "string"
+          }
+        }
+      },
+      "BigSegmentStatus": {
+        "type": "object",
+        "required": [
+          "segmentKey",
+          "generation",
+          "includedCount",
+          "excludedCount",
+          "syncedToObjectStore"
+        ],
+        "properties": {
+          "excludedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "generation": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "includedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "segmentKey": {
+            "type": "string"
+          },
+          "syncedToObjectStore": {
+            "type": "boolean"
+          }
+        }
+      },
       "BuiltInRole": {
         "type": "string",
         "enum": [
@@ -3170,6 +5391,50 @@
           }
         }
       },
+      "CodeRefHunk": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "filePath",
+          "lineNumber",
+          "linePreview"
+        ],
+        "properties": {
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "lineNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "linePreview": {
+            "type": "string"
+          }
+        }
+      },
+      "CodeRefListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagCodeRefSummary"
+            }
+          }
+        }
+      },
       "Context": {
         "type": "object",
         "description": "Evaluation context: either a single context ({\"kind\":\"user\",\"key\":\"...\",...}) or a multi-context ({\"kind\":\"multi\",\"user\":{...},\"organization\":{...}})",
@@ -3264,6 +5529,82 @@
           },
           "token": {
             "$ref": "#/components/schemas/ApiToken"
+          }
+        }
+      },
+      "CreateApplicationRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "kind"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ApplicationKind"
+          },
+          "maintainerTeamId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateApprovalRequestDto": {
+        "type": "object",
+        "required": [
+          "instructions"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          }
+        }
+      },
+      "CreateCustomRoleRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "statements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatement"
+            }
           }
         }
       },
@@ -3457,6 +5798,31 @@
           }
         }
       },
+      "CreateReleasePipelineRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "phases"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReleasePhase"
+            }
+          }
+        }
+      },
       "CreateScheduledChangeRequest": {
         "type": "object",
         "required": [
@@ -3478,6 +5844,31 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          }
+        }
+      },
+      "CreateScheduledSegmentRequest": {
+        "type": "object",
+        "required": [
+          "executeAt",
+          "instructions"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "executeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentPatchInstruction"
             }
           }
         }
@@ -3530,6 +5921,70 @@
           }
         }
       },
+      "CreateSsoProviderRequest": {
+        "type": "object",
+        "required": [
+          "protocol",
+          "name",
+          "issuerUrl"
+        ],
+        "properties": {
+          "clientId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "issuerUrl": {
+            "type": "string"
+          },
+          "jwksUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/SsoProtocol"
+          },
+          "samlMetadataUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scimEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateTeamRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "properties": {
+          "customRoleKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateVariationInput": {
         "type": "object",
         "required": [
@@ -3577,6 +6032,9 @@
               "type": "string"
             }
           },
+          "integrationKind": {
+            "$ref": "#/components/schemas/WebhookIntegrationKind"
+          },
           "name": {
             "type": "string"
           },
@@ -3606,6 +6064,85 @@
           }
         }
       },
+      "CreateWorkflowRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "stages"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowStage"
+            }
+          }
+        }
+      },
+      "CustomRole": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "key",
+          "name",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "statements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatement"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CustomRoleListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomRole"
+            }
+          }
+        }
+      },
       "Environment": {
         "type": "object",
         "required": [
@@ -3621,6 +6158,9 @@
           "createdAt"
         ],
         "properties": {
+          "approvalSettings": {
+            "$ref": "#/components/schemas/EnvironmentApprovalSettings"
+          },
           "clientSideId": {
             "type": "string"
           },
@@ -3654,6 +6194,27 @@
           "revision": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "EnvironmentApprovalSettings": {
+        "type": "object",
+        "properties": {
+          "allowSelfApproval": {
+            "type": "boolean"
+          },
+          "externalApprovalWebhookUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "minApprovals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "required": {
+            "type": "boolean"
           }
         }
       },
@@ -3919,6 +6480,25 @@
           }
         }
       },
+      "ExportAuditArchiveRequest": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "FeatureFlag": {
         "type": "object",
         "required": [
@@ -3990,6 +6570,50 @@
             "items": {
               "$ref": "#/components/schemas/Variation"
             }
+          }
+        }
+      },
+      "FlagCodeRefSummary": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "repoName",
+          "branch",
+          "commitSha",
+          "referenceCount",
+          "extinct",
+          "hunks",
+          "updatedAt"
+        ],
+        "properties": {
+          "branch": {
+            "type": "string"
+          },
+          "commitSha": {
+            "type": "string"
+          },
+          "extinct": {
+            "type": "boolean"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "hunks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeRefHunk"
+            }
+          },
+          "referenceCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "repoName": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -4739,6 +7363,96 @@
         ],
         "description": "Canonical 23-variant semantic instruction patch enum for feature flag mutations."
       },
+      "FlagRelease": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectKey",
+          "flagKey",
+          "pipelineKey",
+          "pipelineName",
+          "status",
+          "currentPhaseIndex",
+          "phases",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentPhaseIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagReleasePhaseState"
+            }
+          },
+          "pipelineKey": {
+            "type": "string"
+          },
+          "pipelineName": {
+            "type": "string"
+          },
+          "projectKey": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FlagReleasePhaseState": {
+        "type": "object",
+        "required": [
+          "phaseIndex",
+          "name",
+          "environmentKey",
+          "status"
+        ],
+        "properties": {
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "environmentKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phaseIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
       "FlagResponse": {
         "allOf": [
           {
@@ -4852,6 +7566,80 @@
           }
         }
       },
+      "FlagWorkflow": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectKey",
+          "envKey",
+          "flagKey",
+          "name",
+          "status",
+          "currentStageIndex",
+          "nextRunAt",
+          "stages",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "currentStageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "description": {
+            "type": "string"
+          },
+          "envKey": {
+            "type": "string"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nextRunAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectKey": {
+            "type": "string"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowStage"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkflowStatus"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "HealthResponse": {
         "type": "object",
         "required": [
@@ -4868,6 +7656,52 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      },
+      "LiveEvalDebugEvent": {
+        "type": "object",
+        "description": "Ephemeral event published onto `skotos.debug.{env_id}` for the Live Events Debugger.",
+        "required": [
+          "timestamp",
+          "envId",
+          "kind"
+        ],
+        "properties": {
+          "contextKinds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flagKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "value": {},
+          "variationIndex": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -5098,6 +7932,49 @@
           "enterprise"
         ]
       },
+      "PolicyEffect": {
+        "type": "string",
+        "enum": [
+          "allow",
+          "deny"
+        ]
+      },
+      "PolicyStatement": {
+        "type": "object",
+        "description": "Declarative resource-path RBAC statement (LaunchDarkly-compatible grammar).\n\nResource paths follow `proj/{project}:env/{env}:flag/{flag}`,\n`proj/{project}:env/{env}:segment/{segment}`, `team/{team}`, `role/{role}`,\n`webhook/{webhook}`, `member/*`, or `*`.",
+        "required": [
+          "effect"
+        ],
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "effect": {
+            "$ref": "#/components/schemas/PolicyEffect"
+          },
+          "notActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notResources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "Prerequisite": {
         "type": "object",
         "required": [
@@ -5214,6 +8091,97 @@
           }
         }
       },
+      "ReleasePhase": {
+        "type": "object",
+        "required": [
+          "name",
+          "environmentKey"
+        ],
+        "properties": {
+          "copyFromPreviousEnv": {
+            "type": "boolean"
+          },
+          "environmentKey": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "requireApproval": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReleasePipeline": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectId",
+          "key",
+          "name",
+          "phases",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReleasePhase"
+            }
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReleasePipelineListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReleasePipeline"
+            }
+          }
+        }
+      },
       "RestoreRevisionRequest": {
         "type": "object",
         "properties": {
@@ -5222,6 +8190,23 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ReviewApprovalRequestDto": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ApprovalReviewKind"
           }
         }
       },
@@ -5389,6 +8374,94 @@
           "failed",
           "canceled"
         ]
+      },
+      "ScheduledSegmentChange": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "segmentId",
+          "envId",
+          "executeAt",
+          "instructions",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "executeAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "executedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentPatchInstruction"
+            }
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "segmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ScheduledChangeStatus"
+          }
+        }
+      },
+      "ScheduledSegmentListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduledSegmentChange"
+            }
+          }
+        }
       },
       "Segment": {
         "type": "object",
@@ -5827,6 +8900,92 @@
           }
         }
       },
+      "SsoProtocol": {
+        "type": "string",
+        "enum": [
+          "oidc",
+          "saml"
+        ]
+      },
+      "SsoProviderConfig": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "protocol",
+          "name",
+          "issuerUrl",
+          "enabled",
+          "scimEnabled",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "clientId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "issuerUrl": {
+            "type": "string"
+          },
+          "jwksUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/SsoProtocol"
+          },
+          "samlMetadataUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scimEnabled": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SsoProviderListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SsoProviderConfig"
+            }
+          }
+        }
+      },
       "Target": {
         "type": "object",
         "required": [
@@ -5881,12 +9040,103 @@
           }
         ]
       },
+      "Team": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "key",
+          "name",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customRoleKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "memberIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TeamListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Team"
+            }
+          }
+        }
+      },
       "TriggerAction": {
         "type": "string",
         "enum": [
           "turnFlagOn",
           "turnFlagOff"
         ]
+      },
+      "UpdateCustomRoleRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "statements": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatement"
+            }
+          }
+        }
       },
       "UpdateEnvironmentRequest": {
         "type": "object",
@@ -5949,6 +9199,32 @@
           }
         }
       },
+      "UpdateTeamRequest": {
+        "type": "object",
+        "properties": {
+          "customRoleKeys": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "UpdateWebhookRequest": {
         "type": "object",
         "properties": {
@@ -5987,6 +9263,30 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "UpsertCodeRefsRequest": {
+        "type": "object",
+        "required": [
+          "repoName",
+          "branch"
+        ],
+        "properties": {
+          "branch": {
+            "type": "string"
+          },
+          "commitSha": {
+            "type": "string"
+          },
+          "hunks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CodeRefHunk"
+            }
+          },
+          "repoName": {
+            "type": "string"
           }
         }
       },
@@ -6097,6 +9397,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "integrationKind": {
+            "$ref": "#/components/schemas/WebhookIntegrationKind"
+          },
           "name": {
             "type": "string"
           },
@@ -6175,6 +9478,18 @@
           }
         }
       },
+      "WebhookIntegrationKind": {
+        "type": "string",
+        "enum": [
+          "generic",
+          "slack",
+          "teams",
+          "datadog",
+          "pagerduty",
+          "jira",
+          "linear"
+        ]
+      },
       "WebhookListResponse": {
         "type": "object",
         "required": [
@@ -6210,6 +9525,81 @@
             "minimum": 0
           }
         }
+      },
+      "WorkflowListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagWorkflow"
+            }
+          }
+        }
+      },
+      "WorkflowStage": {
+        "type": "object",
+        "required": [
+          "name",
+          "instructions"
+        ],
+        "properties": {
+          "errorMessage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "executedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "instructions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagPatchInstruction"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "requireApproval": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkflowStageStatus"
+          },
+          "waitSeconds": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "WorkflowStageStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "waitingapproval",
+          "executed",
+          "failed",
+          "skipped"
+        ]
+      },
+      "WorkflowStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "waitingapproval",
+          "completed",
+          "failed",
+          "canceled"
+        ]
       }
     }
   },
@@ -6236,15 +9626,31 @@
     },
     {
       "name": "segments",
-      "description": "Rule-based and list-based user/context segments"
+      "description": "Rule-based, list-based, and high-scale Big Segments"
     },
     {
       "name": "automation",
-      "description": "Scheduled flag changes and APM rollback triggers"
+      "description": "Scheduled flag changes, multi-step workflows, and APM rollback triggers"
+    },
+    {
+      "name": "governance",
+      "description": "Custom RBAC roles, teams, and enterprise SSO/SCIM"
+    },
+    {
+      "name": "approvals",
+      "description": "Mandatory approval workflows and change review queue"
+    },
+    {
+      "name": "releases",
+      "description": "Release pipelines, flag releases, and application version tracking"
+    },
+    {
+      "name": "devtools",
+      "description": "Code references tracking and developer tooling APIs"
     },
     {
       "name": "webhooks",
-      "description": "HMAC-SHA256 signed outbound webhooks"
+      "description": "HMAC-SHA256 signed outbound webhooks and integrations"
     },
     {
       "name": "usage",
@@ -6252,7 +9658,7 @@
     },
     {
       "name": "audit-log",
-      "description": "Immutable audit trail"
+      "description": "Immutable audit trail and R2/S3 Zstd archival"
     },
     {
       "name": "tokens",

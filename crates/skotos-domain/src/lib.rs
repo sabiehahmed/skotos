@@ -6,6 +6,7 @@ pub mod entities;
 pub mod error;
 pub mod eval_model;
 pub mod patch;
+pub mod phase3;
 pub mod segment_patch;
 
 pub use context::{validate_context_kind, AttributeRef, Context, ContextMeta, SingleContext};
@@ -29,6 +30,15 @@ pub use patch::{
     apply_flag_patch, detect_prerequisite_cycle, validate_clause, validate_flag_env_config,
     validate_rollout, validate_variation_or_rollout, variation_in_use_locations,
     FlagPatchInstruction, PatchResult, PatchSummaryItem, ROLLOUT_TOTAL_WEIGHT,
+};
+pub use phase3::{
+    big_segment_key_hash, Application, ApplicationKind, ApplicationVersion, ApprovalRequest,
+    ApprovalReview, ApprovalReviewKind, ApprovalStatus, AuditArchiveRecord, BigSegmentSnapshot,
+    BigSegmentStatus, CodeRefHunk, CustomRole, EnvironmentApprovalSettings, FlagCodeRefSummary,
+    FlagRelease, FlagReleasePhaseState, FlagWorkflow, LiveEvalDebugEvent, PolicyEffect,
+    PolicyStatement, ReleasePhase, ReleasePipeline, ScheduledSegmentChange, SsoProtocol,
+    SsoProviderConfig, Team, WebhookIntegrationKind, WorkflowStage, WorkflowStageStatus,
+    WorkflowStatus,
 };
 pub use segment_patch::{
     apply_segment_patch, validate_segment, SegmentPatchInstruction, SegmentPatchResult,

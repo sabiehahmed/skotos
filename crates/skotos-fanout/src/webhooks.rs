@@ -1,11 +1,9 @@
 #[cfg(feature = "workers")]
 use std::time::Duration;
 
-#[cfg(feature = "workers")]
-use chrono::Utc;
 use hmac::{Hmac, Mac};
 #[cfg(feature = "workers")]
-use serde_json::{json, Value};
+use serde_json::Value;
 use sha2::Sha256;
 #[cfg(feature = "workers")]
 use skotos_storage::Storage;
@@ -58,18 +56,6 @@ pub async fn dispatch_webhooks_for_event(
         return;
     }
 
-    let envelope = json!({
-        "id": event_id,
-        "eventType": event_type,
-        "orgId": org_id,
-        "environmentKey": env_key,
-        "timestamp": Utc::now(),
-        "data": payload,
-    });
-    let Ok(body_bytes) = serde_json::to_vec(&envelope) else {
-        return;
-    };
-
     for wh in webhooks {
         let event_matches = wh.webhook.events.is_empty()
             || wh
@@ -87,6 +73,18 @@ pub async fn dispatch_webhooks_for_event(
         if !env_matches {
             continue;
         }
+
+        let formatted = crate::integrations::format_integration_payload(
+            wh.webhook.integration_kind,
+            org_id,
+            event_id,
+            event_type,
+            env_key,
+            payload,
+        );
+        let Ok(body_bytes) = serde_json::to_vec(&formatted) else {
+            continue;
+        };
 
         let signature = sign_webhook_payload(&wh.secret, &body_bytes);
         let delivery_id = Uuid::now_v7();

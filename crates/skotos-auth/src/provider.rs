@@ -76,6 +76,7 @@ impl ApiTokenVerifier {
             team_ids: vec![],
             role_ids: vec![],
             token_scopes: vec![token.role.as_str().to_string()],
+            custom_policies: vec![],
         }))
     }
 }
@@ -188,6 +189,15 @@ impl IdentityProvider for SelfHostedAuthAdapter {
             .get_member(payload.org_id, payload.member_id)
             .await
             .map_err(|_| AuthError::InvalidToken)?;
+        let rbac = self
+            .storage
+            .resolve_member_rbac(member.org_id, member.id)
+            .await
+            .unwrap_or(skotos_storage::ResolvedMemberRbac {
+                team_ids: vec![],
+                role_ids: vec![],
+                custom_policies: vec![],
+            });
         Ok(AuthenticatedPrincipal {
             org_id: member.org_id,
             actor_type: ActorType::Member,
@@ -196,9 +206,10 @@ impl IdentityProvider for SelfHostedAuthAdapter {
             email: Some(member.email),
             display_name: member.display_name,
             role: member.role,
-            team_ids: vec![],
-            role_ids: vec![],
+            team_ids: rbac.team_ids,
+            role_ids: rbac.role_ids,
             token_scopes: vec![],
+            custom_policies: rbac.custom_policies,
         })
     }
 
@@ -223,6 +234,15 @@ impl IdentityProvider for SelfHostedAuthAdapter {
             self.session_ttl_hours,
             &self.session_secret,
         )?;
+        let rbac = self
+            .storage
+            .resolve_member_rbac(found.member.org_id, found.member.id)
+            .await
+            .unwrap_or(skotos_storage::ResolvedMemberRbac {
+                team_ids: vec![],
+                role_ids: vec![],
+                custom_policies: vec![],
+            });
         let principal = AuthenticatedPrincipal {
             org_id: found.member.org_id,
             actor_type: ActorType::Member,
@@ -231,9 +251,10 @@ impl IdentityProvider for SelfHostedAuthAdapter {
             email: Some(found.member.email),
             display_name: found.member.display_name,
             role: found.member.role,
-            team_ids: vec![],
-            role_ids: vec![],
+            team_ids: rbac.team_ids,
+            role_ids: rbac.role_ids,
             token_scopes: vec![],
+            custom_policies: rbac.custom_policies,
         };
         Ok((principal, cookie))
     }
@@ -426,6 +447,16 @@ impl IdentityProvider for ExternalAuthAdapter {
             }
         };
 
+        let rbac = self
+            .storage
+            .resolve_member_rbac(member.org_id, member.id)
+            .await
+            .unwrap_or(skotos_storage::ResolvedMemberRbac {
+                team_ids: vec![],
+                role_ids: vec![],
+                custom_policies: vec![],
+            });
+
         Ok(AuthenticatedPrincipal {
             org_id: member.org_id,
             actor_type: ActorType::Member,
@@ -434,9 +465,10 @@ impl IdentityProvider for ExternalAuthAdapter {
             email: Some(member.email),
             display_name: member.display_name,
             role: member.role,
-            team_ids: vec![],
-            role_ids: vec![],
+            team_ids: rbac.team_ids,
+            role_ids: rbac.role_ids,
             token_scopes: vec![],
+            custom_policies: rbac.custom_policies,
         })
     }
 

@@ -25,14 +25,14 @@ All Phase 0 architectural decisions are finalized in [`architecture/adrs/`](../a
 - [x] Segments CRUD & semantic patching, Environment Copy, Bulk Patching, Flag Scheduling, Flag Triggers (APM rollback URLs), Signed Outbound Webhooks, Evaluation Usage/Stale API & Dashboard screens
 - [x] Launch SDKs + OpenFeature providers (124/124 golden vector parity across server SDKs): TS/Node Server, Browser Client, React SDK, Go Server, Rust Server
 
-## Phase 3 — Enterprise Governance, Relay Proxy, DevTools & Scale (Next)
+## Phase 3 — Enterprise Governance, Relay Proxy, DevTools & Scale (Complete)
 
-- [ ] Custom RBAC policies, Teams, Mandatory Approval Workflows, SAML/SCIM & Self-Hosted OIDC
-- [ ] Flag Workflows, Release Pipelines & Release Plans
-- [ ] Big Segments (Roaring Bitmaps + R2/Redis), open-source `services/relay-proxy`, Edge SDKs, Live Debugger
-- [ ] `skotos-code-refs` CI scanner, `skotos-cli`, Terraform provider, Hosted/Local MCP Server, Slack/Jira/Datadog integrations
+- [x] Custom RBAC resource-path allow/deny policies, Teams, Mandatory Peer Approval Workflows, Enterprise SSO (OIDC/SAML) + SCIM 2.0 provisioning, and immutable Zstd Audit Log archival
+- [x] Multi-Step Flag Workflows (SchedulerWorker-driven), Release Pipelines & Flag Releases, Applications & App Version tracking
+- [x] High-Scale Big Segments (Zstd sorted 64-bit FNV-1a hash-block snapshots in R2/S3 + O(log N) lookup), Scheduled Segment Changes, open-source DB-free `services/relay-proxy` (Proxy + Offline File modes), pure Web-Standard `@skotos/edge-sdk` (124/124 golden vectors), and zero-storage Live Events Debugger (ephemeral core NATS)
+- [x] `tools/skotos-cli`, `tools/skotos-code-refs` (+ GitHub Action & extinction check), `tools/skotos-mcp` (JSON-RPC 2.0 stdio + HTTP `/mcp`), `integrations/terraform-provider-skotos` (Go), and Slack/Teams/Datadog/PagerDuty/Jira/Linear webhook formatters
 
-## Phase 4 — ClickHouse Telemetry, Guarded Rollouts & Experimentation Core
+## Phase 4 — ClickHouse Telemetry, Guarded Rollouts & Experimentation Core (Next)
 
 - [ ] ClickHouse `TelemetryStore` backend + Real-Time Data Export sinks
 - [ ] Guarded Rollouts (Release Guardian + auto-rollback + SRM checks), Adaptive Triggers, Engineering Insights

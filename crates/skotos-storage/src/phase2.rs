@@ -1132,7 +1132,7 @@ impl Storage {
 
     pub async fn list_webhooks(&self, org_id: Uuid) -> Result<Vec<Webhook>, StorageError> {
         let rows = sqlx::query(
-            "SELECT id, org_id, name, url, enabled, events, env_filter, created_by, created_at, updated_at
+            "SELECT id, org_id, name, url, enabled, integration_kind, events, env_filter, created_by, created_at, updated_at
              FROM webhooks WHERE org_id = $1 ORDER BY created_at DESC",
         )
         .bind(org_id)
@@ -1170,7 +1170,7 @@ impl Storage {
                  env_filter = COALESCE($7, env_filter),
                  updated_at = now()
              WHERE org_id = $1 AND id = $2
-             RETURNING id, org_id, name, url, enabled, events, env_filter, created_by, created_at, updated_at",
+             RETURNING id, org_id, name, url, enabled, integration_kind, events, env_filter, created_by, created_at, updated_at",
         )
         .bind(org_id)
         .bind(webhook_id)
@@ -1243,7 +1243,7 @@ impl Storage {
         org_id: Uuid,
     ) -> Result<Vec<WebhookWithSecret>, StorageError> {
         let rows = sqlx::query(
-            "SELECT id, org_id, name, url, secret, enabled, events, env_filter, created_by, created_at, updated_at
+            "SELECT id, org_id, name, url, secret, enabled, integration_kind, events, env_filter, created_by, created_at, updated_at
              FROM webhooks WHERE org_id = $1 AND enabled = true",
         )
         .bind(org_id)
@@ -1630,12 +1630,16 @@ fn parse_flag_trigger_row(
 }
 
 fn parse_webhook_row(row: &sqlx::postgres::PgRow) -> Webhook {
+    let kind_str: String = row
+        .try_get("integration_kind")
+        .unwrap_or_else(|_| "generic".to_string());
     Webhook {
         id: row.get("id"),
         org_id: row.get("org_id"),
         name: row.get("name"),
         url: row.get("url"),
         enabled: row.get("enabled"),
+        integration_kind: skotos_domain::WebhookIntegrationKind::from_db(&kind_str),
         events: row.get("events"),
         env_filter: row.get("env_filter"),
         created_by: row.get("created_by"),

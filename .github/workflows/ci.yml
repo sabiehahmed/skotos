@@ -63,11 +63,16 @@ jobs:
       - name: Run Clippy lints
         run: cargo clippy --workspace --all-targets -- -D warnings
 
+      - name: Verify zero-DB isolation on delivery-edge and relay-proxy
+        run: |
+          ! cargo tree -p delivery-edge | grep -E "sqlx|skotos-storage"
+          ! cargo tree -p relay-proxy | grep -E "sqlx|skotos-storage"
+
       - name: Run Rust workspace tests
         run: cargo test --workspace
 
   go-sdk:
-    name: Go Server SDK golden suite & race tests
+    name: Go Server SDK & Terraform Provider tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -76,10 +81,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: "1.24"
 
       - name: Run Go Server SDK tests (124 golden vectors + OpenFeature)
         run: go -C sdks/go-server test -v -race ./...
+
+      - name: Run Terraform Provider tests (CRUD & drift detection)
+        run: go -C integrations/terraform-provider-skotos test -v -race ./...
 
   frontend:
     name: TypeScript, ESLint boundaries, tests & build

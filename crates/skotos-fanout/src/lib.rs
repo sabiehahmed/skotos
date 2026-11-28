@@ -6,6 +6,7 @@
 //! DB-free Delivery Edge auth registry synchronized, dispatches HMAC-signed
 //! outbound webhooks, and executes scheduled flag changes.
 
+pub mod integrations;
 pub mod nats;
 pub mod object_store;
 pub mod protocol;
@@ -13,7 +14,8 @@ pub mod webhooks;
 #[cfg(feature = "workers")]
 pub mod worker;
 
-pub use nats::NatsFanout;
+pub use integrations::format_integration_payload;
+pub use nats::{env_debug_subject, NatsFanout};
 pub use object_store::{S3Config, SnapshotStore};
 #[cfg(feature = "workers")]
 pub use protocol::compile_environment_snapshot;

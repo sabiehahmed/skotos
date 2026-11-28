@@ -29,15 +29,38 @@ export type FlagTrigger = components["schemas"]["FlagTrigger"];
 export type TriggerAction = components["schemas"]["TriggerAction"];
 export type Webhook = components["schemas"]["Webhook"];
 export type WebhookDelivery = components["schemas"]["WebhookDelivery"];
+export type WebhookIntegrationKind = components["schemas"]["WebhookIntegrationKind"];
 export type FlagEvalUsage = components["schemas"]["FlagEvalUsage"];
+export type CustomRole = components["schemas"]["CustomRole"];
+export type PolicyEffect = components["schemas"]["PolicyEffect"];
+export type PolicyStatement = components["schemas"]["PolicyStatement"];
+export type Team = components["schemas"]["Team"];
+export type ApprovalRequest = components["schemas"]["ApprovalRequest"];
+export type ApprovalReview = components["schemas"]["ApprovalReview"];
+export type ApprovalReviewKind = components["schemas"]["ApprovalReviewKind"];
+export type ApprovalStatus = components["schemas"]["ApprovalStatus"];
+export type EnvironmentApprovalSettings = components["schemas"]["EnvironmentApprovalSettings"];
+export type ReleasePipeline = components["schemas"]["ReleasePipeline"];
+export type ReleasePhase = components["schemas"]["ReleasePhase"];
+export type FlagRelease = components["schemas"]["FlagRelease"];
+export type FlagWorkflow = components["schemas"]["FlagWorkflow"];
+export type WorkflowStage = components["schemas"]["WorkflowStage"];
+export type SsoProtocol = components["schemas"]["SsoProtocol"];
+export type SsoProviderConfig = components["schemas"]["SsoProviderConfig"];
+export type AuditArchiveRecord = components["schemas"]["AuditArchiveRecord"];
+export type FlagCodeRefSummary = components["schemas"]["FlagCodeRefSummary"];
+export type CodeRefHunk = components["schemas"]["CodeRefHunk"];
+export type Application = components["schemas"]["Application"];
+export type ApplicationKind = components["schemas"]["ApplicationKind"];
+export type LiveEvalDebugEvent = components["schemas"]["LiveEvalDebugEvent"];
 
-const baseUrl =
+export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== "undefined" && window.location?.origin && window.location.origin !== "null"
     ? window.location.origin
     : "http://localhost:3000");
 
-export const skotosApi = createSkotosClient({ baseUrl });
+export const skotosApi = createSkotosClient({ baseUrl: API_BASE_URL });
 
 export { SkotosApiError, unwrapApiResult };
 

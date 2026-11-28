@@ -24,8 +24,9 @@ migrate: ## Run embedded PostgreSQL migrations via control-api
 test-rust: ## Run all Rust workspace tests
 	cargo test --workspace
 
-test-go: ## Run Go Server SDK tests (124 golden vectors + OpenFeature) with race detector
+test-go: ## Run Go Server SDK (124 golden vectors) and Terraform provider tests with race detector
 	go -C sdks/go-server test -race ./...
+	go -C integrations/terraform-provider-skotos test -race ./...
 
 test-ui: ## Run @skotos/ui test suite
 	pnpm --filter @skotos/ui test
@@ -38,9 +39,11 @@ gen-openapi: ## Export OpenAPI 3.1 spec and regenerate @skotos/api-client
 	pnpm --filter @skotos/api-client gen
 	pnpm --filter @skotos/api-client typecheck
 
-lint-all: ## Run Rust fmt/clippy, ESLint boundaries, zero-Tailwind guard, and docs checks
+lint-all: ## Run Rust fmt/clippy, zero-DB guards, ESLint boundaries, zero-Tailwind guard, and docs checks
 	cargo fmt --all -- --check
 	cargo clippy --workspace --all-targets -- -D warnings
+	! cargo tree -p delivery-edge | grep -E "sqlx|skotos-storage"
+	! cargo tree -p relay-proxy | grep -E "sqlx|skotos-storage"
 	pnpm lint
 	pnpm lint:boundaries
 	pnpm run lint:md

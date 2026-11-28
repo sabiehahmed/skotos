@@ -51,10 +51,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         shutdown_rx.clone(),
     );
 
+    let nats_url =
+        std::env::var("NATS_URL").unwrap_or_else(|_| "nats://127.0.0.1:4222".to_string());
+    let nats = match skotos_fanout::NatsFanout::connect(&nats_url).await {
+        Ok(n) => Some(n),
+        Err(err) => {
+            warn!(error = %err, "event-ingest running without NATS live-debugger tap");
+            None
+        }
+    };
+
     let app = build_router(IngestState {
         auth,
         telemetry,
         tx,
+        nats,
     });
 
     let listener = TcpListener::bind(bind_addr).await?;

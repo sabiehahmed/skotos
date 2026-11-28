@@ -230,6 +230,66 @@ impl SnapshotStore {
             Err(e) => Err(FanoutError::ObjectStore(e)),
         }
     }
+
+    /// Uploads a Zstd-compressed Big Segment membership snapshot (`big-segments/{env_id}/{segment_key}.zst`).
+    pub async fn put_big_segment_snapshot(
+        &self,
+        snap: &skotos_domain::BigSegmentSnapshot,
+    ) -> Result<(), FanoutError> {
+        let path = ObjPath::from(format!(
+            "big-segments/{}/{}.zst",
+            snap.env_id, snap.segment_key
+        ));
+        let json_bytes = serde_json::to_vec(snap)?;
+        let zstd_bytes = zstd::bulk::compress(&json_bytes, 3)?;
+        self.inner
+            .put(&path, PutPayload::from(Bytes::from(zstd_bytes)))
+            .await?;
+        Ok(())
+    }
+
+    /// Loads and decompresses a Big Segment membership snapshot from R2/S3/MinIO.
+    pub async fn get_big_segment_snapshot(
+        &self,
+        env_id: Uuid,
+        segment_key: &str,
+    ) -> Result<Option<skotos_domain::BigSegmentSnapshot>, FanoutError> {
+        let path = ObjPath::from(format!("big-segments/{env_id}/{segment_key}.zst"));
+        match self.inner.get(&path).await {
+            Ok(res) => {
+                let compressed = res.bytes().await?;
+                let raw = zstd::stream::decode_all(compressed.as_ref())?;
+                let snap: skotos_domain::BigSegmentSnapshot = serde_json::from_slice(&raw)?;
+                Ok(Some(snap))
+            }
+            Err(object_store::Error::NotFound { .. }) => Ok(None),
+            Err(e) => Err(FanoutError::ObjectStore(e)),
+        }
+    }
+
+    /// Archives immutable audit log entries as Zstd-compressed NDJSON in zero-egress R2/S3 storage.
+    /// Returns `(object_key, compressed_bytes, sha256_hex)`.
+    pub async fn put_audit_archive(
+        &self,
+        org_id: Uuid,
+        archive_id: Uuid,
+        entries: &[skotos_domain::AuditLogEntry],
+    ) -> Result<(String, i64, String), FanoutError> {
+        let mut ndjson = Vec::with_capacity(entries.len() * 256);
+        for entry in entries {
+            serde_json::to_writer(&mut ndjson, entry)?;
+            ndjson.push(b'\n');
+        }
+        let compressed = zstd::bulk::compress(&ndjson, 3)?;
+        let sha = hex::encode(Sha256::digest(&compressed));
+        let key = format!("audit-archives/{org_id}/{archive_id}.ndjson.zst");
+        let path = ObjPath::from(key.clone());
+        let len = compressed.len() as i64;
+        self.inner
+            .put(&path, PutPayload::from(Bytes::from(compressed)))
+            .await?;
+        Ok((key, len, sha))
+    }
 }
 
 fn hmac_sha256(key: &[u8], data: &[u8]) -> Vec<u8> {

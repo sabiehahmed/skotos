@@ -86,6 +86,8 @@ pub fn build_router(state: EdgeState) -> Router {
             "/sdk/v1/evalx/mobile/context",
             on(MethodFilter::POST, evalx_mobile_context).fallback(evalx_mobile_fallback),
         )
+        // Phase 3 Live Events Debugger (ephemeral NATS core tap)
+        .route("/debug/v1/stream", get(stream_debug_events))
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .with_state(state)
@@ -563,4 +565,83 @@ fn bad_request(msg: &str) -> Response {
         Json(json!({ "error": msg, "code": "bad_request" })),
     )
         .into_response()
+}
+
+/// Phase 3 Live Events Debugger SSE endpoint (`GET /debug/v1/stream`, SDK Key auth).
+/// Subscribes directly to the ephemeral core NATS subject `skotos.debug.{env_id}`.
+async fn stream_debug_events(State(state): State<EdgeState>, headers: HeaderMap) -> Response {
+    let Some(auth_hdr) = headers
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+    else {
+        return unauthorized("missing Authorization header with SDK key");
+    };
+
+    let Some(resolved) = state
+        .auth
+        .verify_secret_key(auth_hdr, EnvironmentKeyKind::Sdk)
+        .await
+    else {
+        return unauthorized("invalid or expired SDK key");
+    };
+
+    let Some(nats) = state.cache.nats() else {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({ "error": "live debugger requires NATS connection" })),
+        )
+            .into_response();
+    };
+
+    let sub = match nats.subscribe_debug_events(resolved.env_id).await {
+        Ok(s) => s,
+        Err(err) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({ "error": format!("failed to open debug tap: {err}") })),
+            )
+                .into_response();
+        }
+    };
+
+    use futures::StreamExt;
+    let keepalive = tokio::time::interval(state.keepalive_interval);
+    let initial = Bytes::from(format!(
+        "event: connected\ndata: {{\"envId\":\"{}\"}}\n\n",
+        resolved.env_id
+    ));
+    let body_stream = stream::unfold(
+        (Some(initial), sub, keepalive),
+        |(mut init, mut sub, mut ka)| async move {
+            if let Some(first) = init.take() {
+                let _ = ka.tick().await;
+                return Some((Ok::<Bytes, Infallible>(first), (init, sub, ka)));
+            }
+            tokio::select! {
+                maybe_msg = sub.next() => {
+                    let msg = maybe_msg?;
+                    let text = String::from_utf8_lossy(&msg.payload);
+                    let frame = Bytes::from(format!("event: debug\ndata: {text}\n\n"));
+                    Some((Ok(frame), (init, sub, ka)))
+                }
+                _ = ka.tick() => {
+                    Some((Ok(Bytes::from_static(b": keepalive\n\n")), (init, sub, ka)))
+                }
+            }
+        },
+    );
+
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("text/event-stream; charset=utf-8"),
+        )
+        .header(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static("no-cache, no-transform"),
+        )
+        .header("x-accel-buffering", HeaderValue::from_static("no"))
+        .body(Body::from_stream(body_stream))
+        .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
 }

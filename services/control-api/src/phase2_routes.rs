@@ -151,6 +151,8 @@ pub struct CreateWebhookRequest {
     pub name: String,
     pub url: String,
     #[serde(default)]
+    pub integration_kind: skotos_domain::WebhookIntegrationKind,
+    #[serde(default)]
     pub secret: Option<String>,
     #[serde(default)]
     pub events: Vec<String>,
@@ -798,7 +800,7 @@ pub async fn create_webhook(
     state
         .authorizer
         .authorize(&principal, Action::ManageEnvironment, &ResourceRef::org())?;
-    let created = state
+    let mut created = state
         .storage
         .create_webhook(
             principal.org_id,
@@ -810,6 +812,17 @@ pub async fn create_webhook(
             &principal.to_audit_actor(),
         )
         .await?;
+    if body.integration_kind != skotos_domain::WebhookIntegrationKind::Generic {
+        state
+            .storage
+            .set_webhook_integration_kind(
+                principal.org_id,
+                created.webhook.id,
+                body.integration_kind,
+            )
+            .await?;
+        created.webhook.integration_kind = body.integration_kind;
+    }
     Ok((
         StatusCode::CREATED,
         Json(CreateWebhookResponse {

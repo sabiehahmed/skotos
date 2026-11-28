@@ -53,6 +53,8 @@ async fn setup_test_app() -> (axum::Router, Storage, String, Uuid) {
         telemetry: Arc::new(skotos_telemetry::PostgresTelemetryStore::new(
             storage.pool().clone(),
         )),
+        snapshots: None,
+        nats: None,
         storage: storage.clone(),
         identity_provider: Arc::new(adapter),
         authorizer: Authorizer,

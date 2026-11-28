@@ -36,10 +36,14 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { skotosApi, unwrapApiResult, type AuthMe } from "./lib/api";
 import { useAuthMe, useLogoutMutation } from "./lib/auth";
+import { ApprovalsPage } from "./pages/ApprovalsPage";
 import { AuditLogPage } from "./pages/AuditLogPage";
 import { FlagDetailPage } from "./pages/FlagDetailPage";
 import { FlagsListPage } from "./pages/FlagsListPage";
+import { RolesSettingsPage, TeamsSsoSettingsPage } from "./pages/GovernanceSettingsPage";
+import { LiveDebuggerPage } from "./pages/LiveDebuggerPage";
 import { LoginPage } from "./pages/LoginPage";
+import { PipelinesPage } from "./pages/PipelinesPage";
 import { SegmentsPage } from "./pages/SegmentsPage";
 import {
   EnvironmentsSettingsPage,
@@ -193,6 +197,42 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               Segments
             </Button>
             <Button
+              variant={location.pathname.includes("/pipelines") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/pipelines",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.GitBranch size={15} />
+              Release Pipelines
+            </Button>
+            <Button
+              variant={isPath("/approvals") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() => void navigate({ to: "/approvals" })}
+            >
+              <Icons.CheckCircle2 size={15} />
+              Approvals
+            </Button>
+            <Button
+              variant={location.pathname.includes("/debugger") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() =>
+                void navigate({
+                  to: "/projects/$projectKey/debugger",
+                  params: { projectKey: activeProjectKey },
+                  search: activeEnv ? { env: activeEnv.key } : {},
+                })
+              }
+            >
+              <Icons.Terminal size={15} />
+              Live Debugger
+            </Button>
+            <Button
               variant={isPath("/audit-log") ? "secondary" : "ghost"}
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/audit-log" })}
@@ -230,7 +270,7 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               style={{ justifyContent: "flex-start" }}
               onClick={() => void navigate({ to: "/settings/webhooks" })}
             >
-              <Icons.Terminal size={15} />
+              <Icons.Code2 size={15} />
               Webhooks
             </Button>
             <Button
@@ -240,6 +280,22 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             >
               <Icons.KeyRound size={15} />
               API Tokens
+            </Button>
+            <Button
+              variant={isPath("/settings/roles") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() => void navigate({ to: "/settings/roles" })}
+            >
+              <Icons.Shield size={15} />
+              Custom Roles
+            </Button>
+            <Button
+              variant={isPath("/settings/teams") ? "secondary" : "ghost"}
+              style={{ justifyContent: "flex-start" }}
+              onClick={() => void navigate({ to: "/settings/teams" })}
+            >
+              <Icons.SlidersHorizontal size={15} />
+              Teams &amp; SSO
             </Button>
             <Button
               variant={isPath("/settings/members") ? "secondary" : "ghost"}
@@ -325,6 +381,33 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
               }),
           },
           {
+            id: "pipelines",
+            label: "Go to Release Pipelines",
+            hint: activeProjectKey,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/pipelines",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
+            id: "approvals",
+            label: "Review Approval Requests",
+            onSelect: () => void navigate({ to: "/approvals" }),
+          },
+          {
+            id: "debugger",
+            label: "Open Live Events Debugger",
+            hint: activeEnv?.key,
+            onSelect: () =>
+              void navigate({
+                to: "/projects/$projectKey/debugger",
+                params: { projectKey: activeProjectKey },
+                search: activeEnv ? { env: activeEnv.key } : {},
+              }),
+          },
+          {
             id: "audit",
             label: "Go to Audit Log",
             onSelect: () => void navigate({ to: "/audit-log" }),
@@ -338,6 +421,16 @@ function AuthenticatedShell({ me }: { me: AuthMe }) {
             id: "webhooks",
             label: "Manage Outbound Webhooks",
             onSelect: () => void navigate({ to: "/settings/webhooks" }),
+          },
+          {
+            id: "roles",
+            label: "Manage Custom RBAC Roles",
+            onSelect: () => void navigate({ to: "/settings/roles" }),
+          },
+          {
+            id: "teams",
+            label: "Manage Teams, SSO & Compliance",
+            onSelect: () => void navigate({ to: "/settings/teams" }),
           },
           {
             id: "tokens",
@@ -500,6 +593,51 @@ function SegmentsRouteView() {
   );
 }
 
+function PipelinesRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const meQuery = useAuthMe();
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  if (!meQuery.data) return null;
+  return (
+    <PipelinesPage
+      projectKey={projectKey}
+      environments={envsQuery.data?.items ?? []}
+      userRole={meQuery.data.role}
+    />
+  );
+}
+
+function DebuggerRouteView() {
+  const { projectKey } = useParams({ strict: false }) as { projectKey: string };
+  const search = useSearch({ strict: false }) as EnvSearch;
+  const envsQuery = useQuery({
+    queryKey: ["environments", projectKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET("/api/v1/projects/{projectKey}/environments", {
+          params: { path: { projectKey } },
+        }),
+      ),
+  });
+  const environments = envsQuery.data?.items ?? [];
+  const activeEnv = environments.find((e) => e.key === search.env) ?? environments[0];
+  return <LiveDebuggerPage projectKey={projectKey} activeEnv={activeEnv} />;
+}
+
+function ApprovalsRouteView() {
+  const meQuery = useAuthMe();
+  if (!meQuery.data) return null;
+  return <ApprovalsPage userRole={meQuery.data.role} />;
+}
+
 function SettingsEnvsRouteView() {
   const meQuery = useAuthMe();
   const projectsQuery = useQuery({
@@ -527,6 +665,18 @@ function SettingsTokensRouteView() {
   const meQuery = useAuthMe();
   if (!meQuery.data) return null;
   return <TokensSettingsPage userRole={meQuery.data.role} />;
+}
+
+function SettingsRolesRouteView() {
+  const meQuery = useAuthMe();
+  if (!meQuery.data) return null;
+  return <RolesSettingsPage userRole={meQuery.data.role} />;
+}
+
+function SettingsTeamsRouteView() {
+  const meQuery = useAuthMe();
+  if (!meQuery.data) return null;
+  return <TeamsSsoSettingsPage userRole={meQuery.data.role} />;
 }
 
 function SettingsMembersRouteView() {
@@ -583,6 +733,30 @@ function buildAppRouter(initialEntries?: string[]) {
     component: SegmentsRouteView,
   });
 
+  const pipelinesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/pipelines",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: PipelinesRouteView,
+  });
+
+  const debuggerRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/projects/$projectKey/debugger",
+    validateSearch: (s: Record<string, unknown>): EnvSearch => ({
+      env: typeof s.env === "string" ? s.env : undefined,
+    }),
+    component: DebuggerRouteView,
+  });
+
+  const approvalsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/approvals",
+    component: ApprovalsRouteView,
+  });
+
   const auditLogRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/audit-log",
@@ -613,6 +787,18 @@ function buildAppRouter(initialEntries?: string[]) {
     component: SettingsTokensRouteView,
   });
 
+  const settingsRolesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/settings/roles",
+    component: SettingsRolesRouteView,
+  });
+
+  const settingsTeamsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/settings/teams",
+    component: SettingsTeamsRouteView,
+  });
+
   const settingsMembersRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/settings/members",
@@ -626,11 +812,16 @@ function buildAppRouter(initialEntries?: string[]) {
     flagsRoute,
     flagDetailRoute,
     segmentsRoute,
+    pipelinesRoute,
+    debuggerRoute,
+    approvalsRoute,
     auditLogRoute,
     settingsProjectsRoute,
     settingsEnvsRoute,
     settingsWebhooksRoute,
     settingsTokensRoute,
+    settingsRolesRoute,
+    settingsTeamsRoute,
     settingsMembersRoute,
   ]);
 

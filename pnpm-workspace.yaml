@@ -4,3 +4,4 @@ packages:
   - "sdks/node-server"
   - "sdks/browser"
   - "sdks/react"
+  - "sdks/edge"

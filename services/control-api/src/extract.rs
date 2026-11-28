@@ -16,6 +16,8 @@ use crate::problem::ApiError;
 pub struct AppState {
     pub storage: Storage,
     pub telemetry: Arc<dyn TelemetryStore>,
+    pub snapshots: Option<skotos_fanout::SnapshotStore>,
+    pub nats: Option<skotos_fanout::NatsFanout>,
     pub identity_provider: Arc<dyn IdentityProvider>,
     pub api_token_verifier: ApiTokenVerifier,
     pub authorizer: Authorizer,
