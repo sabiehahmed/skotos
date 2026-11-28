@@ -775,10 +775,32 @@ impl Storage {
                 .map_err(|e| {
                 StorageError::Validation(DomainError::Validation(e.to_string()))
             })?;
-            let on_var = variations.first().map(|v| v.id).ok_or_else(|| {
+            let first_var = variations.first().map(|v| v.id).ok_or_else(|| {
                 StorageError::Validation(DomainError::InvalidVariation("missing variation".into()))
             })?;
-            let off_var = variations.get(1).map(|v| v.id).unwrap_or(on_var);
+            // Seed the new environment with the flag's own on/off defaults, taken from the
+            // oldest environment that already has a config for it. Assuming "first variation
+            // = on, second = off" inverts flags whose variations are ordered e.g. [false, true].
+            let existing: Option<sqlx::types::Json<FlagEnvConfigBody>> = sqlx::query_scalar(
+                "SELECT c.config_jsonb FROM flag_env_configs c
+                 JOIN environments e ON e.id = c.env_id
+                 WHERE c.flag_id = $1 AND c.env_id <> $2
+                 ORDER BY e.created_at ASC
+                 LIMIT 1",
+            )
+            .bind(flag_id)
+            .bind(env.id)
+            .fetch_optional(&mut *tx)
+            .await?;
+            let known = |id: Option<Uuid>| id.filter(|id| variations.iter().any(|v| v.id == *id));
+            let (on_var, off_var) = default_on_off_variations(
+                &variations,
+                existing
+                    .as_ref()
+                    .and_then(|c| known(c.0.fallthrough.variation_id)),
+                existing.as_ref().and_then(|c| known(c.0.off_variation_id)),
+                first_var,
+            );
             let body = FlagEnvConfigBody {
                 off_variation_id: Some(off_var),
                 prerequisites: vec![],
@@ -2721,4 +2743,68 @@ fn parse_api_token_row(row: &sqlx::postgres::PgRow) -> Result<ApiToken, StorageE
         expires_at: row.get("expires_at"),
         created_at: row.get("created_at"),
     })
+}
+
+/// Picks the fallthrough ("on") and off variations for a flag in a newly created environment.
+///
+/// Prefers the defaults already used by the flag in another environment. Without one, boolean
+/// flags serve `true` when on and `false` when off; other flags fall back to the first and
+/// second variation.
+fn default_on_off_variations(
+    variations: &[Variation],
+    existing_on: Option<Uuid>,
+    existing_off: Option<Uuid>,
+    first_var: Uuid,
+) -> (Uuid, Uuid) {
+    let by_value = |want: bool| {
+        variations
+            .iter()
+            .find(|v| v.value == Value::Bool(want))
+            .map(|v| v.id)
+    };
+    let on = existing_on.or_else(|| by_value(true)).unwrap_or(first_var);
+    let off = existing_off
+        .or_else(|| by_value(false))
+        .or_else(|| variations.get(1).map(|v| v.id))
+        .unwrap_or(on);
+    (on, off)
+}
+
+#[cfg(test)]
+mod default_variation_tests {
+    use super::*;
+
+    fn var(value: Value) -> Variation {
+        Variation {
+            id: Uuid::new_v4(),
+            value,
+            name: None,
+            description: None,
+        }
+    }
+
+    #[test]
+    fn boolean_flags_serve_true_on_and_false_off_regardless_of_order() {
+        let vars = vec![var(json!(false)), var(json!(true))];
+        let (on, off) = default_on_off_variations(&vars, None, None, vars[0].id);
+        assert_eq!(on, vars[1].id);
+        assert_eq!(off, vars[0].id);
+    }
+
+    #[test]
+    fn existing_environment_defaults_win() {
+        let vars = vec![var(json!("a")), var(json!("b")), var(json!("c"))];
+        let (on, off) =
+            default_on_off_variations(&vars, Some(vars[2].id), Some(vars[0].id), vars[0].id);
+        assert_eq!(on, vars[2].id);
+        assert_eq!(off, vars[0].id);
+    }
+
+    #[test]
+    fn multivariate_flags_fall_back_to_first_and_second() {
+        let vars = vec![var(json!("a")), var(json!("b"))];
+        let (on, off) = default_on_off_variations(&vars, None, None, vars[0].id);
+        assert_eq!(on, vars[0].id);
+        assert_eq!(off, vars[1].id);
+    }
 }
