@@ -2,21 +2,21 @@
 
 **Skotos** is a LaunchDarkly-style feature flagging, targeting, and experimentation platform designed for low-latency flag evaluation, real-time streaming updates, and enterprise-grade governance.
 
-> **Status:** Phase 3 Complete (Enterprise Governance, Release Automation, Big Segments, DB-Free Relay Proxy, Edge SDK, Live Debugger, CLI/Code-Refs/MCP/Terraform) — Ready for Phase 4
+> **Status:** Phase 4 Complete (ClickHouse Telemetry, Data Export, A/B & A/A Experimentation, Guarded Rollouts, Engineering Insights, 2/4/6-Stage Migrations, Synced Segments, Python/Java/Mobile SDKs & VS Code Extension) — Ready for Phase 5
 
 ## Repository Structure
 
 ```text
 skotos/
-├── crates/         # Rust libraries: skotos-domain, skotos-eval, skotos-storage, skotos-auth, skotos-telemetry, skotos-fanout
+├── crates/         # Rust libraries: skotos-domain, skotos-eval, skotos-storage, skotos-auth, skotos-telemetry (Postgres + ClickHouse), skotos-fanout
 ├── services/       # Rust services: control-api (Axum + utoipa), delivery-edge (DB-free SSE/evalx), event-ingest, relay-proxy (DB-free)
-├── sdks/           # Official SDKs + OpenFeature providers: rust-server, go-server, node-server, edge, browser, react
+├── sdks/           # Official SDKs + OpenFeature providers: rust-server, go-server, node-server, python-server, java-server, edge, browser, react, mobile
 ├── tools/          # Developer CLIs & AI tooling: skotos-cli, skotos-code-refs, skotos-mcp (stdio + HTTP MCP server)
-├── integrations/   # Infrastructure-as-Code & ecosystem providers: terraform-provider-skotos (Go)
+├── integrations/   # Ecosystem providers: terraform-provider-skotos (Go), vscode-skotos (VS Code / Cursor extension)
 ├── packages/       # TypeScript packages: @skotos/ui (Radix + CSS Modules, zero Tailwind), @skotos/api-client
 ├── apps/           # Frontend apps: @skotos/web (React + Vite Management Dashboard SPA)
 ├── spec/           # Canonical Golden Evaluation Test Suite (124 vectors) and OpenAPI 3.1 schema
-├── deploy/         # Local Docker Compose dev stack (PostgreSQL 16, NATS JetStream, MinIO)
+├── deploy/         # Local Docker Compose dev stack (PostgreSQL 16, NATS JetStream, MinIO, optional ClickHouse analytics profile)
 ├── e2e/            # Playwright real-browser end-to-end & WCAG 2.1 AA accessibility verification
 ├── docs/           # Product vision, feature catalog, requirements, roadmap, implementation plan, and RFCs
 ├── design/         # Domain model, evaluation semantics, API contracts, SDKs, and UI/UX

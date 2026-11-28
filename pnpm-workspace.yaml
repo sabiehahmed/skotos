@@ -5,3 +5,5 @@ packages:
   - "sdks/browser"
   - "sdks/react"
   - "sdks/edge"
+  - "sdks/mobile"
+  - "integrations/vscode-skotos"

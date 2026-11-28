@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Skotos Control Plane API",
-    "description": "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, Big Segments, custom RBAC roles, teams, approval workflows, release pipelines, workflows, SSO/SCIM, code references, scheduling, triggers, webhooks, usage analytics, simulations, revisions, audit logs, API tokens, and members.",
+    "description": "Control Plane REST API for managing Skotos organizations, projects, environments, feature flags, targeting rules, segments, Big Segments, custom RBAC roles, teams, approval workflows, release pipelines, workflows, SSO/SCIM, code references, scheduling, triggers, webhooks, usage analytics, experimentation, guarded rollouts, migration flags, synced segments, data export sinks, simulations, revisions, audit logs, API tokens, and members.",
     "license": {
       "name": ""
     },
@@ -544,6 +544,111 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-export/sinks": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "operationId": "list_data_export_sinks",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportSinkListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "analytics"
+        ],
+        "operationId": "create_data_export_sink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDataExportSinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportSink"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data-export/sinks/{sinkId}": {
+      "delete": {
+        "tags": [
+          "analytics"
+        ],
+        "operationId": "delete_data_export_sink",
+        "parameters": [
+          {
+            "name": "sinkId",
+            "in": "path",
+            "description": "Data export sink ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/data-export/sinks/{sinkId}/flush": {
+      "post": {
+        "tags": [
+          "analytics"
+        ],
+        "operationId": "flush_data_export_sink",
+        "parameters": [
+          {
+            "name": "sinkId",
+            "in": "path",
+            "description": "Data export sink ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataExportFlushResult"
                 }
               }
             }
@@ -1400,6 +1505,330 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "list_experiments",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "create_experiment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExperimentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Experiment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "get_experiment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expKey",
+            "in": "path",
+            "description": "Experiment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Experiment"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "delete_experiment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expKey",
+            "in": "path",
+            "description": "Experiment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}/results": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "get_experiment_results",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expKey",
+            "in": "path",
+            "description": "Experiment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentResults"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}/start": {
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "start_experiment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expKey",
+            "in": "path",
+            "description": "Experiment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Experiment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/experiments/{expKey}/stop": {
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "stop_experiment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expKey",
+            "in": "path",
+            "description": "Experiment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Experiment"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/environments/{envKey}/flags/bulk-patch": {
       "post": {
         "tags": [
@@ -1443,6 +1872,194 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BulkPatchFlagsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/guarded-rollouts": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "list_guarded_rollouts",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardedRolloutListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "create_guarded_rollout",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGuardedRolloutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardedRollout"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/guarded-rollouts/{rolloutId}/evaluate": {
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "evaluate_guarded_rollout_handler",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rolloutId",
+            "in": "path",
+            "description": "Guarded rollout ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardedRolloutEvaluation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/guarded-rollouts/{rolloutId}/rollback": {
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "rollback_guarded_rollout",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rolloutId",
+            "in": "path",
+            "description": "Guarded rollout ID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuardedRollout"
                 }
               }
             }
@@ -2063,6 +2680,94 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/environments/{envKey}/synced-segments": {
+      "get": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "list_synced_segments",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncedSegmentListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "create_synced_segment",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSyncedSegmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSyncedSegmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/environments/{envKey}/usage": {
       "get": {
         "tags": [
@@ -2632,6 +3337,217 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApprovalRequest"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration": {
+      "get": {
+        "tags": [
+          "flags"
+        ],
+        "operationId": "get_migration_config",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MigrationFlagConfig"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "flags"
+        ],
+        "operationId": "upsert_migration_config",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMigrationConfigRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationFlagConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration/telemetry": {
+      "get": {
+        "tags": [
+          "flags"
+        ],
+        "operationId": "get_migration_telemetry",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationTelemetrySummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/monitoring": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "operationId": "get_flag_monitoring",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "flagKey",
+            "in": "path",
+            "description": "Flag key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "envKey",
+            "in": "path",
+            "description": "Environment key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagMonitoringSummary"
                 }
               }
             }
@@ -3647,6 +4563,346 @@
         }
       }
     },
+    "/api/v1/projects/{projectKey}/insights": {
+      "get": {
+        "tags": [
+          "analytics"
+        ],
+        "operationId": "get_engineering_insights",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineeringInsights"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/layers": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "list_layers",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayerListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "create_layer",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLayerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutualExclusionLayer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/layers/{layerKey}": {
+      "delete": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "delete_layer",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "layerKey",
+            "in": "path",
+            "description": "Mutual exclusion layer key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/metric-groups": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "list_metric_groups",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricGroupListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "create_metric_group",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMetricGroupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricGroup"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/metric-groups/{groupKey}": {
+      "delete": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "delete_metric_group",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupKey",
+            "in": "path",
+            "description": "Metric group key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/metrics": {
+      "get": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "list_metrics",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "create_metric",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMetricRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricDefinition"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectKey}/metrics/{metricKey}": {
+      "delete": {
+        "tags": [
+          "experiments"
+        ],
+        "operationId": "delete_metric",
+        "parameters": [
+          {
+            "name": "projectKey",
+            "in": "path",
+            "description": "Project key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "metricKey",
+            "in": "path",
+            "description": "Metric key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectKey}/release-pipelines": {
       "get": {
         "tags": [
@@ -3959,6 +5215,73 @@
             "name": "providerId",
             "in": "path",
             "description": "SSO provider UUID",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/synced-segments/ingest/{token}": {
+      "post": {
+        "tags": [
+          "segments"
+        ],
+        "summary": "High-throughput unauthenticated CDP / Reverse-ETL sync endpoint (`POST /api/v1/synced-segments/ingest/{token}`).\nAuthenticates via one-time hashed sync token (`sk_sync_...`), mutates Big Segment membership,\nand triggers OutboxWorker Zstd hash-block sync to R2/S3 & NATS!",
+        "operationId": "ingest_synced_segment",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "Secret synced segment push token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncedSegmentIngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncedSegmentIngestResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/synced-segments/{integrationId}": {
+      "delete": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "delete_synced_segment",
+        "parameters": [
+          {
+            "name": "integrationId",
+            "in": "path",
+            "description": "Synced segment integration ID",
             "required": true,
             "schema": {
               "type": "string",
@@ -5608,6 +6931,33 @@
           }
         }
       },
+      "CreateDataExportSinkRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "destination"
+        ],
+        "properties": {
+          "config": {},
+          "destination": {
+            "type": "string"
+          },
+          "envId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DataExportSinkKind"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateEnvironmentRequest": {
         "type": "object",
         "required": [
@@ -5629,6 +6979,80 @@
           },
           "requireComments": {
             "type": "boolean"
+          }
+        }
+      },
+      "CreateExperimentRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "flagKey",
+          "primaryMetricKey"
+        ],
+        "properties": {
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperimentVariationWeight"
+            }
+          },
+          "alpha": {
+            "type": "number",
+            "format": "double"
+          },
+          "controlVariationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/StatisticalEngine"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "layerKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerReservationBuckets": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "metricGroupKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ExperimentMode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "primaryMetricKey": {
+            "type": "string"
+          },
+          "randomizationUnit": {
+            "type": "string"
+          },
+          "secondaryMetricKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -5734,6 +7158,61 @@
           }
         }
       },
+      "CreateGuardedRolloutRequest": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "name",
+          "guardrails"
+        ],
+        "properties": {
+          "autoRollback": {
+            "type": "boolean"
+          },
+          "controlVariationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currentTrafficPct": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuardrailMetricRule"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "treatmentVariationIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CreateLayerRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateMemberRequest": {
         "type": "object",
         "required": [
@@ -5756,6 +7235,74 @@
           },
           "role": {
             "$ref": "#/components/schemas/BuiltInRole"
+          }
+        }
+      },
+      "CreateMetricGroupRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "kind",
+          "metricKeys"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricGroupKind"
+          },
+          "metricKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateMetricRequest": {
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "kind",
+          "eventKey",
+          "successDirection"
+        ],
+        "properties": {
+          "aggregation": {
+            "$ref": "#/components/schemas/MetricAggregation"
+          },
+          "description": {
+            "type": "string"
+          },
+          "eventKey": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "randomizationUnit": {
+            "type": "string"
+          },
+          "successDirection": {
+            "$ref": "#/components/schemas/MetricSuccessDirection"
+          },
+          "unit": {
+            "type": "string"
           }
         }
       },
@@ -5961,6 +7508,47 @@
           }
         }
       },
+      "CreateSyncedSegmentRequest": {
+        "type": "object",
+        "required": [
+          "segmentKey",
+          "provider",
+          "externalCohortId"
+        ],
+        "properties": {
+          "contextKind": {
+            "type": "string"
+          },
+          "externalCohortId": {
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/SyncedSegmentProvider"
+          },
+          "segmentKey": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateSyncedSegmentResponse": {
+        "type": "object",
+        "required": [
+          "integration",
+          "plaintextToken",
+          "ingestPath"
+        ],
+        "properties": {
+          "ingestPath": {
+            "type": "string"
+          },
+          "integration": {
+            "$ref": "#/components/schemas/SyncedSegmentIntegration"
+          },
+          "plaintextToken": {
+            "type": "string"
+          }
+        }
+      },
       "CreateTeamRequest": {
         "type": "object",
         "required": [
@@ -6140,6 +7728,202 @@
             "items": {
               "$ref": "#/components/schemas/CustomRole"
             }
+          }
+        }
+      },
+      "DataExportFlushResult": {
+        "type": "object",
+        "required": [
+          "sinkId",
+          "eventsExported",
+          "bytesWritten",
+          "location",
+          "flushedAt"
+        ],
+        "properties": {
+          "bytesWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "eventsExported": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "flushedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "location": {
+            "type": "string"
+          },
+          "sinkId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "DataExportSink": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "name",
+          "kind",
+          "destination",
+          "enabled",
+          "exportedEventCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "config": {},
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "envId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "exportedEventCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DataExportSinkKind"
+          },
+          "lastExportedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DataExportSinkKind": {
+        "type": "string",
+        "enum": [
+          "s3_parquet",
+          "kinesis",
+          "pubsub",
+          "snowflake",
+          "segment",
+          "webhook_ndjson"
+        ]
+      },
+      "DataExportSinkListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataExportSink"
+            }
+          }
+        }
+      },
+      "EngineeringInsights": {
+        "type": "object",
+        "description": "Engineering Insights: DORA velocity & stability metrics + Flag Health.",
+        "required": [
+          "projectKey",
+          "lookbackDays",
+          "flagDeploymentsCount",
+          "deploymentsPerDay",
+          "rollbacksCount",
+          "changeFailureRatePct",
+          "meanTimeToRecoveryMinutes",
+          "totalFlags",
+          "temporaryFlags",
+          "staleFlags",
+          "activeExperiments",
+          "activeGuardedRollouts",
+          "rolledBackGuardrails",
+          "computedAt"
+        ],
+        "properties": {
+          "activeExperiments": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "activeGuardedRollouts": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "changeFailureRatePct": {
+            "type": "number",
+            "format": "double"
+          },
+          "computedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deploymentsPerDay": {
+            "type": "number",
+            "format": "double"
+          },
+          "flagDeploymentsCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lookbackDays": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "meanTimeToRecoveryMinutes": {
+            "type": "number",
+            "format": "double"
+          },
+          "projectKey": {
+            "type": "string"
+          },
+          "rollbacksCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rolledBackGuardrails": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "staleFlags": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "temporaryFlags": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalFlags": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -6480,6 +8264,240 @@
           }
         }
       },
+      "Experiment": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectId",
+          "envId",
+          "key",
+          "name",
+          "flagKey",
+          "mode",
+          "engine",
+          "status",
+          "randomizationUnit",
+          "controlVariationIndex",
+          "primaryMetricKey",
+          "allocations",
+          "alpha",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperimentVariationWeight"
+            },
+            "description": "Expected allocation weights in basis points summing to 100_000 (used for SRM)."
+          },
+          "alpha": {
+            "type": "number",
+            "format": "double"
+          },
+          "controlVariationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/StatisticalEngine"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "hypothesis": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "layerBucketEnd": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "layerBucketStart": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "layerKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metricGroupKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ExperimentMode"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "primaryMetricKey": {
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "randomizationUnit": {
+            "type": "string"
+          },
+          "secondaryMetricKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExperimentStatus"
+          },
+          "stoppedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExperimentListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Experiment"
+            }
+          }
+        }
+      },
+      "ExperimentMode": {
+        "type": "string",
+        "enum": [
+          "ab_test",
+          "aa_test"
+        ]
+      },
+      "ExperimentResults": {
+        "type": "object",
+        "required": [
+          "experimentKey",
+          "flagKey",
+          "mode",
+          "engine",
+          "status",
+          "totalExposures",
+          "srm",
+          "primary",
+          "computedAt"
+        ],
+        "properties": {
+          "computedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/StatisticalEngine"
+          },
+          "experimentKey": {
+            "type": "string"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ExperimentMode"
+          },
+          "primary": {
+            "$ref": "#/components/schemas/MetricExperimentResult"
+          },
+          "secondary": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricExperimentResult"
+            }
+          },
+          "srm": {
+            "$ref": "#/components/schemas/SrmCheckResult"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ExperimentStatus"
+          },
+          "totalExposures": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ExperimentStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "running",
+          "stopped",
+          "archived"
+        ]
+      },
+      "ExperimentVariationWeight": {
+        "type": "object",
+        "required": [
+          "variationIndex",
+          "weight"
+        ],
+        "properties": {
+          "variationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "weight": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ExportAuditArchiveRequest": {
         "type": "object",
         "properties": {
@@ -6814,6 +8832,34 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/FlagResponse"
+            }
+          }
+        }
+      },
+      "FlagMonitoringSummary": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "lookbackHours",
+          "variations",
+          "generatedAt"
+        ],
+        "properties": {
+          "flagKey": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lookbackHours": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "variations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FlagVariationMonitoring"
             }
           }
         }
@@ -7566,6 +9612,54 @@
           }
         }
       },
+      "FlagVariationMonitoring": {
+        "type": "object",
+        "description": "Per-variation health metrics displayed directly on Flag Detail pages (Feature Monitoring).",
+        "required": [
+          "variationIndex",
+          "exposures",
+          "errorCount",
+          "errorRate",
+          "avgLatencyMs",
+          "p95LatencyMs",
+          "conversionCount",
+          "conversionRate"
+        ],
+        "properties": {
+          "avgLatencyMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "conversionCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "conversionRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "errorCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "errorRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "exposures": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "p95LatencyMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "variationIndex": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "FlagWorkflow": {
         "type": "object",
         "required": [
@@ -7640,6 +9734,220 @@
           }
         }
       },
+      "GuardedRollout": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectId",
+          "envId",
+          "flagKey",
+          "name",
+          "status",
+          "controlVariationIndex",
+          "treatmentVariationIndex",
+          "currentTrafficPct",
+          "autoRollback",
+          "guardrails",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "autoRollback": {
+            "type": "boolean"
+          },
+          "controlVariationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentTrafficPct": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "guardrails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuardrailMetricRule"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lastEvaluatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "lastVerdict": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GuardedRolloutStatus"
+          },
+          "treatmentVariationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "GuardedRolloutEvaluation": {
+        "type": "object",
+        "required": [
+          "rollout",
+          "srm",
+          "checks",
+          "regressionDetected",
+          "autoRolledBack",
+          "evaluatedAt"
+        ],
+        "properties": {
+          "autoRolledBack": {
+            "type": "boolean"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuardrailMetricCheck"
+            }
+          },
+          "evaluatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "regressionDetected": {
+            "type": "boolean"
+          },
+          "rollout": {
+            "$ref": "#/components/schemas/GuardedRollout"
+          },
+          "srm": {
+            "$ref": "#/components/schemas/SrmCheckResult"
+          }
+        }
+      },
+      "GuardedRolloutListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuardedRollout"
+            }
+          }
+        }
+      },
+      "GuardedRolloutStatus": {
+        "type": "string",
+        "enum": [
+          "monitoring",
+          "completed",
+          "rolled_back",
+          "paused"
+        ]
+      },
+      "GuardrailMetricCheck": {
+        "type": "object",
+        "required": [
+          "metricKey",
+          "controlMean",
+          "treatmentMean",
+          "controlSamples",
+          "treatmentSamples",
+          "regressionPct",
+          "regressed"
+        ],
+        "properties": {
+          "controlMean": {
+            "type": "number",
+            "format": "double"
+          },
+          "controlSamples": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "metricKey": {
+            "type": "string"
+          },
+          "pValue": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "regressed": {
+            "type": "boolean"
+          },
+          "regressionPct": {
+            "type": "number",
+            "format": "double"
+          },
+          "treatmentMean": {
+            "type": "number",
+            "format": "double"
+          },
+          "treatmentSamples": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "GuardrailMetricRule": {
+        "type": "object",
+        "required": [
+          "metricKey",
+          "maxRegressionPct"
+        ],
+        "properties": {
+          "maxRegressionPct": {
+            "type": "number",
+            "format": "double",
+            "description": "Relative degradation percentage threshold (e.g. `10.0` = 10% worse than control triggers alert/rollback)."
+          },
+          "metricKey": {
+            "type": "string"
+          },
+          "minSampleSize": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "HealthResponse": {
         "type": "object",
         "required": [
@@ -7656,6 +9964,20 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      },
+      "LayerListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MutualExclusionLayer"
+            }
           }
         }
       },
@@ -7771,6 +10093,424 @@
             "items": {
               "$ref": "#/components/schemas/Member"
             }
+          }
+        }
+      },
+      "MetricAggregation": {
+        "type": "string",
+        "enum": [
+          "average",
+          "sum",
+          "count",
+          "p95"
+        ]
+      },
+      "MetricDefinition": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectId",
+          "key",
+          "name",
+          "kind",
+          "eventKey",
+          "successDirection",
+          "aggregation",
+          "randomizationUnit",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "aggregation": {
+            "$ref": "#/components/schemas/MetricAggregation"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "eventKey": {
+            "type": "string",
+            "description": "SDK custom event key tracked via `client.track(event_key, ctx, data, value)`."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "randomizationUnit": {
+            "type": "string"
+          },
+          "successDirection": {
+            "$ref": "#/components/schemas/MetricSuccessDirection"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MetricExperimentResult": {
+        "type": "object",
+        "required": [
+          "metricKey",
+          "metricName",
+          "kind",
+          "successDirection",
+          "variations"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/MetricKind"
+          },
+          "metricKey": {
+            "type": "string"
+          },
+          "metricName": {
+            "type": "string"
+          },
+          "successDirection": {
+            "$ref": "#/components/schemas/MetricSuccessDirection"
+          },
+          "variations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariationResult"
+            }
+          }
+        }
+      },
+      "MetricGroup": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "projectId",
+          "key",
+          "name",
+          "kind",
+          "metricKeys",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MetricGroupKind"
+          },
+          "metricKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ordered metric keys (step order matters for `funnel` groups)."
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MetricGroupKind": {
+        "type": "string",
+        "enum": [
+          "funnel",
+          "collection"
+        ]
+      },
+      "MetricGroupListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricGroup"
+            }
+          }
+        }
+      },
+      "MetricKind": {
+        "type": "string",
+        "enum": [
+          "conversion",
+          "numeric",
+          "latency",
+          "error_rate"
+        ]
+      },
+      "MetricListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricDefinition"
+            }
+          }
+        }
+      },
+      "MetricSuccessDirection": {
+        "type": "string",
+        "enum": [
+          "higher_is_better",
+          "lower_is_better"
+        ]
+      },
+      "MigrationFlagConfig": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "envId",
+          "flagKey",
+          "template",
+          "currentStage",
+          "checkRatio",
+          "readExecutionOrder",
+          "updatedAt"
+        ],
+        "properties": {
+          "checkRatio": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Consistency check sampling ratio (`1` = every call, `10` = 1 in 10, `0` = disabled)."
+          },
+          "currentStage": {
+            "$ref": "#/components/schemas/MigrationStage"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "flagKey": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readExecutionOrder": {
+            "type": "string",
+            "description": "Read execution order: `\"parallel\"`, `\"serial\"`, or `\"random\"`."
+          },
+          "template": {
+            "$ref": "#/components/schemas/MigrationTemplate"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MigrationStage": {
+        "type": "string",
+        "enum": [
+          "off",
+          "dualwrite",
+          "shadow",
+          "live",
+          "rampdown",
+          "complete"
+        ]
+      },
+      "MigrationStageMetrics": {
+        "type": "object",
+        "required": [
+          "stage",
+          "oldInvocations",
+          "newInvocations",
+          "oldErrors",
+          "newErrors",
+          "oldAvgLatencyMs",
+          "newAvgLatencyMs",
+          "consistencyMatches",
+          "consistencyMismatches",
+          "consistencyRatePct"
+        ],
+        "properties": {
+          "consistencyMatches": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "consistencyMismatches": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "consistencyRatePct": {
+            "type": "number",
+            "format": "double"
+          },
+          "newAvgLatencyMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "newErrors": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "newInvocations": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "oldAvgLatencyMs": {
+            "type": "number",
+            "format": "double"
+          },
+          "oldErrors": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "oldInvocations": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stage": {
+            "type": "string"
+          }
+        }
+      },
+      "MigrationTelemetrySummary": {
+        "type": "object",
+        "required": [
+          "flagKey",
+          "stages",
+          "generatedAt"
+        ],
+        "properties": {
+          "flagKey": {
+            "type": "string"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MigrationStageMetrics"
+            }
+          }
+        }
+      },
+      "MigrationTemplate": {
+        "type": "string",
+        "enum": [
+          "two_stage",
+          "four_stage",
+          "six_stage"
+        ]
+      },
+      "MutualExclusionLayer": {
+        "type": "object",
+        "description": "Non-overlapping traffic space (`0..100_000` basis points) isolating concurrent experiments.",
+        "required": [
+          "id",
+          "orgId",
+          "projectId",
+          "key",
+          "name",
+          "salt",
+          "totalBuckets",
+          "allocatedBuckets",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "allocatedBuckets": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "salt": {
+            "type": "string"
+          },
+          "totalBuckets": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -8900,6 +11640,43 @@
           }
         }
       },
+      "SrmCheckResult": {
+        "type": "object",
+        "required": [
+          "chiSquare",
+          "pValue",
+          "srmDetected",
+          "expectedCounts",
+          "observedCounts"
+        ],
+        "properties": {
+          "chiSquare": {
+            "type": "number",
+            "format": "double"
+          },
+          "expectedCounts": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "observedCounts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "pValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "srmDetected": {
+            "type": "boolean"
+          }
+        }
+      },
       "SsoProtocol": {
         "type": "string",
         "enum": [
@@ -8985,6 +11762,140 @@
             }
           }
         }
+      },
+      "StatisticalEngine": {
+        "type": "string",
+        "enum": [
+          "frequentist",
+          "bayesian"
+        ]
+      },
+      "SyncedSegmentIngestRequest": {
+        "type": "object",
+        "properties": {
+          "addKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removeKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SyncedSegmentIngestResponse": {
+        "type": "object",
+        "required": [
+          "segmentKey",
+          "includedCount",
+          "generation"
+        ],
+        "properties": {
+          "generation": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "includedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "segmentKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncedSegmentIntegration": {
+        "type": "object",
+        "required": [
+          "id",
+          "orgId",
+          "envId",
+          "segmentKey",
+          "provider",
+          "externalCohortId",
+          "contextKind",
+          "tokenPrefix",
+          "enabled",
+          "syncedMemberCount",
+          "createdAt"
+        ],
+        "properties": {
+          "contextKind": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "envId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalCohortId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lastSyncedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "orgId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/SyncedSegmentProvider"
+          },
+          "segmentKey": {
+            "type": "string"
+          },
+          "syncedMemberCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tokenPrefix": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncedSegmentListResponse": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SyncedSegmentIntegration"
+            }
+          }
+        }
+      },
+      "SyncedSegmentProvider": {
+        "type": "string",
+        "enum": [
+          "amplitude",
+          "hightouch",
+          "fivetran",
+          "census",
+          "rudderstack",
+          "segment",
+          "webhook"
+        ]
       },
       "Target": {
         "type": "object",
@@ -9290,6 +12201,28 @@
           }
         }
       },
+      "UpsertMigrationConfigRequest": {
+        "type": "object",
+        "required": [
+          "template",
+          "currentStage"
+        ],
+        "properties": {
+          "checkRatio": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currentStage": {
+            "$ref": "#/components/schemas/MigrationStage"
+          },
+          "readExecutionOrder": {
+            "type": "string"
+          },
+          "template": {
+            "$ref": "#/components/schemas/MigrationTemplate"
+          }
+        }
+      },
       "Variation": {
         "type": "object",
         "required": [
@@ -9335,6 +12268,118 @@
               "null"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "VariationResult": {
+        "type": "object",
+        "required": [
+          "variationIndex",
+          "isControl",
+          "exposures",
+          "conversions",
+          "mean",
+          "stdErr",
+          "statisticallySignificant",
+          "winner"
+        ],
+        "properties": {
+          "ciLower": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "ciUpper": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "conversions": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "exposures": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isControl": {
+            "type": "boolean"
+          },
+          "mean": {
+            "type": "number",
+            "format": "double"
+          },
+          "pValue": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "probabilityToBeatControl": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "relativeLift": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "statisticallySignificant": {
+            "type": "boolean"
+          },
+          "stdErr": {
+            "type": "number",
+            "format": "double"
+          },
+          "variationIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "winner": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VariationSufficientStats": {
+        "type": "object",
+        "description": "Compact sufficient statistics per variation (`n`, `conversions`, `sum`, `sum_sq`),\nallowing Frequentist & Bayesian inference in O(1) without pulling raw rows from OLAP.",
+        "required": [
+          "variationIndex",
+          "exposures",
+          "conversions",
+          "sum",
+          "sumSq"
+        ],
+        "properties": {
+          "conversions": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "exposures": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sum": {
+            "type": "number",
+            "format": "double"
+          },
+          "sumSq": {
+            "type": "number",
+            "format": "double"
+          },
+          "variationIndex": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -9622,11 +12667,11 @@
     },
     {
       "name": "flags",
-      "description": "Feature flag management, semantic patching, simulation, and version restore"
+      "description": "Feature flag management, semantic patching, simulation, migration flags, and version restore"
     },
     {
       "name": "segments",
-      "description": "Rule-based, list-based, and high-scale Big Segments"
+      "description": "Rule-based, list-based, high-scale Big Segments, and Synced Segments"
     },
     {
       "name": "automation",
@@ -9643,6 +12688,14 @@
     {
       "name": "releases",
       "description": "Release pipelines, flag releases, and application version tracking"
+    },
+    {
+      "name": "experiments",
+      "description": "Metrics, funnels, mutual exclusion layers, A/B & A/A experiments, and guarded rollouts"
+    },
+    {
+      "name": "analytics",
+      "description": "Feature monitoring, engineering insights (DORA), and real-time data export sinks"
     },
     {
       "name": "devtools",

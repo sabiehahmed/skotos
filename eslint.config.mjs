@@ -35,6 +35,8 @@ export default [
       "apps/**/*.{ts,tsx}",
       "sdks/browser/**/*.{ts,tsx}",
       "sdks/react/**/*.{ts,tsx}",
+      "sdks/mobile/**/*.{ts,tsx}",
+      "integrations/vscode-skotos/**/*.{ts,tsx}",
     ],
     languageOptions: {
       ecmaVersion: 2022,

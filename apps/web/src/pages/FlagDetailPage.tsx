@@ -8,6 +8,7 @@ import {
   Card,
   Checkbox,
   CodeBlock,
+  DataTable,
   Dialog,
   DiffViewer,
   FormField,
@@ -51,6 +52,8 @@ import {
   type FlagEnvConfig,
   type FlagPatchInstruction,
   type FlagResponse,
+  type MigrationStage,
+  type MigrationTemplate,
   type SimulateFlagResponse,
   type TriggerAction,
 } from "../lib/api";
@@ -193,6 +196,82 @@ export function FlagDetailPage({
         ),
       ),
     enabled: Boolean(envKey),
+  });
+
+  const monitoringQuery = useQuery({
+    queryKey: ["flag-monitoring", projectKey, flagKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/monitoring",
+          { params: { path: { projectKey, flagKey, envKey } } },
+        ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const migrationConfigQuery = useQuery({
+    queryKey: ["flag-migration-config", projectKey, flagKey, envKey],
+    queryFn: async () => {
+      const res = await skotosApi.GET(
+        "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration",
+        { params: { path: { projectKey, flagKey, envKey } } },
+      );
+      if (res.response.status === 404) return null;
+      return unwrapApiResult(res);
+    },
+    enabled: Boolean(envKey),
+  });
+
+  const migrationTelemetryQuery = useQuery({
+    queryKey: ["flag-migration-telemetry", projectKey, flagKey, envKey],
+    queryFn: async () =>
+      unwrapApiResult(
+        await skotosApi.GET(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration/telemetry",
+          { params: { path: { projectKey, flagKey, envKey } } },
+        ),
+      ),
+    enabled: Boolean(envKey),
+  });
+
+  const [migTemplate, setMigTemplate] = useState<MigrationTemplate>("six_stage");
+  const [migStage, setMigStage] = useState<MigrationStage>("off");
+  const [migCheckRatio, setMigCheckRatio] = useState("1");
+  const [migReadOrder, setMigReadOrder] = useState("parallel");
+
+  useEffect(() => {
+    if (migrationConfigQuery.data) {
+      setMigTemplate(migrationConfigQuery.data.template);
+      setMigStage(migrationConfigQuery.data.currentStage);
+      setMigCheckRatio(String(migrationConfigQuery.data.checkRatio));
+      setMigReadOrder(migrationConfigQuery.data.readExecutionOrder);
+    }
+  }, [migrationConfigQuery.data]);
+
+  const saveMigrationMutation = useMutation({
+    mutationFn: async () =>
+      unwrapApiResult(
+        await skotosApi.PUT(
+          "/api/v1/projects/{projectKey}/flags/{flagKey}/environments/{envKey}/migration",
+          {
+            params: { path: { projectKey, flagKey, envKey } },
+            body: {
+              template: migTemplate,
+              currentStage: migStage,
+              checkRatio: Number(migCheckRatio) || 1,
+              readExecutionOrder: migReadOrder,
+            },
+          },
+        ),
+      ),
+    onSuccess: (cfg) => {
+      toast({ title: `Migration stage set to ${cfg.currentStage}`, tone: "success" });
+      void qc.invalidateQueries({ queryKey: ["flag-migration-config", projectKey, flagKey, envKey] });
+      void qc.invalidateQueries({ queryKey: ["flag-migration-telemetry", projectKey, flagKey, envKey] });
+    },
+    onError: (err) =>
+      toast({ title: "Failed to save migration stage", description: formatErrorMessage(err), tone: "danger" }),
   });
 
   const [workflowName, setWorkflowName] = useState("Progressive Rollout");
@@ -1762,6 +1841,220 @@ export function FlagDetailPage({
                 </Stack>
               ))}
             </Stack>
+          )}
+        </Stack>
+      </Card>
+
+      {/* Phase 4: Feature Monitoring (Per-Variation Error Rate & Latency) */}
+      <Card padded>
+        <Stack gap={3}>
+          <Stack direction="horizontal" align="center" justify="space-between">
+            <Stack gap={1}>
+              <Heading level={3}>Feature Monitoring (Last 24h)</Heading>
+              <Text size="sm" tone="muted">
+                Per-variation exposures, error rate, p95 latency, and conversions for regression
+                monitoring in {activeEnv?.name ?? envKey}.
+              </Text>
+            </Stack>
+            <Badge tone="accent">
+              {(monitoringQuery.data?.variations ?? []).reduce((s, v) => s + v.exposures, 0).toLocaleString()}{" "}
+              exposures
+            </Badge>
+          </Stack>
+          {monitoringQuery.isPending ? (
+            <Skeleton height={80} />
+          ) : (monitoringQuery.data?.variations ?? []).length === 0 ? (
+            <Text size="sm" tone="muted">
+              No per-variation exposure/telemetry samples recorded in the last 24 hours.
+            </Text>
+          ) : (
+            <DataTable
+              rows={monitoringQuery.data?.variations ?? []}
+              rowKey={(row) => String(row.variationIndex)}
+              columns={[
+                {
+                  key: "var",
+                  header: "Variation",
+                  render: (row) => (
+                    <Text bold>
+                      {flag.variations[row.variationIndex]?.name ?? `Variation #${row.variationIndex}`}
+                    </Text>
+                  ),
+                },
+                {
+                  key: "exp",
+                  header: "Exposures",
+                  render: (row) => <Text mono>{row.exposures.toLocaleString()}</Text>,
+                },
+                {
+                  key: "err",
+                  header: "Error Rate",
+                  render: (row) => (
+                    <Badge tone={row.errorRate > 0.05 ? "danger" : "success"}>
+                      {(row.errorRate * 100).toFixed(2)}%
+                    </Badge>
+                  ),
+                },
+                {
+                  key: "lat",
+                  header: "p95 Latency",
+                  render: (row) => (
+                    <Text mono>{row.p95LatencyMs != null ? `${row.p95LatencyMs.toFixed(1)} ms` : "—"}</Text>
+                  ),
+                },
+                {
+                  key: "conv",
+                  header: "Conversions",
+                  render: (row) => <Text mono>{row.conversionCount.toLocaleString()}</Text>,
+                },
+              ]}
+            />
+          )}
+        </Stack>
+      </Card>
+
+      {/* Phase 4: 2/4/6-Stage Migration Flags & Consistency Telemetry */}
+      <Card padded>
+        <Stack gap={4}>
+          <Stack direction="horizontal" align="center" justify="space-between">
+            <Stack gap={1}>
+              <Heading level={3}>2 / 4 / 6-Stage Migration Flag</Heading>
+              <Text size="sm" tone="muted">
+                Orchestrate zero-downtime database or service migrations with dual-write, shadow
+                reads, consistency checks, and latency telemetry.
+              </Text>
+            </Stack>
+            {migrationConfigQuery.data && (
+              <Badge tone="accent">
+                Stage: {migrationConfigQuery.data.currentStage} ({migrationConfigQuery.data.template})
+              </Badge>
+            )}
+          </Stack>
+
+          {writerAllowed && (
+            <Stack direction="horizontal" gap={3} align="flex-end" style={{ flexWrap: "wrap" }}>
+              <FormField label="Template" htmlFor="mig-template">
+                <Select
+                  id="mig-template"
+                  value={migTemplate}
+                  onValueChange={(v) => {
+                    const tpl = v as MigrationTemplate;
+                    setMigTemplate(tpl);
+                    if (tpl === "two_stage" && migStage !== "off" && migStage !== "complete") {
+                      setMigStage("off");
+                    }
+                  }}
+                  options={[
+                    { value: "two_stage", label: "2-Stage (off → complete)" },
+                    { value: "four_stage", label: "4-Stage (off → shadow → live → complete)" },
+                    { value: "six_stage", label: "6-Stage (off → dualwrite → shadow → live → rampdown → complete)" },
+                  ]}
+                />
+              </FormField>
+              <FormField label="Current Stage" htmlFor="mig-stage">
+                <Select
+                  id="mig-stage"
+                  value={migStage}
+                  onValueChange={(v) => setMigStage(v as MigrationStage)}
+                  options={
+                    migTemplate === "two_stage"
+                      ? [
+                          { value: "off", label: "1. off (Old only)" },
+                          { value: "complete", label: "2. complete (New only)" },
+                        ]
+                      : migTemplate === "four_stage"
+                        ? [
+                            { value: "off", label: "1. off" },
+                            { value: "shadow", label: "2. shadow (Dual read, serve old)" },
+                            { value: "live", label: "3. live (Dual read, serve new)" },
+                            { value: "complete", label: "4. complete" },
+                          ]
+                        : [
+                            { value: "off", label: "1. off" },
+                            { value: "dualwrite", label: "2. dualwrite" },
+                            { value: "shadow", label: "3. shadow" },
+                            { value: "live", label: "4. live" },
+                            { value: "rampdown", label: "5. rampdown" },
+                            { value: "complete", label: "6. complete" },
+                          ]
+                  }
+                />
+              </FormField>
+              <FormField label="Consistency Check Ratio" htmlFor="mig-ratio">
+                <Input
+                  id="mig-ratio"
+                  type="number"
+                  value={migCheckRatio}
+                  onChange={(e) => setMigCheckRatio(e.target.value)}
+                />
+              </FormField>
+              <FormField label="Read Order" htmlFor="mig-order">
+                <Select
+                  id="mig-order"
+                  value={migReadOrder}
+                  onValueChange={setMigReadOrder}
+                  options={[
+                    { value: "parallel", label: "Parallel" },
+                    { value: "serial", label: "Serial" },
+                    { value: "random", label: "Random" },
+                  ]}
+                />
+              </FormField>
+              <Button
+                variant="primary"
+                disabled={saveMigrationMutation.isPending}
+                onClick={() => saveMigrationMutation.mutate()}
+              >
+                {saveMigrationMutation.isPending ? "Saving..." : "Save Migration Stage"}
+              </Button>
+            </Stack>
+          )}
+
+          {(migrationTelemetryQuery.data?.stages ?? []).length > 0 && (
+            <DataTable
+              rows={migrationTelemetryQuery.data?.stages ?? []}
+              rowKey={(s) => s.stage}
+              columns={[
+                { key: "stage", header: "Stage", render: (s) => <Badge tone="accent">{s.stage}</Badge> },
+                {
+                  key: "ops",
+                  header: "Old / New Calls",
+                  render: (s) => (
+                    <Text mono>
+                      {s.oldInvocations.toLocaleString()} / {s.newInvocations.toLocaleString()}
+                    </Text>
+                  ),
+                },
+                {
+                  key: "consistency",
+                  header: "Consistency",
+                  render: (s) => (
+                    <Badge tone={s.consistencyRatePct >= 99 ? "success" : "warning"}>
+                      {s.consistencyRatePct.toFixed(1)}% ({s.consistencyMatches}/
+                      {s.consistencyMatches + s.consistencyMismatches})
+                    </Badge>
+                  ),
+                },
+                {
+                  key: "latency",
+                  header: "Old / New Avg Latency",
+                  render: (s) => (
+                    <Text mono>
+                      {s.oldAvgLatencyMs.toFixed(1)}ms / {s.newAvgLatencyMs.toFixed(1)}ms
+                    </Text>
+                  ),
+                },
+                {
+                  key: "errors",
+                  header: "Old / New Errors",
+                  render: (s) => (
+                    <Text mono>
+                      {s.oldErrors} / {s.newErrors}
+                    </Text>
+                  ),
+                },
+              ]}
+            />
           )}
         </Stack>
       </Card>

@@ -10,11 +10,12 @@ workspace = true
 
 [features]
 default = []
-workers = ["dep:skotos-storage"]
+workers = ["dep:skotos-storage", "dep:skotos-telemetry"]
 
 [dependencies]
 skotos-domain.workspace = true
 skotos-storage = { workspace = true, optional = true }
+skotos-telemetry = { workspace = true, optional = true }
 async-nats.workspace = true
 bytes.workspace = true
 chrono.workspace = true
