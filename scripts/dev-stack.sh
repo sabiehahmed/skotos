@@ -131,6 +131,43 @@ service_running() {
   return 1
 }
 
+# Print PIDs of every descendant of the given PID (children, grandchildren, ...).
+# Uses `pgrep -P`, available on both Linux (procps) and macOS.
+descendant_pids() {
+  local parent="$1"
+  local child
+  command -v pgrep >/dev/null 2>&1 || return 0
+  for child in $(pgrep -P "${parent}" 2>/dev/null || true); do
+    descendant_pids "${child}"
+    printf '%s\n' "${child}"
+  done
+}
+
+# Send a signal to a service: its process group (when it leads one), every
+# descendant, and the PID itself. Covering descendants matters for wrappers such
+# as `pnpm exec vite`, where the real server is a child that survives if only the
+# wrapper is signalled.
+signal_service_tree() {
+  local sig="$1"
+  local pid="$2"
+  shift 2
+  local p
+  kill "-${sig}" -- "-${pid}" 2>/dev/null || true
+  for p in "$@" "${pid}"; do
+    kill "-${sig}" "${p}" 2>/dev/null || true
+  done
+}
+
+any_pid_running() {
+  local p
+  for p in "$@"; do
+    if pid_is_running "${p}"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 stop_service() {
   local name="$1"
   local file="${PID_DIR}/${name}.pid"
@@ -146,19 +183,56 @@ stop_service() {
   fi
 
   info "Stopping ${name} (pid ${pid})..."
-  # Stop the whole process group if launched in its own session, plus the PID itself.
-  kill -TERM -- "-${pid}" 2>/dev/null || kill -TERM "${pid}" 2>/dev/null || true
+  # Snapshot descendants before signalling: once the parent exits they are
+  # re-parented to init/launchd and can no longer be found via the parent PID.
+  local descendants=()
+  local d
+  for d in $(descendant_pids "${pid}"); do
+    descendants+=("${d}")
+  done
+
+  signal_service_tree TERM "${pid}" ${descendants[@]+"${descendants[@]}"}
 
   local waited=0
-  while pid_is_running "${pid}" && (( waited < 40 )); do
+  while any_pid_running "${pid}" ${descendants[@]+"${descendants[@]}"} && (( waited < 40 )); do
     sleep 0.25
     waited=$((waited + 1))
   done
-  if pid_is_running "${pid}"; then
+  if any_pid_running "${pid}" ${descendants[@]+"${descendants[@]}"}; then
     warn "${name} did not exit cleanly within 10s; sending SIGKILL"
-    kill -KILL -- "-${pid}" 2>/dev/null || kill -KILL "${pid}" 2>/dev/null || true
+    signal_service_tree KILL "${pid}" ${descendants[@]+"${descendants[@]}"}
   fi
   rm -f "${file}"
+}
+
+# Fallback for a dev server left behind by an older dev-stack.sh, or one whose
+# PID file is gone: stop whatever listens on the port, but only when that
+# process runs from this repository (so another project's server is untouched).
+stop_port_listener_from_repo() {
+  local name="$1"
+  local port="$2"
+  local pid cwd
+  command -v lsof >/dev/null 2>&1 || return 0
+  for pid in $(lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true); do
+    cwd="$(lsof -a -p "${pid}" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -n1)"
+    case "${cwd}" in
+      "${ROOT_DIR}"|"${ROOT_DIR}"/*)
+        info "Stopping leftover ${name} listener on :${port} (pid ${pid})..."
+        kill -TERM "${pid}" 2>/dev/null || true
+        local waited=0
+        while pid_is_running "${pid}" && (( waited < 40 )); do
+          sleep 0.25
+          waited=$((waited + 1))
+        done
+        if pid_is_running "${pid}"; then
+          kill -KILL "${pid}" 2>/dev/null || true
+        fi
+        ;;
+      *)
+        warn "Port ${port} is held by pid ${pid} outside this repo (${cwd:-unknown cwd}); leaving it alone"
+        ;;
+    esac
+  done
 }
 
 start_detached() {
@@ -176,7 +250,11 @@ start_detached() {
   if command -v setsid >/dev/null 2>&1; then
     setsid "$@" </dev/null >>"${log_file}" 2>&1 &
   else
+    # macOS has no setsid(1). Enable job control so the background job gets its
+    # own process group (pgid == pid), which stop_service can then signal whole.
+    set -m
     nohup "$@" </dev/null >>"${log_file}" 2>&1 &
+    set +m
   fi
   local pid=$!
   printf '%s\n' "${pid}" > "${pid_file}"
@@ -481,6 +559,7 @@ cmd_down() {
   for svc in web relay-proxy event-ingest delivery-edge control-api; do
     stop_service "${svc}"
   done
+  stop_port_listener_from_repo "web" "${WEB_PORT:-${SKOTOS_WEB_PORT:-5173}}"
 
   if [[ "${stop_infra}" == "true" ]]; then
     cd "${ROOT_DIR}"
