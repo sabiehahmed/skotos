@@ -511,7 +511,7 @@ export function RuleBuilder({
                     value={clause.op === "segmentMatch" ? "" : clause.attribute}
                     suggestions={attributeOptionsFor(clause.contextKind)}
                     placeholder={
-                      clause.op === "segmentMatch" ? "not used for segments" : "email or /address/country"
+                      clause.op === "segmentMatch" ? "not used" : "email or /address/country"
                     }
                     disabled={disabled || clause.op === "segmentMatch"}
                     mono
