@@ -364,10 +364,16 @@ pub struct CreateMemberRequest {
     pub role: BuiltInRole,
     #[serde(default)]
     pub password: Option<String>,
+    /// Custom RBAC role keys to assign directly to the new member.
+    #[serde(default)]
+    pub custom_role_keys: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateMemberRequest {
     pub role: BuiltInRole,
+    /// When present, replaces the member's directly assigned custom RBAC roles.
+    #[serde(default)]
+    pub custom_role_keys: Option<Vec<String>>,
 }

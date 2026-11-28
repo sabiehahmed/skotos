@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use chrono::{DateTime, Duration, Utc};
 use serde_json::{json, Value};
@@ -210,6 +210,51 @@ impl Storage {
         )
         .await?;
         tx.commit().await?;
+        Ok(())
+    }
+
+    /// Returns the custom role keys assigned directly to each member of the org.
+    pub async fn list_member_custom_role_keys(
+        &self,
+        org_id: Uuid,
+    ) -> Result<HashMap<Uuid, Vec<String>>, StorageError> {
+        let rows = sqlx::query(
+            "SELECT mcr.member_id, cr.key
+             FROM member_custom_roles mcr
+             JOIN custom_roles cr ON cr.id = mcr.role_id
+             WHERE mcr.org_id = $1
+             ORDER BY mcr.created_at ASC, cr.key ASC",
+        )
+        .bind(org_id)
+        .fetch_all(&self.pool)
+        .await?;
+        let mut out: HashMap<Uuid, Vec<String>> = HashMap::new();
+        for r in rows {
+            out.entry(r.get("member_id"))
+                .or_default()
+                .push(r.get("key"));
+        }
+        Ok(out)
+    }
+
+    /// Fails with `NotFound` if any of the given custom role keys does not exist in the org.
+    pub async fn ensure_custom_roles_exist(
+        &self,
+        org_id: Uuid,
+        role_keys: &[String],
+    ) -> Result<(), StorageError> {
+        if role_keys.is_empty() {
+            return Ok(());
+        }
+        let found: Vec<String> =
+            sqlx::query_scalar("SELECT key FROM custom_roles WHERE org_id = $1 AND key = ANY($2)")
+                .bind(org_id)
+                .bind(role_keys)
+                .fetch_all(&self.pool)
+                .await?;
+        if let Some(missing) = role_keys.iter().find(|k| !found.contains(k)) {
+            return Err(StorageError::NotFound(format!("custom role '{missing}'")));
+        }
         Ok(())
     }
 
@@ -1255,6 +1300,7 @@ impl Storage {
                 _ => BuiltInRole::Reader,
             },
             external_subject_id: row.get("external_subject_id"),
+            custom_role_keys: Vec::new(),
             created_at: row.get("created_at"),
         };
 
